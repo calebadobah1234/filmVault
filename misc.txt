@@ -1,0 +1,25 @@
+87fb91d9b12142ebb4e55c99ef1f1537 - api key for news
+
+<div className="grid grid-cols-3 max-md:grid-cols-2 max-sm:grid-cols-1 max-lg:grid-cols-2">
+      {props.data.map((item, index) => {
+        return (
+          <div key={index} className="mr-6 ">
+            <div className="overflow-hidden w-76">
+              <Link href={`/more/${item._id}`}>
+                {item.urlToImage && (
+                  <Image
+                    src={item.urlToImage}
+                    width={300}
+                    height={600}
+                    className=" rounded-xl hover:w-80 absolute transition-all duration-100 ease-in-out"
+                  />
+                )}
+              </Link>
+            </div>
+            <h3 className="mt-56 mb-14 font-sans text-2xl antialiased font-light max-w-sm">
+              {item.title}
+            </h3>
+          </div>
+        );
+      })}
+    </div>
