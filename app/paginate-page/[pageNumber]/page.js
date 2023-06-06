@@ -5,7 +5,7 @@ import Image from "next/image";
 
 const page = async ({ params }) => {
   const res = await fetch(
-    `http://localhost:3001/get-paginate-content/${params.pageNumber}`,
+    `https://byteread-final.onrender.com/get-paginate-content/${params.pageNumber}`,
     { cache: "force-cache" }
   );
   const data = await res.json();

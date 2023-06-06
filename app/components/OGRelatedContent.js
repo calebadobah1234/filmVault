@@ -4,7 +4,7 @@ import Link from "next/link";
 
 const RelatedContent = async (props) => {
   const res = await fetch(
-    `http://localhost:3001/get-related-content/${props.category}`
+    `https://byteread-final.onrender.com/get-related-content/${props.category}`
   );
   console.log(res);
   const data = await res.json();

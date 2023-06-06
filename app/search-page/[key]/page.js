@@ -19,7 +19,7 @@ const SearchPage = ({ params }) => {
   console.log();
   useEffect(() => {
     const res = axios
-      .get(`http://localhost:3001/search/${key}`)
+      .get(`https://byteread-final.onrender.com/search/${key}`)
       .then((rest) => {
         setFoundItems(rest.data);
         setIsloading(false);

@@ -7,7 +7,7 @@ import Pagination from "./components/Pagination";
 import Head from "next/head";
 import { Metadata } from "next";
 
-const urll = "http://localhost:3001/get-20-items";
+const urll = "https://byteread-final.onrender.com/get-20-items";
 
 export const metadata = {
   title: "ByteRead: Short Movie and Video Game News at Your Fingertips",
@@ -22,7 +22,7 @@ export default async function Home() {
   const res = await fetch(urll, { cache: "no-store" });
   const data = await res.json();
 
-  const res2 = await fetch(`http://localhost:3001/sort-views`, {
+  const res2 = await fetch(`https://byteread-final.onrender.com/sort-views`, {
     cache: "force-cache",
   });
   const data2 = await res2.json();

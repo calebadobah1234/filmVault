@@ -7,7 +7,7 @@ import { Metadata } from "next";
 
 export const generateMetadata = async ({ params }) => {
   const res = await fetch(
-    `http://localhost:3001/get-item-details/${params.id}`,
+    `https://byteread-final.onrender.com/get-item-details/${params.id}`,
     { cache: "force-cache" }
   );
   const data = await res.json();
@@ -19,12 +19,12 @@ export const generateMetadata = async ({ params }) => {
 
 const page = async ({ params }) => {
   const res = await fetch(
-    `http://localhost:3001/get-item-details/${params.id}`,
+    `https://byteread-final.onrender.com/get-item-details/${params.id}`,
     { cache: "force-cache" }
   );
   const data = await res.json();
   const addViews = await axios.post(
-    `http://localhost:3001/add-views/${params.id}`
+    `https://byteread-final.onrender.com/add-views/${params.id}`
   );
 
   const filtered = data.mainData.filter((item) => {
