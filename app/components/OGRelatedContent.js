@@ -24,6 +24,7 @@ const RelatedContent = async (props) => {
                   <Link href={`/more/${item._id}`}>
                     <Image
                       src={item.urlToImage}
+                      alt={item.title}
                       width={200}
                       height={200}
                       className="w-80 min-w-80"

@@ -9,7 +9,12 @@ const Navbar = () => {
       <div className="bg-black text-white max-md:w-[100%]">
         <div className="flex justify-center items-center">
           <Link href="/">
-            <Image src="/finalLogo.png" width={200} height={200} />
+            <Image
+              src="/finalLogo.png"
+              width={200}
+              height={200}
+              alt="Byte-Read"
+            />
           </Link>
         </div>
         <nav className="bg-black text-white py-5">

@@ -1,11 +1,7 @@
-import Image from "next/image";
-import Navbar from "./components/Navbar";
 import TopPost from "./components/TopPost";
 import LatestNews from "./components/LatestNews";
-import Searchbar from "./components/Searchbar";
+
 import Pagination from "./components/Pagination";
-import Head from "next/head";
-import { Metadata } from "next";
 
 const urll = "https://byteread-final.onrender.com/get-20-items";
 
@@ -23,7 +19,7 @@ export default async function Home() {
   const data = await res.json();
 
   const res2 = await fetch(`https://byteread-final.onrender.com/sort-views`, {
-    cache: "force-cache",
+    cache: "no-store",
   });
   const data2 = await res2.json();
 

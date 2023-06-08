@@ -21,7 +21,7 @@ const Pagination = (props) => {
           </Link>
         )}
         {paginationArray.map((item, index) => (
-          <Link key={index} href={`/paginate-page/${item}`}>
+          <Link key={index} href={`/search-page/${params.searchKey}/${item}`}>
             <li
               className={`p-2 ${
                 props.currentPage === item

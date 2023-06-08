@@ -15,6 +15,7 @@ const LatestNews = (props) => {
                   width={80}
                   height={80}
                   className="w-80 min-w-80 max-md:min-w-[100%] max-md:flex max-md:justify-center max-md:rounded-lg"
+                  alt={item.title}
                 ></Image>
               </Link>
               <div className="max-w-[40%] border-b-4 max-md:max-w-[100%]">

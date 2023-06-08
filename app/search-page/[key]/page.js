@@ -7,14 +7,12 @@ import Image from "next/image";
 
 import { useEffect, useState } from "react";
 import Loading from "@/app/components/Loading";
-import SearchPaginate from "@/app/components/SearchPaginate";
 
 const SearchPage = ({ params }) => {
   const key = params.key;
   const [foundItems, setFoundItems] = useState([]);
   const [isLoading, setIsloading] = useState(true);
-  let sliceStart = 0;
-  let sliceEnd = 49;
+  const [currentPage, setCurrentPage] = useState(1);
 
   console.log();
   useEffect(() => {
@@ -64,6 +62,7 @@ const SearchPage = ({ params }) => {
                         src={item.urlToImage}
                         width={200}
                         height={200}
+                        alt={item.title}
                         className="w-80 min-w-80 max-md:min-w-[100%] max-md:flex max-md:justify-center max-md:rounded-lg"
                       ></Image>
                     </Link>
@@ -88,10 +87,6 @@ const SearchPage = ({ params }) => {
           </div>
         </div>
       </div>
-      <SearchPaginate
-        paginatePagesToShow={foundItems.length / 50}
-        startNumber={1}
-      />
     </>
   );
 };

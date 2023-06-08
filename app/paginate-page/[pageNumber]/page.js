@@ -6,7 +6,7 @@ import Image from "next/image";
 const page = async ({ params }) => {
   const res = await fetch(
     `https://byteread-final.onrender.com/get-paginate-content/${params.pageNumber}`,
-    { cache: "force-cache" }
+    { cache: "no-cache" }
   );
   const data = await res.json();
 
@@ -27,6 +27,7 @@ const page = async ({ params }) => {
                     src={item.urlToImage}
                     width={200}
                     height={200}
+                    alt={item.title}
                     className="w-80 min-w-80 max-md:min-w-[100%] max-md:flex max-md:justify-center max-md:rounded-lg"
                   ></Image>
                 </Link>
