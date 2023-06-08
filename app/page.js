@@ -1,6 +1,6 @@
 import TopPost from "./components/TopPost";
 import LatestNews from "./components/LatestNews";
-
+import Script from "next/script";
 import Pagination from "./components/Pagination";
 
 const urll = "https://byteread-final.onrender.com/get-20-items";
