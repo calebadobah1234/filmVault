@@ -15,7 +15,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={font.className}>
-      <GoogleAnalytics />
+      <GoogleAnalytics GA_MEASUREMENT_ID="G-XRQ23BL3CB" />
       <body>
         <Navbar />
         {children}
