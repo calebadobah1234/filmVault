@@ -18,7 +18,6 @@ export default function RootLayout({ children }) {
       <GoogleAnalytics />
       <body>
         <Navbar />
-
         {children}
         <Footer />
       </body>
