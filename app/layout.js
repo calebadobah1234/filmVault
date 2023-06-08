@@ -2,6 +2,7 @@ import "./globals.css";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import { Roboto } from "next/font/google";
+import GoogleAnalytics from "./components/GoogleAnalytics";
 
 const font = Roboto({ subsets: ["latin"], weight: ["400"] });
 
@@ -14,6 +15,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={font.className}>
+      <GoogleAnalytics />
       <body>
         <Navbar />
 
