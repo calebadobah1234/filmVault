@@ -1,4 +1,5 @@
 import { BsFacebook, BsInstagram, BsTwitter } from "react-icons/bs";
+import Link from "next/link";
 
 const Footer = () => {
   return (
@@ -10,13 +11,17 @@ const Footer = () => {
           </div>
           <div className="flex space-x-4">
             <div className="cursor-pointer text-2xl hover:text-blue-500">
-              <BsFacebook />
+              <Link href="https://www.facebook.com/profile.php?id=100093211403930">
+                <BsFacebook />
+              </Link>
             </div>
-            <div className="cursor-pointer text-2xl hover:text-pink-500">
+            {/* <div className="cursor-pointer text-2xl hover:text-pink-500">
               <BsInstagram />
-            </div>
+            </div> */}
             <div className="cursor-pointer text-2xl hover:text-blue-400">
-              <BsTwitter />
+              <Link href="https://twitter.com/adobah102">
+                <BsTwitter />{" "}
+              </Link>
             </div>
           </div>
         </div>
