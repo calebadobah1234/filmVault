@@ -35,6 +35,12 @@ export default function RootLayout({ children }) {
 
   gtag('config', 'G-XRQ23BL3CB');`}
         </Script>
+        <Script
+          async
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9077918501356115"
+          crossorigin="anonymous"
+          strategy="beforeInteractive"
+        ></Script>
       </head>
       <body>
         <Navbar />
