@@ -8,6 +8,7 @@ const Footer = () => {
         <div className="flex justify-center mt-10 flex-col items-center">
           <div className="text-lg font-bold mb-4">
             All rights reserved &copy; 2023
+            <h1 className="inline"> Byte-Read.xyz </h1>
           </div>
           <div className="flex space-x-4">
             <div className="cursor-pointer text-2xl hover:text-blue-500">
