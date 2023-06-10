@@ -14,7 +14,7 @@ const LatestNews = (props) => {
                   src={item.urlToImage}
                   width={200}
                   height={300}
-                  className="h-20 w-80 min-w-80 max-md:min-w-[100%] max-md:flex max-md:justify-center max-md:rounded-lg"
+                  className=" w-80 min-w-80 max-md:min-w-[100%] max-md:flex max-md:justify-center max-md:rounded-lg"
                   alt={item.title}
                 ></Image>
               </Link>
