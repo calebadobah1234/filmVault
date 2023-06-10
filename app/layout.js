@@ -25,7 +25,7 @@ export default function RootLayout({ children }) {
         />
         <Script
           async
-          src="https://www.googletagmanager.com/gtag/js?id=G-XRQ23BL3CB"
+          src="https://www.googletagmanager.com/gtag/js?id=G-G5F92NBCCE"
         ></Script>
         <Script id="anal2" strategy="beforeInteractive">
           {`
@@ -33,7 +33,7 @@ export default function RootLayout({ children }) {
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
 
-  gtag('config', 'G-XRQ23BL3CB');`}
+  gtag('config', 'G-G5F92NBCCE');`}
         </Script>
         <Script
           async
