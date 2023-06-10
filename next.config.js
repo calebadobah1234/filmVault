@@ -18,6 +18,7 @@ const nextConfig = {
       "images.wsj.net",
       "static0.gamerantimages.com",
       "static1.srcdn.com",
+      "www.byte-read.xyz",
     ],
   },
 };
