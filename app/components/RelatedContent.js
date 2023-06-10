@@ -20,7 +20,14 @@ const RelatedContent = async (props) => {
           {limit.map((item, index) => {
             return (
               <>
-                <div key={index} className="flex mb-10 max-md:flex-col">
+                <div
+                  key={index}
+                  className={` ${
+                    item.title == props.title
+                      ? "hidden"
+                      : "flex mb-10 max-md:flex-col"
+                  }`}
+                >
                   <Link href={`/more/${item._id}`}>
                     <Image
                       src={item.urlToImage}
