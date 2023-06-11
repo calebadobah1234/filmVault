@@ -20,8 +20,8 @@ const TopPost = async (props) => {
                 <Link href={`/more/${item._id}`}>
                   <Image
                     src={item.urlToImage}
-                    width={400}
-                    height={400}
+                    width={700}
+                    height={700}
                     className="w-full h-full object-cover transition duration-500 ease-in-out transform hover:scale-110"
                   />
                 </Link>
