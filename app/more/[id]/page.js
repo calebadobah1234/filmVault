@@ -6,7 +6,9 @@ import axios from "axios";
 export const generateMetadata = async ({ params }) => {
   const res = await fetch(
     `https://byteread-final.onrender.com/get-item-details/${params.id}`,
-    { cache: "force-cache" }
+    {
+      next: { revalidate: 60 },
+    }
   );
   const data = await res.json();
   return {

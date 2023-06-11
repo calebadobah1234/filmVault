@@ -14,11 +14,13 @@ export const metadata = {
 export default async function Home() {
   const paginateStartNumber = 1;
   const paginateEndNumber = paginateStartNumber + 9;
-  const res = await fetch(urll, { cache: "no-store" });
+  const res = await fetch(urll, {
+    next: { revalidate: 60 },
+  });
   const data = await res.json();
 
   const res2 = await fetch(`https://byteread-final.onrender.com/sort-views`, {
-    cache: "no-store",
+    next: { revalidate: 60 },
   });
   const data2 = await res2.json();
 
