@@ -32,16 +32,19 @@ const page = async ({ params }) => {
     <>
       <div className="grid grid-cols-5 mt-10">
         <div className="col-span-1 max-md:hidden"></div>
-        <div className="col-span-3 max-md:col-span-5">
+        <div className="col-span-3 max-md:col-span-5 ">
           <h1 className="font-sans text-2xl antialiased font-bold mb-4 max-w-3xl max-md:ml-2">
             {data.title}
           </h1>
-          <Image
-            src={data.urlToImage}
-            width={800}
-            height={300}
-            alt={data.title}
-          />
+          <div className="h-96 overflow-hidden">
+            <Image
+              src={data.urlToImage}
+              width={800}
+              height={300}
+              alt={data.title}
+              className="min-h-[100%]"
+            />
+          </div>
           <div className="mt-10 w-[80%] max-md:w-[94%] max-md:ml-2">
             <p className="font-sans text-lg antialiased leading-relaxed mb-4">
               {filtered.map((item) => {
