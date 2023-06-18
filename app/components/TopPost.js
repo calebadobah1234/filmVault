@@ -26,7 +26,11 @@ const TopPost = async (props) => {
                   />
                 </Link>
                 <div className="absolute bottom-0 bg-black bg-opacity-50 w-full p-2">
-                  <Link href={`/more/${item._id}`}>
+                  <Link
+                    href={
+                      item.type === 2 ? `best/${item._id}` : `/more/${item._id}`
+                    }
+                  >
                     <h3 className="text-white font-sans xl:text-xl text-2xl font-bold antialiased mx-2 hover:underline">
                       {item.title}
                     </h3>

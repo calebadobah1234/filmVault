@@ -19,6 +19,8 @@ const nextConfig = {
       "static0.gamerantimages.com",
       "static1.srcdn.com",
       "www.byte-read.xyz",
+      "media.autoexpress.co.uk",
+      "www.autoexpress.co.uk",
     ],
   },
 };
