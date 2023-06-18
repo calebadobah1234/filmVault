@@ -22,7 +22,7 @@ const TopItems = async (props) => {
             {data.title}
           </h1>
           <div>
-            <div className="h-[600px] overflow-hidden">
+            <div className="max-md:h-auto h-[600px] overflow-hidden">
               <Image
                 src={data.urlToImage}
                 width={800}
@@ -49,7 +49,7 @@ const TopItems = async (props) => {
                       </h2>
                     </div>
 
-                    <div className="h-96 overflow-hidden">
+                    <div className="max-md:h-auto h-96 overflow-hidden max-md:flex max-md:justify-center">
                       <Image
                         src={item.urlToImage}
                         width={600}
