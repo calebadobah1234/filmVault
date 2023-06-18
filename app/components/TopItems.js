@@ -7,7 +7,7 @@ const TopItems = async (props) => {
     `https://byteread-final.onrender.com/get-item-details/${props.id}`,
     {
       next: {
-        revalidate: 0,
+        revalidate: 60000,
       },
     }
   );
