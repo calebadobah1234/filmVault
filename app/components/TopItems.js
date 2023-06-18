@@ -45,7 +45,7 @@ const TopItems = async (props) => {
                         id={index}
                         className="font-sans text-2xl antialiased font-bold mb-4 max-w-3xl max-md:ml-2"
                       >
-                        {index + 1 + " " + item.title}
+                        {index + 1 + "." + " " + item.title}
                       </h2>
                     </div>
 

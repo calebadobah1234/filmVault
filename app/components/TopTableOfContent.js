@@ -11,13 +11,13 @@ const TopTableOfContent = (props) => {
       {props.data.entrys.map((item, index) => {
         return (
           <div
-            className="font-sans text-md antialiased font-bold my-1 max-w-3xl max-md:ml-2 text-blue-800 hover:cursor-pointer"
+            className="hover:underline font-sans text-md antialiased font-bold my-1 max-w-3xl max-md:ml-2 text-blue-800 hover:cursor-pointer"
             key={item._id}
             onClick={() => {
               handleCLick(index);
             }}
           >
-            {index + 1 + " " + item.title}
+            {index + 1 + "." + " " + item.title}
           </div>
         );
       })}
