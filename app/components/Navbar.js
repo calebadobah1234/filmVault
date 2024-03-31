@@ -7,17 +7,8 @@ const Navbar = () => {
   return (
     <>
       <div className="bg-black text-white max-md:w-[100%]">
-        <div className="flex justify-center items-center">
-          <Link href="/">
-            <Image
-              src="/finalLogo.png"
-              width={200}
-              height={200}
-              alt="Byte-Read"
-            />
-          </Link>
-        </div>
-        <nav className="bg-black text-white py-5">
+        <div className="flex justify-center items-center"></div>
+        <nav className="bg-blue-900 text-white py-5">
           <div className="container mx-auto flex justify-center items-center">
             <ul className="flex space-x-8">
               <li>

@@ -20,6 +20,16 @@ const {
   getPaginateContentM,
 } = require("../controllers/serMovie");
 
+const {
+  get20ItemsS,
+  getItemDetailsS,
+  findItemsS,
+  getRelatedContentS,
+  addViewsS,
+  sortViewsS,
+  getPaginateContentS,
+} = require("../controllers/serSeries");
+
 const { register, login, authentication } = require("../controllers/auth");
 
 router.route("/get-20-items").get(get20Items);
@@ -39,5 +49,13 @@ router.route("/get-related-contentM/:category").get(getRelatedContentM);
 router.route("/add-viewsM/:_id").post(addViewsM);
 router.route("/sort-viewsM").get(sortViewsM);
 router.route("/get-paginate-contentM/:pass").get(getPaginateContentM);
+
+router.route("/get-20-itemsS").get(get20ItemsS);
+router.route("/get-item-detailsS/:id").get(getItemDetailsS);
+router.route("/searchS/:title").get(findItemsS);
+router.route("/get-related-contentS/:category").get(getRelatedContentS);
+router.route("/add-viewsS/:_id").post(addViewsS);
+router.route("/sort-viewsS").get(sortViewsS);
+router.route("/get-paginate-contentS/:pass").get(getPaginateContentS);
 
 module.exports = router;

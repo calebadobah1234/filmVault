@@ -1,6 +1,7 @@
 import TopPost from "./components/TopPost";
 import LatestNews from "./components/LatestNews";
 import Pagination from "./components/Pagination";
+import LatestItems from "./components/LatestItems";
 
 const urll = "http://localhost:3001/get-20-itemsM";
 
@@ -17,12 +18,18 @@ export default async function Home() {
   const res = await fetch(urll, {
     next: { revalidate: 0 },
   });
-  const data = await res.json();
+  const moviesData = await res.json();
 
   const res2 = await fetch(`https://byteread-final.onrender.com/sort-views`, {
     next: { revalidate: 60 },
   });
   const data2 = await res2.json();
+
+  const res3 = await fetch("http://localhost:3001/get-20-itemsS", {
+    next: { revalidate: 60 },
+  });
+
+  const seriesData = await res3.json();
 
   return (
     <>
@@ -30,13 +37,10 @@ export default async function Home() {
         <TopPost img="/jw4.webp" data2={data2} />
         <div className="flex justify-center">
           <div className="mt-44">
-            <div className="flex justify-center">
-              <h3 className="font-sans text-4xl antialiased font-bold mb-4 ml-20 ">
-                Latest Post
-              </h3>
-            </div>
+            <div className="flex justify-center"></div>
 
-            <LatestNews data={data} />
+            <LatestItems data={moviesData} title="Latest Movies" />
+            <LatestItems data={seriesData} title="Latest Series" />
 
             <Pagination
               paginatePagesToShow={10}

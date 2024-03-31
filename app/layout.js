@@ -42,7 +42,7 @@ export default function RootLayout({ children }) {
           strategy="beforeInteractive"
         ></Script>
       </head>
-      <body className="bg-black">
+      <body className="bg-darkPurple text-white">
         <Navbar />
         {children}
         <Footer />

@@ -17,7 +17,7 @@ const Searchbar = () => {
         placeholder="Search for news"
         value={searchValue}
         onChange={searchChange}
-        className="w-[40%] rounded-lg border-2 border-gray-300 bg-white h-10 px-5 pr-16 text-sm focus:outline-none max-md:w-[80%]"
+        className="text-black w-[40%] rounded-lg border-2 border-gray-300 bg-white h-10 px-5 pr-16 text-sm focus:outline-none max-md:w-[80%]"
       ></input>
       <FaSearch className="hidden text-2xl" />
     </form>
