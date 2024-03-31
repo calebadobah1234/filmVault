@@ -7,12 +7,12 @@ const TopItems = async (props) => {
     `https://byteread-final.onrender.com/get-item-details/${props.id}`,
     {
       next: {
-        revalidate: 60000,
+        revalidate: 0,
       },
     }
   );
   const data = await res.json();
-  console.log(data);
+
   return (
     <>
       <div className="grid grid-cols-5 mt-10">
@@ -22,18 +22,11 @@ const TopItems = async (props) => {
             {data.title}
           </h1>
           <div>
-            <div className="max-md:h-auto h-[600px] overflow-hidden">
-              <Image
-                src={data.urlToImage}
-                width={800}
-                height={600}
-                alt={data.title}
-              />
-            </div>
+            <div className="max-md:h-auto h-[600px] overflow-hidden"></div>
             <div>
-              <h3 className="mt-10 font-sans text-2xl antialiased font-bold mb-4 max-w-3xl max-md:ml-2">
+              <h5 className="mt-10 font-sans text-2xl antialiased font-bold mb-4 max-w-3xl max-md:ml-2">
                 Read Ahead:
-              </h3>
+              </h5>
               <TopTableOfContent data={data} />
             </div>
             <div>
@@ -47,6 +40,9 @@ const TopItems = async (props) => {
                       >
                         {index + 1 + "." + " " + item.title}
                       </h2>
+
+                      {data.externalLink &&
+                        `<div>Read More:" <Link src=${data.externalLink}>${data.externalLink}<Link/><div/>`}
                     </div>
 
                     <div className="max-md:h-auto h-96 overflow-hidden max-md:flex max-md:justify-center">

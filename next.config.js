@@ -21,6 +21,7 @@ const nextConfig = {
       "www.byte-read.xyz",
       "media.autoexpress.co.uk",
       "www.autoexpress.co.uk",
+      "back.sermovie39.pw",
     ],
   },
 };

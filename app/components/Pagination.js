@@ -23,24 +23,24 @@ const Pagination = (props) => {
         {paginationArray.map((item, index) => (
           <Link key={index} href={`/paginate-page/${item}`}>
             <li
-              className={`p-2 ${
+              className={`px-2 py-1 ${
                 props.currentPage === item
                   ? "bg-blue-500 text-white"
-                  : "bg-gray-300 text-gray-700 hover:bg-blue-500 hover:text-white transition-colors duration-300 cursor-pointer"
+                  : "rounded-sm text-white bg-red-500 border-red-500 text-gray-700 hover:bg-blue-500 hover:text-white transition-colors duration-300 cursor-pointer font-extralight"
               }`}
             >
               {item}
             </li>
           </Link>
         ))}
-
+        <li>...</li>
         <Link href={`/paginate-page/400`}>
-          <li className="p-2 bg-gray-300 hover:bg-blue-600 transition-colors duration-300 cursor-pointer">
+          <li className="px-2 py-1 rounded-sm text-white bg-red-500 hover:bg-blue-600 transition-colors duration-300 cursor-pointer">
             400
           </li>
         </Link>
         <Link href={`/paginate-page/${Number(props.currentPage) + 1}`}>
-          <li className="p-3 bg-gray-300 text-white hover:bg-blue-600 transition-colors duration-300 cursor-pointer">
+          <li className="px-2 py-2 rounded-sm text-white bg-red-500 text-white hover:bg-blue-600 transition-colors duration-300 cursor-pointer">
             <GrNext />
           </li>
         </Link>

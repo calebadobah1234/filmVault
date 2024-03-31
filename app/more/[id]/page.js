@@ -32,35 +32,54 @@ const page = async ({ params }) => {
   });
   return (
     <>
-      <div className="grid grid-cols-5 mt-10">
-        <div className="col-span-1 max-md:hidden"></div>
-        <div className="col-span-3 max-md:col-span-5 ">
-          <h1 className="font-sans text-2xl antialiased font-bold mb-4 max-w-3xl max-md:ml-2">
-            {data.title}
-          </h1>
-          <div className="h-96 overflow-hidden">
+      <main className="flex justify-center mt-10">
+        <div className="min-w-[80%] relative">
+          <div className="bg-blue-800 rounded-2xl overflow-hidden ">
             <Image
               src={data.urlToImage}
-              width={800}
-              height={300}
+              width={700}
+              height={700}
               alt={data.title}
-              className="min-h-[100%]"
+              className="w-full object-cover opacity-50 h-[450px]"
             />
           </div>
-          <div className="mt-10 w-[80%] max-md:w-[94%] max-md:ml-2">
-            <p className="font-sans text-lg antialiased leading-relaxed mb-4">
-              {filtered.map((item) => {
-                return (
-                  <>
-                    <p className="my-5">{item}</p>
-                  </>
-                );
-              })}
-            </p>
+          <div className="absolute -bottom-10 left-10 overflow-hidden w-fill">
+            <div className="flex">
+              <Image
+                src={data.urlToImage}
+                width={200}
+                height={300}
+                alt={data.title}
+                className="rounded-xl h-[250px]"
+              />
+              <div>
+                <div className="text-white text-xl ml-8">
+                  <p>Action|Drama|Intense Hentai</p>
+                </div>
+                <div className="ml-8">
+                  <h1 className="text-white font-bold text-3xl">
+                    {data.title}
+                  </h1>
+                </div>
+                <div className="ml-8">
+                  <p>
+                    Synopsis:
+                    <br />
+                    In Gentlemen, we meet Eddie Halstead, an English aristocrat,
+                    who inherits a great fortune after the death of his father.
+                    But he soon discovers that his family is involved in illegal
+                    activities. Eddie decides to stay out of this dark world,
+                    but
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-      <RelatedContent title={data.title} />
+      </main>
+      <aside>
+        <RelatedContent title={data.title} />
+      </aside>
     </>
   );
 };

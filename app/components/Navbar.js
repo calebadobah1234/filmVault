@@ -27,7 +27,17 @@ const Navbar = () => {
               </li>
               <li>
                 <Link href="/about-us" className="hover:text-blue-500">
-                  About
+                  Movies
+                </Link>
+              </li>
+              <li>
+                <Link href="/about-us" className="hover:text-blue-500">
+                  Series
+                </Link>
+              </li>
+              <li>
+                <Link href="/about-us" className="hover:text-blue-500">
+                  Anime
                 </Link>
               </li>
             </ul>

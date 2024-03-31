@@ -6,9 +6,9 @@ const RelatedContent = async (props) => {
   const res = await fetch(
     `https://byteread-final.onrender.com/get-related-content/${props.category}`
   );
-  console.log(res);
+
   const data = await res.json();
-  console.log(data);
+
   return (
     <div className="grid grid-cols-5 mt-40">
       <div className="cols-span-1"></div>

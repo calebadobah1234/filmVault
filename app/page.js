@@ -2,7 +2,7 @@ import TopPost from "./components/TopPost";
 import LatestNews from "./components/LatestNews";
 import Pagination from "./components/Pagination";
 
-const urll = "https://byteread-final.onrender.com/get-20-items";
+const urll = "http://localhost:3001/get-20-itemsM";
 
 export const metadata = {
   title: "ByteRead: Short Movie and Video Game News at Your Fingertips",
@@ -15,7 +15,7 @@ export default async function Home() {
   const paginateStartNumber = 1;
   const paginateEndNumber = paginateStartNumber + 9;
   const res = await fetch(urll, {
-    next: { revalidate: 60 },
+    next: { revalidate: 0 },
   });
   const data = await res.json();
 
@@ -30,10 +30,14 @@ export default async function Home() {
         <TopPost img="/jw4.webp" data2={data2} />
         <div className="flex justify-center">
           <div className="mt-44">
-            <h3 className="font-sans text-4xl antialiased font-bold mb-4 ml-20 ">
-              Latest Post
-            </h3>
+            <div className="flex justify-center">
+              <h3 className="font-sans text-4xl antialiased font-bold mb-4 ml-20 ">
+                Latest Post
+              </h3>
+            </div>
+
             <LatestNews data={data} />
+
             <Pagination
               paginatePagesToShow={10}
               currentPaginatePage={1}
