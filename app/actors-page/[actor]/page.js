@@ -7,7 +7,7 @@ import SearchItems from "@/app/components/SearchItems";
 
 const page = async ({ params }) => {
   const res = await fetch(
-    `http://localhost:3001/get-paginate-contentAm/${params.pageNumber}`,
+    `http://localhost:3001/get-other-actor-movies/${params.actor}`,
     { cache: "no-cache" }
   );
   const data = await res.json();

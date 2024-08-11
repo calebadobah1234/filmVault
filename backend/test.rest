@@ -1,8 +1,8 @@
-POST http://localhost:3001/login
+POST http://127.0.0.1:5000/embed
 Content-Type: application/json
 
 {
-    "name":"Caleb Adobahhh",
-    "email":"calebadobah1234@gmail.com",
-    "password":"AkataniiGangstar"
+    "text": "This is a test sentence.
 }
+
+

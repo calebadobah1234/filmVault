@@ -13,12 +13,12 @@ app.use("/", router);
 const start = () => {
   app.listen(port, async () => {
     try {
-      await connectDB(
-        "mongodb+srv://calebadobah1234:bananaman1234@crackxx.fxot0.mongodb.net/ai-blog?authSource=admin&replicaSet=atlas-edc7t5-shard-0&readPreference=primary&ssl=true"
-      );
+      console.log("Connecting...");
+      await connectDB("mongodb://localhost:27017");
       console.log("connected to db port 3001");
     } catch (err) {
       console.log(err);
+      start();
     }
   });
 };

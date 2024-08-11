@@ -125,70 +125,79 @@ const page = async ({ params }) => {
     image.replace("/_next/image?url=", "").split("&")[0]
   );
   const activeCategories = data.categories;
-  const imdbNumber = parseFloat(data.imdb.match(/IMDb\n\n([\d.]+)/)[1]);
+
   return (
     <>
       <div>
-        <div className="flex justify-center items-center w-full mt-10">
-          <div className="flex flex-col md:flex-row justify-center items-center max-w-4xl w-full p-5 border-slate-950 border-1 shadow-md">
-            <Image
-              src={modifiedImg}
-              width={200}
-              height={300}
-              alt={data.title}
-            />
-            <div className="flex flex-col ml-8">
-              <div className="mt-4">
-                <h1 className="text-black font-bold text-3xl">{data.title}</h1>
-              </div>
-              <div className="text-black text-sm flex mt-1">
-                <p className="font-light inline text-lg">Genre: </p>
-                <p className="flex mt-1 ml-1">
-                  {activeCategories.map((item, index) => {
-                    return (
-                      <div key={index} className="mr-2">
-                        <p className="inline text-green-600 cursor-pointer">
-                          {
-                            persianToEnglishCategories[
-                              item.replace("|", "").trim()
-                            ]
-                          }
-                          {index < activeCategories.length - 1 ? " |" : ""}
-                        </p>
-                      </div>
-                    );
-                  })}
-                </p>
-              </div>
-              <div className="imdb text-black font-light">
-                IMDB: {imdbNumber}/10
-              </div>
-              <div className="mt-4">
-                <div className="text-black  w-[95%] leading-snug pb-7">
-                  {data.description}
+        <main className=" mt-10 ">
+          <div className="flex justify-end">
+            {" "}
+            <div className="min-w-[80%] relative">
+              {/* <div className="bg-blue-800 rounded-2xl overflow-hidden ">
+              <Image
+                src={data.poster}
+                width={1920}
+                height={1080}
+                alt={data.title}
+                className="w-full object-cover opacity-50 h-[450px]"
+              />
+            </div> */}
+              <div className=" overflow-hidden w-fill">
+                <div className="flex">
+                  <Image
+                    src={modifiedImg}
+                    width={200}
+                    height={300}
+                    alt={data.title}
+                    className="rounded-xl"
+                  />
+                  <div>
+                    <div className="text-white text-sm ml-8 flex">
+                      {activeCategories.map((item, index) => {
+                        return (
+                          <div key={index} className="mr-2">
+                            {
+                              persianToEnglishCategories[
+                                item.replace("|", "").trim()
+                              ]
+                            }
+                            {index < activeCategories.length - 1 ? " |" : ""}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="ml-8">
+                      <h1 className="text-white font-bold text-3xl">
+                        {data.title}
+                      </h1>
+                    </div>
+                    <div className="text-white ml-8 w-[50%]">
+                      {data.description}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-
-        <div className="flex justify-center text-black">
-          <div className="mt-20 max-w-[80%] ">
+        </main>
+        <div className="flex justify-center">
+          <div className="mt-20 max-w-[60%] ">
             <div>
               {data.episodesData.map((item, index) => {
                 return (
-                  <div key={index} className="py-4 my-5 px-40 border-b-4">
+                  <div
+                    key={index}
+                    className="bg-black rounded-xl py-10 my-5 px-40"
+                  >
                     <div>
                       <h3 className="text-white relative text-center font-semibold mb-2">
-                        <span className="text-xl text-black">
-                          {item.chapterTitle}
-                        </span>
-                        <span className="text-lg ml-2 text-black">
+                        <span className="text-xl">{item.chapterTitle}</span>
+                        <span className="text-lg ml-2">
                           {item.resolutionText}
                         </span>
                       </h3>
                     </div>
-                    <div className="flex mt-4 mb-4 flex-wrap w-full">
+                    <div className="flex justify-center mt-4 mb-4 flex-wrap w-full">
                       {item.episodes.map((item2, index2) => {
                         console.log(item2);
                         return (
@@ -227,7 +236,7 @@ const page = async ({ params }) => {
           </div>
         </div>
         <LatestItems
-          title="You May Also Like"
+          title="Related Content"
           data={uniqueCombinedData}
           flex={true}
           relatedContent={true}

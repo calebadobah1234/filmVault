@@ -1,12 +1,11 @@
 import "./globals.css";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
-import { Roboto } from "next/font/google";
+import { Oswald } from "next/font/google";
 import GoogleAnalytics from "./components/GoogleAnalytics";
 import Script from "next/script";
-import Head from "next/head";
 
-const font = Roboto({ subsets: ["latin"], weight: ["400"] });
+const oswald = Oswald({ subsets: ["latin"] });
 
 export const metadata = {
   icons: {
@@ -16,7 +15,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={font.className}>
+    <html lang="en" className={oswald.className}>
       {/* <GoogleAnalytics GA_MEASUREMENT_ID="G-XRQ23BL3CB" /> */}
       <head>
         <meta
@@ -42,7 +41,7 @@ export default function RootLayout({ children }) {
           strategy="beforeInteractive"
         ></Script>
       </head>
-      <body className="bg-darkPurple text-white">
+      <body className="text-black">
         <Navbar />
         {children}
         <Footer />

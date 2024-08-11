@@ -28,7 +28,7 @@ const RelatedContent = async (props) => {
                       : "flex mb-10 max-md:flex-col"
                   }`}
                 >
-                  <Link href={`/more/${item._id}`}>
+                  <Link href={`/movies1/${item.title}`}>
                     <Image
                       src={item.urlToImage}
                       width={200}

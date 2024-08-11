@@ -1,9 +1,12 @@
+import { use } from "react";
 import TopPost from "./components/TopPost";
 import LatestNews from "./components/LatestNews";
 import Pagination from "./components/Pagination";
 import LatestItems from "./components/LatestItems";
+import SlideShow from "./components/SlideShow";
+import ChangeSlideRight from "./components/ChangeSlideRight";
 
-const urll = "http://localhost:3001/get-20-itemsM";
+const BASE_URL = "http://localhost:3001";
 
 export const metadata = {
   title: "ByteRead: Short Movie and Video Game News at Your Fingertips",
@@ -12,46 +15,103 @@ export const metadata = {
   keywords: "ByteRead,Entertainment news,Film reviews",
 };
 
-export default async function Home() {
-  const paginateStartNumber = 1;
-  const paginateEndNumber = paginateStartNumber + 9;
-  const res = await fetch(urll, {
-    next: { revalidate: 0 },
-  });
-  const moviesData = await res.json();
+async function fetchData(url, options = {}) {
+  try {
+    const res = await fetch(url, {
+      next: { revalidate: options.revalidate || 3600 }, // Default to 1 hour if not specified
+      ...options,
+    });
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    return await res.json();
+  } catch (error) {
+    console.error(`Error fetching data from ${url}:`, error);
+    return null;
+  }
+}
 
-  const res2 = await fetch(`https://byteread-final.onrender.com/sort-views`, {
-    next: { revalidate: 60 },
-  });
-  const data2 = await res2.json();
+async function fetchAllData() {
+  const urls = [
+    { url: `${BASE_URL}/get-20-itemsAm`, key: "moviesData" },
+    {
+      url: `${BASE_URL}/sort-viewsAm`,
+      key: "viewsData",
+      options: { next: { revalidate: 0 } },
+    },
+    { url: `${BASE_URL}/get-20-itemsAm`, key: "seriesData" },
+    { url: `${BASE_URL}/get-highest-rated-moviesAm`, key: "highestRatedData" },
+    {
+      url: `${BASE_URL}/get-category-dataAm?category=action&limit=20&skip=0`,
+      key: "actionMovies",
+    },
+    {
+      url: `${BASE_URL}/get-category-dataAm?category=drama&limit=20&skip=0`,
+      key: "dramaMovies",
+    },
+    {
+      url: `${BASE_URL}/get-category-dataAm?category=romance&limit=20&skip=0`,
+      key: "romanceMovies",
+    },
+  ];
 
-  const res3 = await fetch("http://localhost:3001/get-20-itemsS", {
-    next: { revalidate: 60 },
-  });
+  const results = await Promise.all(
+    urls.map(({ url, key, options }) =>
+      fetchData(url, options).then((data) => ({ [key]: data }))
+    )
+  );
 
-  const seriesData = await res3.json();
+  return Object.assign({}, ...results);
+}
+
+export default function Home() {
+  const data = use(fetchAllData());
+
+  if (!data) {
+    return <div>Error loading data. Please try again later.</div>;
+  }
+
+  const {
+    moviesData,
+    viewsData,
+    seriesData,
+    highestRatedData,
+    actionMovies,
+    dramaMovies,
+    romanceMovies,
+  } = data;
 
   return (
-    <>
-      <div>
-        <TopPost img="/jw4.webp" data2={data2} />
-        <div className="flex justify-center">
-          <div className="mt-44">
-            <div className="flex justify-center"></div>
-
-            <LatestItems data={moviesData} title="Latest Movies" />
-            <LatestItems data={seriesData} title="Latest Series" />
-
-            <Pagination
-              paginatePagesToShow={10}
-              currentPaginatePage={1}
-              startNumber={1}
-              endNumber={paginateEndNumber}
-            />
-          </div>
-          <div className="col-span-2"></div>
-        </div>
+    <div>
+      <div className="mt-5">
+        <LatestItems data={moviesData} title="Latest Movies" flex={true} />
+        <LatestItems data={seriesData} title="Latest Series" flex={true} />
+        <LatestItems data={moviesData} title="Latest Anime" flex={true} />
+        <LatestItems
+          data={highestRatedData}
+          title="Highest Rated"
+          flex={true}
+        />
+        <LatestItems
+          data={actionMovies?.items}
+          title="Action"
+          link={true}
+          flex={true}
+          showMoreCategory="action"
+        />
+        <LatestItems
+          data={dramaMovies?.items}
+          title="Drama"
+          link={true}
+          flex={true}
+          showMoreCategory="drama"
+        />
+        <LatestItems
+          data={romanceMovies?.items}
+          title="Romance"
+          link={true}
+          flex={true}
+          showMoreCategory="Romance"
+        />
       </div>
-    </>
+    </div>
   );
 }

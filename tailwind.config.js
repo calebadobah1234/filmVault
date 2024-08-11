@@ -13,9 +13,25 @@ module.exports = {
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
       },
       colors: {
-        darkPurple: "#170323", // Define your custom color
+        darkPurple: "#170323",
+        lightPurple: "#D567F3",
       },
     },
   },
-  plugins: [],
+  plugins: [
+    function ({ addUtilities }) {
+      const newUtilities = {
+        ".no-scrollbar": {
+          /* Hide scrollbar for Webkit-based browsers */
+          "&::-webkit-scrollbar": {
+            display: "none",
+          },
+          /* Hide scrollbar for IE, Edge and Firefox */
+          "-ms-overflow-style": "none" /* IE and Edge */,
+          "scrollbar-width": "none" /* Firefox */,
+        },
+      };
+      addUtilities(newUtilities);
+    },
+  ],
 };

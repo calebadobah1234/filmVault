@@ -29,6 +29,10 @@ const serMovieSchema = new mongoose.Schema({
     type: Array,
     trim: true,
   },
+  type: {
+    type: String,
+    default: "serMovie",
+  },
 });
 
 module.exports = mongoose.model("SerMovie", serMovieSchema);

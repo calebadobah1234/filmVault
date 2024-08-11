@@ -22,6 +22,10 @@ const nextConfig = {
       "media.autoexpress.co.uk",
       "www.autoexpress.co.uk",
       "back.sermovie39.pw",
+      "lightdl.xyz",
+      "1.bp.blogspot.com",
+      "localhost",
+      "avamovie.shop",
     ],
   },
 };
