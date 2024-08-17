@@ -5,19 +5,39 @@ import axios from "axios";
 import LatestItems from "@/app/components/LatestItems";
 import Link from "next/link";
 
-export const generateMetadata = async ({ params }) => {
+export async function generateMetadata({ params }) {
   const res = await fetch(
     `http://localhost:3001/get-item-detailsAm/${params.title}`,
     {
-      next: { revalidate: 60 },
+      cache: "force-cache",
     }
   );
-  const data = await res.json();
+  const data1 = await res.json();
+  const data = data1[0];
   return {
-    title: `${data.title}`,
-    description: `${data.description}`,
+    title: data.title,
+    description: data.description,
+    openGraph: {
+      title: data.title,
+      description: data.description,
+      images: [
+        {
+          url: data.img,
+          width: 800,
+          height: 600,
+          alt: data.title,
+        },
+      ],
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: data.title,
+      description: data.description,
+      images: [data.img],
+    },
   };
-};
+}
 
 const page = async ({ params }) => {
   const res = await fetch(
@@ -41,8 +61,9 @@ const page = async ({ params }) => {
       }).toString();
       const response = await fetch(
         `http://localhost:3001/get-related-contentAm?${queryString}`,
+
         {
-          revalidate: 0,
+          cache: "force-cache",
         }
       );
       if (!response.ok) throw new Error("Network response was not ok");

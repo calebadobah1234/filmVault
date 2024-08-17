@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-
+import Categories from "./Categories";
 import Searchbar from "./Searchbar";
 
 const Navbar = () => {
@@ -24,31 +24,14 @@ const Navbar = () => {
 
               <li className="relative group mb-2 md:mb-0">
                 <Link
-                  href="/"
+                  href={`/category-page?category=all&limit=30=&skip=1&currentPage=1`}
                   className="hover:text-green-400 uppercase text-lg md:text-xl font-bold relative px-2 py-1 transition-colors duration-300 ease-in-out"
                 >
                   movies
                   <span className="absolute bottom-0 left-0 w-full h-0.5 bg-green-400 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-in-out"></span>
                 </Link>
               </li>
-              <li className="relative group mb-2 md:mb-0">
-                <Link
-                  href="/"
-                  className="hover:text-green-400 uppercase text-lg md:text-xl font-bold relative px-2 py-1 transition-colors duration-300 ease-in-out"
-                >
-                  series
-                  <span className="absolute bottom-0 left-0 w-full h-0.5 bg-green-400 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-in-out"></span>
-                </Link>
-              </li>
-              <li className="relative group mb-2 md:mb-0">
-                <Link
-                  href="/"
-                  className="hover:text-green-400 uppercase text-lg md:text-xl font-bold relative px-2 py-1 transition-colors duration-300 ease-in-out"
-                >
-                  anime
-                  <span className="absolute bottom-0 left-0 w-full h-0.5 bg-green-400 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-in-out"></span>
-                </Link>
-              </li>
+              <Categories />
             </ul>
           </div>
         </nav>

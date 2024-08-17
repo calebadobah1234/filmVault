@@ -213,54 +213,61 @@ const getCategoryDataAm = async (req, res) => {
       return res.status(400).json({ error: "Category is required" });
     }
 
-    const pipeline = [
-      {
-        $match: {
-          categories: { $in: [new RegExp(category, "i")] },
-        },
-      },
-      {
-        $addFields: {
-          categoryIndex: {
-            $indexOfArray: [
-              {
-                $map: {
-                  input: "$categories",
-                  as: "cat",
-                  in: { $toLower: "$$cat" },
-                },
-              },
-              category.toLowerCase(),
-            ],
+    let items, totalCount;
+
+    if (category.toLowerCase() === "all") {
+      // If category is "all", fetch all items
+      items = await avaMovie
+        .find()
+        .sort({ lastModified: -1, yearOfPublication: -1, _id: 1 })
+        .skip(skip)
+        .limit(limit);
+      totalCount = await avaMovie.countDocuments();
+    } else {
+      // Use the existing aggregation pipeline for specific categories
+      const pipeline = [
+        {
+          $match: {
+            categories: { $in: [new RegExp(category, "i")] },
           },
-          yearOfPublication: { $toInt: "$movieInfo.yearOfPublication" },
         },
-      },
-      {
-        $sort: {
-          categoryIndex: 1,
-          yearOfPublication: -1,
-          lastModified: -1, // Sort by lastModified in descending order (newest first)
-          // Then sort by yearOfPublication in descending order
-
-          _id: 1, // Tertiary sort to ensure consistent ordering
+        {
+          $addFields: {
+            categoryIndex: {
+              $indexOfArray: [
+                {
+                  $map: {
+                    input: "$categories",
+                    as: "cat",
+                    in: { $toLower: "$$cat" },
+                  },
+                },
+                category.toLowerCase(),
+              ],
+            },
+            yearOfPublication: { $toInt: "$movieInfo.yearOfPublication" },
+          },
         },
-      },
-      {
-        $facet: {
-          paginatedResults: [{ $skip: skip }, { $limit: limit }],
-          totalCount: [{ $count: "count" }],
+        {
+          $sort: {
+            categoryIndex: 1,
+            yearOfPublication: -1,
+            lastModified: -1,
+            _id: 1,
+          },
         },
-      },
-    ];
+        {
+          $facet: {
+            paginatedResults: [{ $skip: skip }, { $limit: limit }],
+            totalCount: [{ $count: "count" }],
+          },
+        },
+      ];
 
-    const result = await avaMovie.aggregate(pipeline);
-
-    // Extract the paginated results and total count
-    const items = result[0].paginatedResults;
-    const totalCount = result[0].totalCount[0]
-      ? result[0].totalCount[0].count
-      : 0;
+      const result = await avaMovie.aggregate(pipeline);
+      items = result[0].paginatedResults;
+      totalCount = result[0].totalCount[0] ? result[0].totalCount[0].count : 0;
+    }
 
     res.status(200).json({
       items: items,
@@ -270,7 +277,6 @@ const getCategoryDataAm = async (req, res) => {
     handleServerError(res, error);
   }
 };
-
 const getOtherActorMoviesAm = async (req, res) => {
   try {
     const { actor } = req.params;

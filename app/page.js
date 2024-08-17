@@ -9,10 +9,9 @@ import ChangeSlideRight from "./components/ChangeSlideRight";
 const BASE_URL = "http://localhost:3001";
 
 export const metadata = {
-  title: "ByteRead: Short Movie and Video Game News at Your Fingertips",
+  title: "FilmVault.xyz: Free Hd movies download",
   description:
-    "Discover the latest news on short movies and video games at ByteRead. Stay updated with bite-sized articles, reviews, and insights into the world of cinema and gaming. Get your fix of entertainment news and immerse yourself in the exciting realm of movies and video games.",
-  keywords: "ByteRead,Entertainment news,Film reviews",
+    "Explore a vast collection of the latest movies and enjoy free downloads in stunning HD quality. Choose from multiple resolutions, including 480p, 720p, and 1080p, to experience your favorite films at their best.",
 };
 
 async function fetchData(url, options = {}) {
@@ -31,25 +30,30 @@ async function fetchData(url, options = {}) {
 
 async function fetchAllData() {
   const urls = [
-    { url: `${BASE_URL}/get-20-itemsAm`, key: "moviesData" },
     {
-      url: `${BASE_URL}/sort-viewsAm`,
-      key: "viewsData",
-      options: { next: { revalidate: 0 } },
+      url: `${BASE_URL}/get-20-itemsAm`,
+      key: "moviesData",
+      options: { next: { revalidate: 3600000 } },
     },
-    { url: `${BASE_URL}/get-20-itemsAm`, key: "seriesData" },
-    { url: `${BASE_URL}/get-highest-rated-moviesAm`, key: "highestRatedData" },
+    {
+      url: `${BASE_URL}/get-highest-rated-moviesAm`,
+      key: "highestRatedData",
+      options: { next: { revalidate: 3600000 } },
+    },
     {
       url: `${BASE_URL}/get-category-dataAm?category=action&limit=20&skip=0`,
       key: "actionMovies",
+      options: { next: { revalidate: 3600000 } },
     },
     {
       url: `${BASE_URL}/get-category-dataAm?category=drama&limit=20&skip=0`,
       key: "dramaMovies",
+      options: { next: { revalidate: 3600000 } },
     },
     {
       url: `${BASE_URL}/get-category-dataAm?category=romance&limit=20&skip=0`,
       key: "romanceMovies",
+      options: { next: { revalidate: 3600000 } },
     },
   ];
 
@@ -83,13 +87,7 @@ export default function Home() {
     <div>
       <div className="mt-5">
         <LatestItems data={moviesData} title="Latest Movies" flex={true} />
-        <LatestItems data={seriesData} title="Latest Series" flex={true} />
-        <LatestItems data={moviesData} title="Latest Anime" flex={true} />
-        <LatestItems
-          data={highestRatedData}
-          title="Highest Rated"
-          flex={true}
-        />
+
         <LatestItems
           data={actionMovies?.items}
           title="Action"
@@ -110,6 +108,11 @@ export default function Home() {
           link={true}
           flex={true}
           showMoreCategory="Romance"
+        />
+        <LatestItems
+          data={highestRatedData}
+          title="Highest Rated"
+          flex={true}
         />
       </div>
     </div>

@@ -8,7 +8,7 @@ import SearchItems from "@/app/components/SearchItems";
 const page = async ({ searchParams }) => {
   const res = await fetch(
     `http://localhost:3001/get-category-dataAm/?category=${searchParams.category}&limit=30&skip=${searchParams.skip}`,
-    { cache: "no-cache" }
+    { cache: "no-cache", next: { revalidate: 86400 } }
   );
   const data = await res.json();
 
