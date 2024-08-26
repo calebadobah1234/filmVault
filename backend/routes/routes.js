@@ -42,6 +42,7 @@ const {
   getCategoryDataAm,
   getOtherActorMoviesAm,
   getMoviesByYear,
+  increaseSearchPriority,
 } = require("../controllers/avaMovies");
 
 const { register, login, authentication } = require("../controllers/auth");
@@ -84,6 +85,7 @@ router.route("/get-highest-rated-moviesAm").get(getHighestRatedMoviesAm);
 router.route("/get-category-dataAm").get(getCategoryDataAm);
 router.route("/get-other-actor-movies/:actor").get(getOtherActorMoviesAm);
 router.route("/get-movies-by-year").get(getMoviesByYear);
+router.route("/increase-search-priority").post(increaseSearchPriority);
 
 router.route("/slideShow").get(findSLideShowItems);
 

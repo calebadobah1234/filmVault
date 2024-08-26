@@ -368,6 +368,30 @@ const getMoviesByYear = async (req, res) => {
   }
 };
 
+const increaseSearchPriority = async (req, res) => {
+  try {
+    const { title } = req.query;
+
+    if (!title) {
+      return res.status(400).json({ error: "Title is required" });
+    }
+
+    const increase = await avaMovie.findOneAndUpdate(
+      { title: title },
+      { $inc: { searchPriority: 1 } },
+      { new: true }
+    );
+
+    if (!increase) {
+      return res.status(404).json({ error: "Movie not found" });
+    }
+
+    res.status(200).json(increase);
+  } catch (error) {
+    console.error("Error increasing search priority:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
 module.exports = {
   get20ItemsAm,
   getItemDetailsAm,
@@ -380,4 +404,5 @@ module.exports = {
   getCategoryDataAm,
   getOtherActorMoviesAm,
   getMoviesByYear,
+  increaseSearchPriority,
 };
