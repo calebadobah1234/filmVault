@@ -32,7 +32,7 @@ const AddItem = () => {
     <>
       <div>
         <form
-          action="http://localhost:3001/add-item"
+          action="https://filmvaultbackend.onrender.com/add-item"
           className="flex flex-col"
           onSubmit={handleSubmit}
           method="post"

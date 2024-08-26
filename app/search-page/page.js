@@ -27,7 +27,7 @@ const SearchPage = () => {
 
       try {
         const res = await axios.get(
-          `http://localhost:3001/searchAm?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
+          `https://filmvaultbackend.onrender.com/searchAm?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
         );
         setFoundItems(res.data.items);
         setTotalCount(res.data.totalCount);

@@ -32,7 +32,7 @@ const Searchbar = () => {
       if (searchValue.trim() !== "") {
         try {
           const response = await axios.get(
-            `http://localhost:3001/searchAm?title=${searchValue}&skip=1&limit=5`
+            `https://filmvaultbackend.onrender.com/searchAm?title=${searchValue}&skip=1&limit=5`
           );
           setSearchResults(response.data.items);
         } catch (error) {

@@ -1,0 +1,8 @@
+POST http://127.0.0.1:5000/embed
+Content-Type: application/json
+
+{
+    "text": "This is a test sentence.
+}
+
+

@@ -7,7 +7,7 @@ import SearchItems from "@/app/components/SearchItems";
 
 const page = async ({ searchParams }) => {
   const res = await fetch(
-    `http://localhost:3001/get-movies-by-year?year=${searchParams.year}&limit=30&skip=${searchParams.skip}`,
+    `https://filmvaultbackend.onrender.com/get-movies-by-year?year=${searchParams.year}&limit=30&skip=${searchParams.skip}`,
     { cache: "no-cache" }
   );
   const data = await res.json();

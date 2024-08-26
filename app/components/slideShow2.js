@@ -9,7 +9,9 @@ const SlideShow = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch("http://localhost:3001/slideShow");
+        const res = await fetch(
+          "https://filmvaultbackend.onrender.com/slideShow"
+        );
         const mainData = await res.json();
         console.log(mainData);
         setData(mainData);

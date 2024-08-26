@@ -7,7 +7,7 @@ const SlideShow = async () => {
   let currentImage = 1;
 
   try {
-    const res = await fetch("http://localhost:3001/slideShow", {
+    const res = await fetch("https://filmvaultbackend.onrender.com/slideShow", {
       next: { revalidate: 60000 },
     });
     const mainData = await res.json();

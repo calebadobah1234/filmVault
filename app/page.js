@@ -6,7 +6,7 @@ import LatestItems from "./components/LatestItems";
 import SlideShow from "./components/SlideShow";
 import ChangeSlideRight from "./components/ChangeSlideRight";
 
-const BASE_URL = "http://localhost:3001";
+const BASE_URL = "https://filmvaultbackend.onrender.com";
 
 export const metadata = {
   title: "FilmVault.xyz: Free Hd movies download",
