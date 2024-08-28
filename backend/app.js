@@ -14,8 +14,10 @@ const start = () => {
   app.listen(port, async () => {
     try {
       console.log("Connecting...");
-      await connectDB("mongodb://localhost:27017");
-      console.log("connected to db port 3001");
+      await connectDB(
+        "mongodb+srv://calebadobah1234:bananaman1234@crackxx.fxot0.mongodb.net/ai-blog"
+      );
+      console.log(`connected to db port ${port}`);
     } catch (err) {
       console.log(err);
       start();

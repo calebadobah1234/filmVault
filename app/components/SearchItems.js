@@ -14,7 +14,7 @@ const SearchItems = (props) => {
       ) : (
         <></>
       )}
-      <div className="mt-5">
+      <div className="mt-5 flex justify-center">
         <LatestItems data={props.data} flex={true} itemsToShow={30} />
       </div>
     </>

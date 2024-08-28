@@ -7,7 +7,7 @@ const handleServerError = (res, error) => {
 
 const get20ItemsAm = async (req, res) => {
   try {
-    const items = await avaMovie.find({}).limit(50);
+    const items = await avaMovie.find({}).limit(20).sort({ _id: -1 });
     res.status(200).json(items);
   } catch (error) {
     handleServerError(res, error);
