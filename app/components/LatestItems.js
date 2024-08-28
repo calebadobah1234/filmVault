@@ -96,7 +96,7 @@ const LatestItems = (props) => {
           })}
         </div>
         <span className={`${props.hide ? "hidden" : "inline"}`}>
-          <ScrollHorizontal className={className} />
+          {/* <ScrollHorizontal className={className} /> */}
         </span>
       </div>
       {props.showMoreCategory && (

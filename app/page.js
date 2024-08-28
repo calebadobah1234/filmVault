@@ -33,7 +33,7 @@ async function fetchAllData() {
     {
       url: `${BASE_URL}/get-20-itemsAm`,
       key: "moviesData",
-      options: { next: { revalidate: 21600 } },
+      options: { next: { revalidate: 900 } },
     },
     {
       url: `${BASE_URL}/get-highest-rated-moviesAm`,
@@ -86,7 +86,12 @@ export default function Home() {
   return (
     <div>
       <div className="mt-5">
-        <LatestItems data={moviesData} title="Latest Movies" flex={true} />
+        <LatestItems
+          data={moviesData}
+          title="Latest Movies"
+          flex={true}
+          itemsToShow={14}
+        />
 
         <LatestItems
           data={actionMovies?.items}
@@ -94,6 +99,7 @@ export default function Home() {
           link={true}
           flex={true}
           showMoreCategory="action"
+          itemsToShow={14}
         />
         <LatestItems
           data={dramaMovies?.items}
@@ -101,6 +107,7 @@ export default function Home() {
           link={true}
           flex={true}
           showMoreCategory="drama"
+          itemsToShow={14}
         />
         <LatestItems
           data={romanceMovies?.items}
@@ -108,11 +115,13 @@ export default function Home() {
           link={true}
           flex={true}
           showMoreCategory="Romance"
+          itemsToShow={14}
         />
         <LatestItems
           data={highestRatedData}
           title="Highest Rated"
           flex={true}
+          itemsToShow={14}
         />
       </div>
     </div>
