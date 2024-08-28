@@ -85,44 +85,46 @@ export default function Home() {
 
   return (
     <div>
-      <div className="mt-5">
-        <LatestItems
-          data={moviesData}
-          title="Latest Movies"
-          flex={true}
-          itemsToShow={14}
-        />
+      <div className="mt-5 flex justify-center">
+        <div>
+          <LatestItems
+            data={moviesData}
+            title="Latest Movies"
+            flex={true}
+            itemsToShow={14}
+          />
 
-        <LatestItems
-          data={actionMovies?.items}
-          title="Action"
-          link={true}
-          flex={true}
-          showMoreCategory="action"
-          itemsToShow={14}
-        />
-        <LatestItems
-          data={dramaMovies?.items}
-          title="Drama"
-          link={true}
-          flex={true}
-          showMoreCategory="drama"
-          itemsToShow={14}
-        />
-        <LatestItems
-          data={romanceMovies?.items}
-          title="Romance"
-          link={true}
-          flex={true}
-          showMoreCategory="Romance"
-          itemsToShow={14}
-        />
-        <LatestItems
-          data={highestRatedData}
-          title="Highest Rated"
-          flex={true}
-          itemsToShow={14}
-        />
+          <LatestItems
+            data={actionMovies?.items}
+            title="Action"
+            link={true}
+            flex={true}
+            showMoreCategory="action"
+            itemsToShow={14}
+          />
+          <LatestItems
+            data={dramaMovies?.items}
+            title="Drama"
+            link={true}
+            flex={true}
+            showMoreCategory="drama"
+            itemsToShow={14}
+          />
+          <LatestItems
+            data={romanceMovies?.items}
+            title="Romance"
+            link={true}
+            flex={true}
+            showMoreCategory="Romance"
+            itemsToShow={14}
+          />
+          <LatestItems
+            data={highestRatedData}
+            title="Highest Rated"
+            flex={true}
+            itemsToShow={14}
+          />
+        </div>
       </div>
     </div>
   );
