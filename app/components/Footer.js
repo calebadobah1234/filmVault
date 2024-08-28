@@ -12,7 +12,7 @@ const Footer = () => {
             </span>
             <h2 className="inline font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500">
               {" "}
-              Byte-Read.xyz{" "}
+              FilmVault.xyz{" "}
             </h2>
           </div>
           <div className="flex space-x-6">

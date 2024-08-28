@@ -52,12 +52,16 @@ const SearchPage = () => {
 
   if (foundItems.length === 0) {
     return (
-      <div className="grid grid-cols-5 mt-5 mb-[25%]">
-        <div className="col-span-1"></div>
-        <h2 className="font-sans text-3xl font-bold antialiased mx-2 col-span-3 mt-10">
-          No item with search key {key} found. Try changing your search key or
-          search for something else.
-        </h2>
+      <div className="flex items-center justify-center min-h-[50vh] px-4 py-8">
+        <div className="text-center max-w-2xl">
+          <h2 className="text-3xl font-bold text-gray-800 mb-4">
+            No Results Found
+          </h2>
+          <p className="text-lg text-gray-600">
+            No item with search key <span className="font-semibold">{key}</span>{" "}
+            found. Try changing your search key or search for something else.
+          </p>
+        </div>
       </div>
     );
   }

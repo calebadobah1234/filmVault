@@ -8,16 +8,18 @@ import SearchItems from "@/app/components/SearchItems";
 const page = async ({ searchParams }) => {
   const res = await fetch(
     `https://filmvaultbackend.onrender.com/get-category-dataAm/?category=${searchParams.category}&limit=30&skip=${searchParams.skip}`,
-    { cache: "no-cache", next: { revalidate: 86400 } }
+    { next: { revalidate: 21600 } }
   );
   const data = await res.json();
 
   return (
     <>
-      <div className="flex justify-center text-2xl font-bold ">
-        <h1 className="max-w-[80%] flex justify-center">
-          You are on page {searchParams.currentPage} of {searchParams.category}{" "}
-          Movies page
+      <div className="my-6 px-4">
+        <h1 className="text-3xl font-bold text-center text-gray-800 leading-tight">
+          <span className="block mb-2">{searchParams.category} Movies</span>
+          <span className="text-xl text-gray-600 font-normal">
+            Page {searchParams.currentPage}
+          </span>
         </h1>
       </div>
 
@@ -26,7 +28,7 @@ const page = async ({ searchParams }) => {
         startNumber={
           searchParams.currentPage - 4 < 1 ? 1 : searchParams.currentPage - 4
         }
-        paginatePagesToShow={6}
+        paginatePagesToShow={5}
         currentPage={searchParams.currentPage}
         category={searchParams.category}
         skip={searchParams.skip}

@@ -33,27 +33,27 @@ async function fetchAllData() {
     {
       url: `${BASE_URL}/get-20-itemsAm`,
       key: "moviesData",
-      options: { next: { revalidate: 3600000 } },
+      options: { next: { revalidate: 21600 } },
     },
     {
       url: `${BASE_URL}/get-highest-rated-moviesAm`,
       key: "highestRatedData",
-      options: { next: { revalidate: 3600000 } },
+      options: { next: { revalidate: 21600 } },
     },
     {
       url: `${BASE_URL}/get-category-dataAm?category=action&limit=20&skip=0`,
       key: "actionMovies",
-      options: { next: { revalidate: 3600000 } },
+      options: { next: { revalidate: 21600 } },
     },
     {
       url: `${BASE_URL}/get-category-dataAm?category=drama&limit=20&skip=0`,
       key: "dramaMovies",
-      options: { next: { revalidate: 3600000 } },
+      options: { next: { revalidate: 21600 } },
     },
     {
       url: `${BASE_URL}/get-category-dataAm?category=romance&limit=20&skip=0`,
       key: "romanceMovies",
-      options: { next: { revalidate: 3600000 } },
+      options: { next: { revalidate: 21600 } },
     },
   ];
 
