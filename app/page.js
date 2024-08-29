@@ -92,6 +92,7 @@ export default function Home() {
             title="Latest Movies"
             flex={true}
             itemsToShow={14}
+            showMoreCategory="all"
           />
 
           <LatestItems

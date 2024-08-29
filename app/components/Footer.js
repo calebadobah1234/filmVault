@@ -1,5 +1,5 @@
 "use client";
-import { BsFacebook, BsTwitter } from "react-icons/bs";
+import { BsFacebook, BsTwitter, BsTelegram } from "react-icons/bs";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -14,30 +14,51 @@ const Footer = () => {
       <div className="container mx-auto px-4 py-12">
         <div className="flex flex-col items-center">
           <div className="text-lg font-bold mb-6 text-center">
-            <span className="block sm:inline">
-              All rights reserved &copy; 2023
-            </span>
             <HeadingTag className="inline font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500">
-              {" "}
-              FilmVault.xyz{" "}
+              FilmVault.xyz - Your Source for Free Movies Download
             </HeadingTag>
-            <h2>Free Movies Download</h2>
+            <p className="mt-2">
+              Discover and download free movies at FilmVault.xyz. Your one-stop
+              destination for high-quality, free movie downloads.
+            </p>
           </div>
 
-          <div className="flex space-x-6">
+          <nav aria-label="Footer Navigation" className="mb-6">
+            <ul className="flex flex-wrap justify-center space-x-4">
+              <li>
+                <Link href="/" className="hover:text-green-400">
+                  Home
+                </Link>
+              </li>
+              <li>
+                <Link href="/movies" className="hover:text-green-400">
+                  Free Movies
+                </Link>
+              </li>
+            </ul>
+          </nav>
+
+          <div className="flex space-x-6 mb-6">
             <Link
-              href="https://www.facebook.com/profile.php?id=100093211403930"
-              className="text-3xl hover:text-blue-500 transition-colors duration-300 transform hover:scale-110"
-            >
-              <BsFacebook />
-            </Link>
-            <Link
-              href="https://twitter.com/adobah102"
+              href="https://x.com/FilmVault_xyz"
               className="text-3xl hover:text-blue-400 transition-colors duration-300 transform hover:scale-110"
+              aria-label="Follow FilmVault on Twitter"
             >
               <BsTwitter />
             </Link>
+            <Link
+              href="https://t.me/fv_xyz"
+              className="text-3xl hover:text-blue-400 transition-colors duration-300 transform hover:scale-110"
+              aria-label="Follow FilmVault on Twitter"
+            >
+              <BsTelegram />
+            </Link>
           </div>
+
+          <p className="text-sm text-center">
+            &copy; 2024 FilmVault.xyz - The best place for free movie downloads.
+            All rights reserved.
+          </p>
         </div>
       </div>
     </footer>
