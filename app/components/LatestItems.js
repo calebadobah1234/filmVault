@@ -35,13 +35,13 @@ const LatestItems = (props) => {
         )}
       </div>
 
-      <div className="relative flex max-w-[80%] mx-auto max-md:max-w-[95%] xs:hidden">
+      <div className="relative flex max-w-[90%] mx-auto max-md:max-w-[95%]">
         <div
           className={`flex ${
             props.flex
               ? "flex-wrap justify-center"
               : "flex-nowrap md:flex-nowrap"
-          } overflow-x-auto no-scrollbar items-center ${className} max-md:flex-wrap max-md:justify-center md:max-lg:grid md:max-lg:grid-cols-3 `}
+          } overflow-x-auto no-scrollbar items-center ${className} max-md:flex-wrap max-md:justify-center md:max-lg:grid md:grid-cols-3 lg:grid-cols-4 md:max-lg:gap-10`}
         >
           {data.map((item) => {
             let imdb = item.imdb;
@@ -49,7 +49,7 @@ const LatestItems = (props) => {
             return (
               <div
                 key={item._id}
-                className="aspect-[9/16] max-w-[200px] group flex-none h-[380px] relative max-md:mr-1 mr-5 cursor-pointer overflow-hidden transition-transform duration-300 ease-in-out hover:scale-105 pb-8 w-[180px] max-md:w-[calc(50%-0.5rem)]"
+                className="aspect-[9/16] max-w-[200px] group flex-none h-[380px] relative md:mr-5 mr-1 cursor-pointer overflow-hidden transition-transform duration-300 ease-in-out hover:scale-105 w-[180px] max-md:w-[calc(50%-0.5rem)]"
               >
                 <Link href={`/movies1/${item.title}`}>
                   <div className="relative w-full ">
@@ -70,8 +70,8 @@ const LatestItems = (props) => {
 
                 <div
                   className={`absolute left-0 bottom-8 ${
-                    props.relatedContent ? "mb-32" : "mb-24"
-                  } text-blue-300 group-hover:text-white group-hover:bg-yellow-500 mb-14 rounded-sm ml-3 bg-red-500 px-2 py-1 text-xs transition-all duration-300 ease-in-out transform group-hover:translate-y-1`}
+                    props.relatedContent ? "mb-32" : "max-sm:mb-28 mb-24"
+                  } text-blue-300 group-hover:text-white group-hover:bg-yellow-500 rounded-sm ml-3 bg-red-500 px-2 py-1 text-xs transition-all duration-300 ease-in-out transform group-hover:translate-y-1`}
                 >
                   <p>
                     {item.categories[0]
@@ -81,7 +81,7 @@ const LatestItems = (props) => {
                 </div>
                 <div
                   className={`absolute right-0 bottom-8 text-red-500 ${
-                    props.relatedContent ? "mb-32" : "mb-24"
+                    props.relatedContent ? "mb-32" : "max-sm:mb-28 mb-24"
                   } rounded-sm mr-3 bg-yellow-500 px-2 py-1 text-xs group-hover:text-white group-hover:bg-red-500 transition-all duration-300 ease-in-out transform group-hover:translate-y-1`}
                 >
                   <p>{imdb + "/10"}</p>

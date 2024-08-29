@@ -68,7 +68,7 @@ const Searchbar = () => {
           className="flex justify-center items-center mt-8 mb-8 px-4 w-full max-w-3xl mx-auto relative"
         >
           <input
-            placeholder="Search for movies and series"
+            placeholder="Search for movie, actor or category"
             value={searchValue}
             onChange={searchChange}
             className="w-full border-2 border-gray-300 bg-white h-12 px-6 pr-12 text-gray-700 text-lg focus:outline-none focus:border-green-400 focus:ring-2 focus:ring-green-200 transition-all duration-300 ease-in-out shadow-md hover:shadow-lg"
