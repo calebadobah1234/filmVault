@@ -15,7 +15,7 @@ export async function generateMetadata({ params }) {
   const data1 = await res.json();
   const data = data1[0];
   return {
-    title: data.title,
+    title: `FilmVault.xyz|${data.title} free download`,
     description: data.description,
     openGraph: {
       title: data.title,
