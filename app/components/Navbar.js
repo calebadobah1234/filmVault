@@ -8,7 +8,13 @@ const Navbar = () => {
   return (
     <>
       <div className="bg-gray-900 text-white w-full">
-        <div className="flex justify-center items-center"></div>
+        <div className="flex justify-center items-center py-4">
+          <Link href={"/"}>
+            <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500">
+              FilmVault.XYZ
+            </h1>
+          </Link>
+        </div>
         <nav className="text-white py-6 px-4">
           <div className="container mx-auto">
             <ul className="flex flex-wrap justify-center items-center space-x-2 md:space-x-8">

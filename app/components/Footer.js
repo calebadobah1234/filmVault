@@ -6,7 +6,7 @@ const Footer = () => {
   const pathname = headersList.get("x-invoke-path") || "";
   const isHomePage = pathname === "/";
 
-  const HeadingTag = isHomePage ? "h1" : "h2";
+  const HeadingTag = isHomePage ? "h2" : "h2";
 
   return (
     <footer className="bg-gray-900 text-white border-t-4 border-green-400 mt-28">
