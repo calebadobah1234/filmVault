@@ -51,10 +51,10 @@ const LatestItems = (props) => {
                 key={item._id}
                 className="aspect-[9/16] max-w-[200px] group flex-none h-[380px] relative md:mr-5 mr-1 cursor-pointer overflow-hidden transition-transform duration-300 ease-in-out hover:scale-105 w-[180px] max-md:w-[calc(50%-0.5rem)]"
               >
-                <Link href={`/movies1/${item.title}`}>
-                  <div className="relative w-full ">
-                    {" "}
-                    {/* Aspect ratio wrapper */}
+                <div className="relative w-full ">
+                  {" "}
+                  {/* Aspect ratio wrapper */}
+                  <Link href={`/movies1/${item.title}`}>
                     <Image
                       src={item.img}
                       alt={item.title}
@@ -65,8 +65,8 @@ const LatestItems = (props) => {
                       width={180}
                       height={250}
                     />
-                  </div>
-                </Link>
+                  </Link>
+                </div>
 
                 <div
                   className={`absolute left-0 bottom-8 ${
@@ -88,7 +88,9 @@ const LatestItems = (props) => {
                 </div>
                 <div className="absolute text-black font-sans font-bold antialiased text-sm transition-colors duration-300 ease-in-out group-hover:text-green-400 w-full">
                   <div className="p-2">
-                    <h3 className="line-clamp-2 break-words">{item.title}</h3>
+                    <Link href={`/movies1/${item.title}`}>
+                      <h3 className="line-clamp-2 break-words">{item.title}</h3>
+                    </Link>
                   </div>
                 </div>
               </div>
