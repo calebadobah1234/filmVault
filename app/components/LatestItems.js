@@ -107,7 +107,7 @@ const LatestItems = (props) => {
         </span>
       </div>
       {props.showMoreCategory && (
-        <div className="relative flex justify-center mt-4 mb-5">
+        <div className="relative flex justify-center mb-10">
           <Link
             href={`category-page?category=${props.showMoreCategory}&limit=30&skip=1&currentPage=1`}
             className="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded-full shadow-md transition-all duration-300 ease-in-out transform hover:scale-105"
