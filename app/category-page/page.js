@@ -28,7 +28,7 @@ const page = async ({ searchParams }) => {
         startNumber={
           searchParams.currentPage - 4 < 1 ? 1 : searchParams.currentPage - 4
         }
-        paginatePagesToShow={5}
+        paginatePagesToShow={4}
         currentPage={searchParams.currentPage}
         category={searchParams.category}
         skip={searchParams.skip}
