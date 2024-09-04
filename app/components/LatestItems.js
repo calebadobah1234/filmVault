@@ -4,6 +4,10 @@ import Link from "next/link";
 import ScrollHorizontal from "./ScrollHorizontal";
 import { FaAngleRight } from "react-icons/fa";
 
+const sanitizeTitle = (title) => {
+  return title.replace(/[^a-zA-Z0-9]/g, "_") + ".jpg";
+};
+
 const LatestItems = (props) => {
   const data = props.relatedContent
     ? props.data.slice(0, 12)
@@ -45,7 +49,8 @@ const LatestItems = (props) => {
         >
           {data.map((item) => {
             let imdb = item.imdb;
-
+            const sanitizedTitle = sanitizeTitle(item.title);
+            const localImagePath = `/images1/${sanitizedTitle}`;
             return (
               <div
                 key={item._id}
@@ -56,7 +61,7 @@ const LatestItems = (props) => {
                   {/* Aspect ratio wrapper */}
                   <Link href={`/movies1/${item.title}`}>
                     <Image
-                      src={item.img}
+                      src={localImagePath}
                       alt={item.title}
                       objectFit="cover"
                       className="rounded-md transition duration-500 ease-in-out transform group-hover:brightness-75 relative w-full h-full"
