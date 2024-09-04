@@ -2,7 +2,7 @@ import "./globals.css";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import { Oswald } from "next/font/google";
-import { GoogleTagManager } from "@next/third-parties/google";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import Script from "next/script";
 
 const oswald = Oswald({ subsets: ["latin"] });
@@ -32,7 +32,7 @@ export default function RootLayout({ children }) {
   gtag('config', 'G-G5F92NBCCE');`}
           </Script>
         </head> */}
-        <GoogleTagManager gtmId={"G-G5F92NBCCE"} />
+        <GoogleAnalytics gaId={"G-G5F92NBCCE"} />
         <Navbar />
         {children}
         <Footer />
