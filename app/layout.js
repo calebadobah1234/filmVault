@@ -19,7 +19,7 @@ export default function RootLayout({ children }) {
       {/* <GoogleAnalytics GA_MEASUREMENT_ID="G-XRQ23BL3CB" /> */}
 
       <body className="text-black">
-        <head>
+        {/* <head>
           <Script
             async
             src="https://www.googletagmanager.com/gtag/js?id=G-G5F92NBCCE"
@@ -31,8 +31,8 @@ export default function RootLayout({ children }) {
 
   gtag('config', 'G-G5F92NBCCE');`}
           </Script>
-        </head>
-        {/* <GoogleTagManager gtmId={"G-G5F92NBCCE"} /> */}
+        </head> */}
+        <GoogleTagManager gtmId={"G-G5F92NBCCE"} />
         <Navbar />
         {children}
         <Footer />
