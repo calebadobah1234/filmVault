@@ -18,7 +18,7 @@ export default function RootLayout({ children }) {
       {/* <GoogleAnalytics GA_MEASUREMENT_ID="G-XRQ23BL3CB" /> */}
 
       <body className="text-black">
-        <GoogleAnalytics gaId={"G-C67405YHL7"} />
+        <GoogleAnalytics gaId={"G-G5F92NBCCE"} />
         <Navbar />
         {children}
         <Footer />

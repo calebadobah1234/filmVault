@@ -1,32 +1,36 @@
 "use client";
+import React, { useEffect } from "react";
+import { useRouter } from "next/router";
 
-import Script from "next/script";
-import { pageView } from "./gtagHelper";
-import { useSearchParams, usePathname } from "next/navigation";
-import { useEffect } from "react";
+const GoogleAnalytics = ({ gaId }) => {
+  const router = useRouter();
 
-export default function GoogleAnalytics() {
-  const pathName = usePathname();
-  const searchParams = useSearchParams();
   useEffect(() => {
-    const url = pathName + searchParams.toString();
-    pageView("G-XRQ23BL3CB", url);
-  }, [pathName, searchParams]);
+    const handleRouteChange = (url) => {
+      window.gtag("config", gaId, {
+        page_path: url,
+      });
+    };
 
-  return (
-    <>
-      <Script
-        async
-        src="https://www.googletagmanager.com/gtag/js?id=G-XRQ23BL3CB"
-      ></Script>
-      <Script id="anal">
-        {`
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+    router.events.on("routeChangeComplete", handleRouteChange);
 
-  gtag('config', 'G-XRQ23BL3CB');`}
-      </Script>
-    </>
-  );
-}
+    return () => {
+      router.events.off("routeChangeComplete", handleRouteChange);
+    };
+  }, [gaId, router.events]);
+
+  useEffect(() => {
+    window.gtag =
+      window.gtag ||
+      function () {
+        window.dataLayer.push(arguments);
+      };
+    window.dataLayer = window.dataLayer || [];
+    window.gtag("js", new Date());
+    window.gtag("config", gaId);
+  }, [gaId]);
+
+  return null;
+};
+
+export default GoogleAnalytics;
