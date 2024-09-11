@@ -110,6 +110,7 @@ export default function Home() {
             flex={true}
             itemsToShow={14}
             showMoreCategory="all"
+            series={true}
           />
           <LatestItems
             data={animeData}
@@ -117,6 +118,7 @@ export default function Home() {
             flex={true}
             itemsToShow={14}
             showMoreCategory="all"
+            anime={true}
           />
 
           <LatestItems

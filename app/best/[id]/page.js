@@ -5,7 +5,7 @@ export const generateMetadata = async ({ params }) => {
   const res = await fetch(
     `https://byteread-final.onrender.com/get-item-details/${params.id}`,
     {
-      next: { revalidate: 0 },
+      next: { revalidate: 36000 },
     }
   );
   const data = await res.json();

@@ -54,7 +54,7 @@ const Footer = () => {
               </svg>
             </Link>
             <Link
-              href="https://t.me/fv_xyz"
+              href="https://t.me/pc_gs"
               className="text-3xl hover:text-blue-400 transition-colors duration-300 transform hover:scale-110"
               aria-label="Follow FilmVault on Telegram"
             >

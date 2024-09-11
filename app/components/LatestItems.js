@@ -138,7 +138,9 @@ const LatestItems = (props) => {
       {props.showMoreCategory && (
         <div className="relative flex justify-center mb-10">
           <Link
-            href={`category-page?category=${props.showMoreCategory}&limit=30&skip=1&currentPage=1`}
+            href={`category-page${
+              props.anime ? "-anime" : props.series ? "-series" : ""
+            }?category=${props.showMoreCategory}&limit=30&skip=1&currentPage=1`}
             className="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded-full shadow-md transition-all duration-300 ease-in-out transform hover:scale-105"
           >
             Show More

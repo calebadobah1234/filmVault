@@ -44,7 +44,7 @@ const page = async ({ params }) => {
   const res = await fetch(
     `https://filmvaultbackend.onrender.com/get-item-detailsAiom/${params.title}`,
     {
-      revalidate: 0,
+      revalidate: 36000,
     }
   );
   const resData = await res.json();
