@@ -8,7 +8,7 @@ import DownloadSection from "@/app/components/DownloadSection";
 
 export async function generateMetadata({ params }) {
   const res = await fetch(
-    `http://localhost:3001/get-item-detailsAiom/${params.title}`,
+    `https://filmvaultbackend.onrender.com/get-item-detailsAiom/${params.title}`,
     {
       cache: "force-cache",
     }
@@ -42,7 +42,7 @@ export async function generateMetadata({ params }) {
 
 const page = async ({ params }) => {
   const res = await fetch(
-    `http://localhost:3001/get-item-detailsAiom/${params.title}`,
+    `https://filmvaultbackend.onrender.com/get-item-detailsAiom/${params.title}`,
     {
       revalidate: 0,
     }
@@ -61,7 +61,7 @@ const page = async ({ params }) => {
         title: title,
       }).toString();
       const response = await fetch(
-        `http://localhost:3001/get-related-contentAiom?${queryString}`,
+        `https://filmvaultbackend.onrender.com/get-related-contentAiom?${queryString}`,
 
         {
           cache: "force-cache",

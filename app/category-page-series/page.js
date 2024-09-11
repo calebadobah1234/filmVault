@@ -7,7 +7,7 @@ import SearchItems from "@/app/components/SearchItems";
 
 const page = async ({ searchParams }) => {
   const res = await fetch(
-    `http://localhost:3001/get-category-dataAiom/?category=${searchParams.category}&limit=30&skip=${searchParams.skip}`,
+    `https://filmvaultbackend.onrender.com/get-category-dataAiom/?category=${searchParams.category}&limit=30&skip=${searchParams.skip}`,
     { next: { revalidate: 21600 } }
   );
   const data = await res.json();

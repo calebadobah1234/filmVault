@@ -31,10 +31,10 @@ const SearchPage = () => {
             `https://filmvaultbackend.onrender.com/searchAm?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
           ),
           axios.get(
-            `http://localhost:3001/searchAiom?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
+            `https://filmvaultbackend.onrender.com/searchAiom?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
           ),
           axios.get(
-            `http://localhost:3001/searchAiome?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
+            `https://filmvaultbackend.onrender.com/searchAiome?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
           ),
         ]);
 

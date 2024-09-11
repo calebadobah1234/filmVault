@@ -33,8 +33,8 @@ const Searchbar = () => {
         try {
           const endpoints = [
             `https://filmvaultbackend.onrender.com/searchAm?title=${searchValue}&skip=1&limit=5`,
-            `http://localhost:3001/searchAiom?title=${searchValue}&skip=1&limit=5`,
-            `http://localhost:3001/searchAiome?title=${searchValue}&skip=1&limit=5`,
+            `https://filmvaultbackend.onrender.com/searchAiom?title=${searchValue}&skip=1&limit=5`,
+            `https://filmvaultbackend.onrender.com/searchAiome?title=${searchValue}&skip=1&limit=5`,
           ];
 
           const responses = await Promise.all(
