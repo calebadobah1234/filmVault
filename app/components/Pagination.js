@@ -58,9 +58,11 @@ const Pagination = (props) => {
       <ul className="flex space-x-2 items-center">
         {currentPage > 1 && (
           <Link
-            href={`/${props.whatFor}-page?${props.whatFor}=${
-              props.category
-            }&skip=${currentPage - 1}&limit=30&currentPage=${currentPage - 1}`}
+            href={`/${props.whatFor}-page${
+              props.anime ? "-anime" : props.series ? "-series" : ""
+            }?${props.whatFor}=${props.category}&skip=${
+              currentPage - 1
+            }&limit=30&currentPage=${currentPage - 1}`}
             onClick={handleScrollToTop}
           >
             <li className={`${baseButtonStyles} ${inactiveButtonStyles}`}>
@@ -72,7 +74,11 @@ const Pagination = (props) => {
         {paginationArray[0] > 1 && (
           <>
             <Link
-              href={`/${props.whatFor}-page?${props.whatFor}=${props.category}&skip=1&limit=30&currentPage=1`}
+              href={`/${props.whatFor}-page${
+                props.anime ? "-anime" : props.series ? "-series" : ""
+              }?${props.whatFor}=${
+                props.category
+              }&skip=1&limit=30&currentPage=1`}
               onClick={handleScrollToTop}
             >
               <li className={`${baseButtonStyles} ${inactiveButtonStyles}`}>
@@ -88,7 +94,11 @@ const Pagination = (props) => {
         {paginationArray.map((item) => (
           <Link
             key={item}
-            href={`/${props.whatFor}-page?${props.whatFor}=${props.category}&skip=${item}&limit=30&currentPage=${item}`}
+            href={`/${props.whatFor}-page${
+              props.anime ? "-anime" : props.series ? "-series" : ""
+            }?${props.whatFor}=${
+              props.category
+            }&skip=${item}&limit=30&currentPage=${item}`}
             onClick={handleScrollToTop}
           >
             <li
@@ -112,7 +122,11 @@ const Pagination = (props) => {
               <li className="text-gray-500 font-bold">...</li>
             )}
             <Link
-              href={`/${props.whatFor}-page?${props.whatFor}=${props.category}&skip=${totalPages}&limit=30&currentPage=${totalPages}`}
+              href={`/${props.whatFor}-page${
+                props.anime ? "-anime" : props.series ? "-series" : ""
+              }?${props.whatFor}=${
+                props.category
+              }&skip=${totalPages}&limit=30&currentPage=${totalPages}`}
               onClick={handleScrollToTop}
             >
               <li className={`${baseButtonStyles} ${inactiveButtonStyles}`}>
@@ -124,9 +138,11 @@ const Pagination = (props) => {
 
         {currentPage < totalPages && (
           <Link
-            href={`/${props.whatFor}-page?${props.whatFor}=${
-              props.category
-            }&skip=${currentPage + 1}&limit=30&currentPage=${currentPage + 1}`}
+            href={`/${props.whatFor}-page${
+              props.anime ? "-anime" : props.series ? "-series" : ""
+            }?${props.whatFor}=${props.category}&skip=${
+              currentPage + 1
+            }&limit=30&currentPage=${currentPage + 1}`}
             onClick={handleScrollToTop}
           >
             <li className={`${baseButtonStyles} ${inactiveButtonStyles}`}>

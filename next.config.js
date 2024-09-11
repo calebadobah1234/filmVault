@@ -26,6 +26,7 @@ const nextConfig = {
       "1.bp.blogspot.com",
       "localhost",
       "avamovie.shop",
+      "aio-film.ir",
     ],
   },
 };

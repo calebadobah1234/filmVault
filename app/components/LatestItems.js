@@ -49,8 +49,16 @@ const LatestItems = (props) => {
         >
           {data.map((item) => {
             let imdb = item.imdb;
+            console.log(item);
             const sanitizedTitle = sanitizeTitle(item.title);
-            const localImagePath = `/images1/${sanitizedTitle}`;
+            const localImagePath = `${
+              props.series ||
+              props.anime ||
+              item.type == "aioAnime" ||
+              item.type == "aioMovie"
+                ? `${item.imageUrl}`
+                : `/images1/${sanitizedTitle}`
+            }`;
             return (
               <div
                 key={item._id}
@@ -59,7 +67,15 @@ const LatestItems = (props) => {
                 <div className="relative w-full ">
                   {" "}
                   {/* Aspect ratio wrapper */}
-                  <Link href={`/movies1/${item.title}`}>
+                  <Link
+                    href={
+                      props.series || item.type == "aioMovie"
+                        ? `/series1/${item.title}`
+                        : props.anime || item.type === "aioAnime"
+                        ? `/anime1/${item.title}`
+                        : `/movies1/${item.title}`
+                    }
+                  >
                     <Image
                       src={localImagePath}
                       alt={item.title}
@@ -75,7 +91,9 @@ const LatestItems = (props) => {
 
                 <div
                   className={`absolute left-0 bottom-8 ${
-                    props.relatedContent ? "mb-32" : "max-sm:mb-28 mb-24"
+                    props.relatedContent
+                      ? "mb-32 max-sm:mb-36"
+                      : "max-sm:mb-32 mb-24"
                   } text-blue-300 group-hover:text-white group-hover:bg-yellow-500 rounded-sm ml-3 bg-red-500 px-2 py-1 text-xs transition-all duration-300 ease-in-out transform group-hover:translate-y-1`}
                 >
                   <p>
@@ -86,10 +104,21 @@ const LatestItems = (props) => {
                 </div>
                 <div
                   className={`absolute right-0 bottom-8 text-red-500 ${
-                    props.relatedContent ? "mb-32" : "max-sm:mb-28 mb-24"
+                    props.relatedContent
+                      ? "mb-32 max-sm:mb-36"
+                      : "max-sm:mb-32 mb-24"
                   } rounded-sm mr-3 bg-yellow-500 px-2 py-1 text-xs group-hover:text-white group-hover:bg-red-500 transition-all duration-300 ease-in-out transform group-hover:translate-y-1`}
                 >
-                  <p>{imdb + "/10"}</p>
+                  <p>
+                    {props.series ||
+                    item.type == "aioMovie" ||
+                    item.type == "aioAnime"
+                      ? item.imdbRating
+                      : props.anime
+                      ? item.imdbRating
+                      : imdb}
+                    /10
+                  </p>
                 </div>
                 <div className="absolute text-black font-sans font-bold antialiased text-sm transition-colors duration-300 ease-in-out group-hover:text-green-400 w-full">
                   <div className="p-2">

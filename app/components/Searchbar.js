@@ -31,10 +31,20 @@ const Searchbar = () => {
     const delaySearch = setTimeout(async () => {
       if (searchValue.trim() !== "") {
         try {
-          const response = await axios.get(
-            `https://filmvaultbackend.onrender.com/searchAm?title=${searchValue}&skip=1&limit=5`
+          const endpoints = [
+            `https://filmvaultbackend.onrender.com/searchAm?title=${searchValue}&skip=1&limit=5`,
+            `http://localhost:3001/searchAiom?title=${searchValue}&skip=1&limit=5`,
+            `http://localhost:3001/searchAiome?title=${searchValue}&skip=1&limit=5`,
+          ];
+
+          const responses = await Promise.all(
+            endpoints.map((endpoint) => axios.get(endpoint))
           );
-          setSearchResults(response.data.items);
+
+          const allResults = responses.flatMap(
+            (response) => response.data.items
+          );
+          setSearchResults(allResults);
         } catch (error) {
           console.error("Error fetching search results:", error);
         }
@@ -85,7 +95,13 @@ const Searchbar = () => {
           >
             {searchResults.map((item, index) => (
               <Link
-                href={`/movies1/${item.title}`}
+                href={
+                  item.type == "aioMovie"
+                    ? `/series1/${item.title}`
+                    : item.type == "aioAnime"
+                    ? `/anime1/${item.title}`
+                    : `/movies1/${item.title}`
+                }
                 key={item._id}
                 onClick={clearSearchResults}
               >
@@ -93,9 +109,13 @@ const Searchbar = () => {
                   key={index}
                   className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
                 >
-                  {item.img && (
+                  {(item.img || item.imageUrl) && (
                     <Image
-                      src={item.img}
+                      src={
+                        item.type == "aioMovie" || item.type == "aioAnime"
+                          ? item.imageUrl
+                          : item.img
+                      }
                       alt={item.title}
                       width={40}
                       height={40}

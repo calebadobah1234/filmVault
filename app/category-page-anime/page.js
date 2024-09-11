@@ -7,7 +7,7 @@ import SearchItems from "@/app/components/SearchItems";
 
 const page = async ({ searchParams }) => {
   const res = await fetch(
-    `https://filmvaultbackend.onrender.com/get-category-dataAm/?category=${searchParams.category}&limit=30&skip=${searchParams.skip}`,
+    `http://localhost:3001/get-category-dataAiome/?category=${searchParams.category}&limit=30&skip=${searchParams.skip}`,
     { next: { revalidate: 21600 } }
   );
   const data = await res.json();
@@ -17,7 +17,7 @@ const page = async ({ searchParams }) => {
       <div className="my-6 px-4">
         <h1 className="text-3xl font-bold text-center text-gray-800 leading-tight">
           <span className="block mb-2 capitalize">
-            {searchParams.category} Movies
+            {searchParams.category} Anime
           </span>
           <span className="text-xl text-gray-600 font-normal">
             Page {searchParams.currentPage}
@@ -36,6 +36,7 @@ const page = async ({ searchParams }) => {
         skip={searchParams.skip}
         whatFor="category"
         finalNumber={data.totalCount}
+        anime={true}
       />
     </>
   );

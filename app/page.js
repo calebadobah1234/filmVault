@@ -36,6 +36,16 @@ async function fetchAllData() {
       options: { next: { revalidate: 900 } },
     },
     {
+      url: `${BASE_URL}/get-20-itemsAiom`,
+      key: "seriesData",
+      options: { next: { revalidate: 900 } },
+    },
+    {
+      url: `${BASE_URL}/get-20-itemsAiome`,
+      key: "animeData",
+      options: { next: { revalidate: 900 } },
+    },
+    {
       url: `${BASE_URL}/get-highest-rated-moviesAm`,
       key: "highestRatedData",
       options: { next: { revalidate: 21600 } },
@@ -75,7 +85,7 @@ export default function Home() {
 
   const {
     moviesData,
-    viewsData,
+    animeData,
     seriesData,
     highestRatedData,
     actionMovies,
@@ -90,6 +100,20 @@ export default function Home() {
           <LatestItems
             data={moviesData}
             title="Latest Movies"
+            flex={true}
+            itemsToShow={14}
+            showMoreCategory="all"
+          />
+          <LatestItems
+            data={seriesData}
+            title="Latest Series"
+            flex={true}
+            itemsToShow={14}
+            showMoreCategory="all"
+          />
+          <LatestItems
+            data={animeData}
+            title="Latest Anime"
             flex={true}
             itemsToShow={14}
             showMoreCategory="all"

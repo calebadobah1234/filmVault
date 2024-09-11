@@ -26,11 +26,31 @@ const SearchPage = () => {
       }
 
       try {
-        const res = await axios.get(
-          `https://filmvaultbackend.onrender.com/searchAm?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
-        );
-        setFoundItems(res.data.items);
-        setTotalCount(res.data.totalCount);
+        const [resAm, resAiom, resAiome] = await Promise.all([
+          axios.get(
+            `https://filmvaultbackend.onrender.com/searchAm?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
+          ),
+          axios.get(
+            `http://localhost:3001/searchAiom?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
+          ),
+          axios.get(
+            `http://localhost:3001/searchAiome?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
+          ),
+        ]);
+
+        const mergedItems = [
+          ...resAm.data.items,
+          ...resAiom.data.items,
+          ...resAiome.data.items,
+        ];
+
+        const totalCount =
+          resAm.data.totalCount +
+          resAiom.data.totalCount +
+          resAiome.data.totalCount;
+
+        setFoundItems(mergedItems);
+        setTotalCount(totalCount);
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -41,7 +61,6 @@ const SearchPage = () => {
     fetchAll();
   }, [key, skip, limit, currentPage]);
 
-  // This useEffect will log the totalCount after it's been updated
   useEffect(() => {
     console.log("Total count:", totalCount);
   }, [totalCount]);

@@ -45,6 +45,36 @@ const {
   increaseSearchPriority,
 } = require("../controllers/avaMovies");
 
+const {
+  get20ItemsAiom,
+  getItemDetailsAiom,
+  findItemsAiom,
+  getRelatedContentAiom,
+  addViewsAiom,
+  sortViewsAiom,
+  getPaginateContentAiom,
+  getHighestRatedMoviesAiom,
+  getCategoryDataAiom,
+  getOtherActorMoviesAiom,
+  getMoviesByYearAiom,
+  increaseSearchPriorityAiom,
+} = require("../controllers/aioMovie");
+
+const {
+  get20ItemsAiome,
+  getItemDetailsAiome,
+  findItemsAiome,
+  getRelatedContentAiome,
+  addViewsAiome,
+  sortViewsAiome,
+  getPaginateContentAiome,
+  getHighestRatedMoviesAiome,
+  getCategoryDataAiome,
+  getOtherActorMoviesAiome,
+  getMoviesByYearAiome,
+  increaseSearchPriorityAiome,
+} = require("../controllers/aioAnime");
+
 const { register, login, authentication } = require("../controllers/auth");
 const { findSLideShowItems } = require("../controllers/slideShow");
 
@@ -87,6 +117,34 @@ router.route("/get-other-actor-movies/:actor").get(getOtherActorMoviesAm);
 router.route("/get-movies-by-year").get(getMoviesByYear);
 router.route("/increase-search-priority").post(increaseSearchPriority);
 
-router.route("/slideShow").get(findSLideShowItems);
+router.route("/get-20-itemsAiom").get(get20ItemsAiom);
+router.route("/get-item-detailsAiom/:title").get(getItemDetailsAiom);
+router.route("/searchAiom").get(findItemsAiom);
+router.route("/get-related-contentAiom").get(getRelatedContentAiom);
+router.route("/add-viewsAiom/:_id").post(addViewsAiom);
+router.route("/sort-viewsAiom").get(sortViewsAiom);
+router.route("/get-paginate-contentAiom/:pass").get(getPaginateContentAiom);
+router.route("/get-highest-rated-moviesAiom").get(getHighestRatedMoviesAiom);
+router.route("/get-category-dataAiom").get(getCategoryDataAiom);
+router.route("/get-other-actor-moviesAiom/:actor").get(getOtherActorMoviesAiom);
+router.route("/get-movies-by-yearAiom").get(getMoviesByYearAiom);
+router.route("/increase-search-priorityAiom").post(increaseSearchPriorityAiom);
+
+router.route("/get-20-itemsAiome").get(get20ItemsAiome);
+router.route("/get-item-detailsAiome/:title").get(getItemDetailsAiome);
+router.route("/searchAiome").get(findItemsAiome);
+router.route("/get-related-contentAiome").get(getRelatedContentAiome);
+router.route("/add-viewsAiome/:_id").post(addViewsAiome);
+router.route("/sort-viewsAiome").get(sortViewsAiome);
+router.route("/get-paginate-contentAiome/:pass").get(getPaginateContentAiome);
+router.route("/get-highest-rated-moviesAiome").get(getHighestRatedMoviesAiome);
+router.route("/get-category-dataAiome").get(getCategoryDataAiome);
+router
+  .route("/get-other-actor-moviesAiome/:actor")
+  .get(getOtherActorMoviesAiome);
+router.route("/get-movies-by-yearAiome").get(getMoviesByYearAiome);
+router
+  .route("/increase-search-priorityAiome")
+  .post(increaseSearchPriorityAiome);
 
 module.exports = router;
