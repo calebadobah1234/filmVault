@@ -55,7 +55,8 @@ const LatestItems = (props) => {
               props.series ||
               props.anime ||
               item.type == "aioAnime" ||
-              item.type == "aioMovie"
+              item.type == "aioMovie" ||
+              item.type == "aioKdrama"
                 ? `${item.imageUrl}`
                 : `/images1/${sanitizedTitle}`
             }`;
@@ -71,8 +72,10 @@ const LatestItems = (props) => {
                     href={
                       props.series || item.type == "aioMovie"
                         ? `/series1/${item.title}`
-                        : props.anime || item.type === "aioAnime"
+                        : props.anime || item.type == "aioAnime"
                         ? `/anime1/${item.title}`
+                        : props.kdrama || item.type == "aioKdrama"
+                        ? `/kdrama1/${item.title}`
                         : `/movies1/${item.title}`
                     }
                   >
@@ -112,9 +115,10 @@ const LatestItems = (props) => {
                   <p>
                     {props.series ||
                     item.type == "aioMovie" ||
-                    item.type == "aioAnime"
+                    item.type == "aioAnime" ||
+                    item.type == "aioKdrama"
                       ? item.imdbRating
-                      : props.anime
+                      : props.anime || props.kdrama
                       ? item.imdbRating
                       : imdb}
                     /10
@@ -122,7 +126,17 @@ const LatestItems = (props) => {
                 </div>
                 <div className="absolute text-black font-sans font-bold antialiased text-sm transition-colors duration-300 ease-in-out group-hover:text-green-400 w-full">
                   <div className="p-2">
-                    <Link href={`/movies1/${item.title}`}>
+                    <Link
+                      href={
+                        props.series || item.type == "aioMovie"
+                          ? `/series1/${item.title}`
+                          : props.anime || item.type == "aioAnime"
+                          ? `/anime1/${item.title}`
+                          : props.kdrama || item.type == "aioKdrama"
+                          ? `/kdrama1/${item.title}`
+                          : `/movies1/${item.title}`
+                      }
+                    >
                       <h3 className="line-clamp-2 break-words">{item.title}</h3>
                     </Link>
                   </div>
@@ -139,7 +153,13 @@ const LatestItems = (props) => {
         <div className="relative flex justify-center mb-10">
           <Link
             href={`category-page${
-              props.anime ? "-anime" : props.series ? "-series" : ""
+              props.anime
+                ? "-anime"
+                : props.series
+                ? "-series"
+                : props.kdrama
+                ? "-kdrama"
+                : ""
             }?category=${props.showMoreCategory}&limit=30&skip=1&currentPage=1`}
             className="bg-white hover:bg-gray-100 text-gray-800 font-semibold py-2 px-4 border border-gray-400 rounded-full shadow-md transition-all duration-300 ease-in-out transform hover:scale-105"
           >

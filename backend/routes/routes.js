@@ -75,6 +75,21 @@ const {
   increaseSearchPriorityAiome,
 } = require("../controllers/aioAnime");
 
+const {
+  get20ItemsAiokd,
+  getItemDetailsAiokd,
+  findItemsAiokd,
+  getRelatedContentAiokd,
+  addViewsAiokd,
+  sortViewsAiokd,
+  getPaginateContentAiokd,
+  getHighestRatedMoviesAiokd,
+  getCategoryDataAiokd,
+  getOtherActorMoviesAiokd,
+  getMoviesByYearAiokd,
+  increaseSearchPriorityAiokd,
+} = require("../controllers/aioKdrama");
+
 const { register, login, authentication } = require("../controllers/auth");
 const { findSLideShowItems } = require("../controllers/slideShow");
 
@@ -129,6 +144,23 @@ router.route("/get-category-dataAiom").get(getCategoryDataAiom);
 router.route("/get-other-actor-moviesAiom/:actor").get(getOtherActorMoviesAiom);
 router.route("/get-movies-by-yearAiom").get(getMoviesByYearAiom);
 router.route("/increase-search-priorityAiom").post(increaseSearchPriorityAiom);
+
+router.route("/get-20-itemsAiokd").get(get20ItemsAiokd);
+router.route("/get-item-detailsAiokd/:title").get(getItemDetailsAiokd);
+router.route("/searchAiokd").get(findItemsAiokd);
+router.route("/get-related-contentAiokd").get(getRelatedContentAiokd);
+router.route("/add-viewsAiokd/:_id").post(addViewsAiokd);
+router.route("/sort-viewsAiokd").get(sortViewsAiokd);
+router.route("/get-paginate-contentAiokd/:pass").get(getPaginateContentAiokd);
+router.route("/get-highest-rated-moviesAiokd").get(getHighestRatedMoviesAiokd);
+router.route("/get-category-dataAiokd").get(getCategoryDataAiokd);
+router
+  .route("/get-other-actor-moviesAiokd/:actor")
+  .get(getOtherActorMoviesAiokd);
+router.route("/get-movies-by-yearAiokd").get(getMoviesByYearAiokd);
+router
+  .route("/increase-search-priorityAiokd")
+  .post(increaseSearchPriorityAiokd);
 
 router.route("/get-20-itemsAiome").get(get20ItemsAiome);
 router.route("/get-item-detailsAiome/:title").get(getItemDetailsAiome);

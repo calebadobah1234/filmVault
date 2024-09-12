@@ -59,7 +59,13 @@ const Pagination = (props) => {
         {currentPage > 1 && (
           <Link
             href={`/${props.whatFor}-page${
-              props.anime ? "-anime" : props.series ? "-series" : ""
+              props.anime
+                ? "-anime"
+                : props.series
+                ? "-series"
+                : props.kdrama
+                ? "-kdrama"
+                : ""
             }?${props.whatFor}=${props.category}&skip=${
               currentPage - 1
             }&limit=30&currentPage=${currentPage - 1}`}
@@ -75,7 +81,13 @@ const Pagination = (props) => {
           <>
             <Link
               href={`/${props.whatFor}-page${
-                props.anime ? "-anime" : props.series ? "-series" : ""
+                props.anime
+                  ? "-anime"
+                  : props.series
+                  ? "-series"
+                  : props.kdrama
+                  ? "-kdrama"
+                  : ""
               }?${props.whatFor}=${
                 props.category
               }&skip=1&limit=30&currentPage=1`}
@@ -95,7 +107,13 @@ const Pagination = (props) => {
           <Link
             key={item}
             href={`/${props.whatFor}-page${
-              props.anime ? "-anime" : props.series ? "-series" : ""
+              props.anime
+                ? "-anime"
+                : props.series
+                ? "-series"
+                : props.kdrama
+                ? "-kdrama"
+                : ""
             }?${props.whatFor}=${
               props.category
             }&skip=${item}&limit=30&currentPage=${item}`}
@@ -123,7 +141,13 @@ const Pagination = (props) => {
             )}
             <Link
               href={`/${props.whatFor}-page${
-                props.anime ? "-anime" : props.series ? "-series" : ""
+                props.anime
+                  ? "-anime"
+                  : props.series
+                  ? "-series"
+                  : props.kdrama
+                  ? "-kdrama"
+                  : ""
               }?${props.whatFor}=${
                 props.category
               }&skip=${totalPages}&limit=30&currentPage=${totalPages}`}
@@ -139,7 +163,13 @@ const Pagination = (props) => {
         {currentPage < totalPages && (
           <Link
             href={`/${props.whatFor}-page${
-              props.anime ? "-anime" : props.series ? "-series" : ""
+              props.anime
+                ? "-anime"
+                : props.series
+                ? "-series"
+                : props.kdrama
+                ? "-kdrama"
+                : ""
             }?${props.whatFor}=${props.category}&skip=${
               currentPage + 1
             }&limit=30&currentPage=${currentPage + 1}`}

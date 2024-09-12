@@ -46,6 +46,11 @@ async function fetchAllData() {
       options: { next: { revalidate: 900 } },
     },
     {
+      url: `${BASE_URL}/get-20-itemsAiokd`,
+      key: "kdramaData",
+      options: { next: { revalidate: 900 } },
+    },
+    {
       url: `${BASE_URL}/get-highest-rated-moviesAm`,
       key: "highestRatedData",
       options: { next: { revalidate: 21600 } },
@@ -91,6 +96,7 @@ export default function Home() {
     actionMovies,
     dramaMovies,
     romanceMovies,
+    kdramaData,
   } = data;
 
   return (
@@ -106,7 +112,7 @@ export default function Home() {
           />
           <LatestItems
             data={seriesData}
-            title="Latest Series"
+            title="Series"
             flex={true}
             itemsToShow={14}
             showMoreCategory="all"
@@ -114,11 +120,19 @@ export default function Home() {
           />
           <LatestItems
             data={animeData}
-            title="Latest Anime"
+            title="Anime"
             flex={true}
             itemsToShow={14}
             showMoreCategory="all"
             anime={true}
+          />
+          <LatestItems
+            data={kdramaData}
+            title="Korean Series"
+            flex={true}
+            itemsToShow={14}
+            showMoreCategory="all"
+            kdrama={true}
           />
 
           <LatestItems

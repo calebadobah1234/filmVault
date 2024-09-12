@@ -88,6 +88,11 @@ const MobileNav = ({ categories }) => {
               >
                 Anime
               </NavLink>
+              <NavLink
+                href={`/category-page-kdrama?category=all&limit=30=&skip=1&currentPage=1`}
+              >
+                Korean Series
+              </NavLink>
               <li className="py-2 px-4">
                 {categories ? (
                   <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider">

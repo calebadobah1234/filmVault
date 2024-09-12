@@ -26,7 +26,7 @@ const SearchPage = () => {
       }
 
       try {
-        const [resAm, resAiom, resAiome] = await Promise.all([
+        const [resAm, resAiom, resAiome, resAiokd] = await Promise.all([
           axios.get(
             `https://filmvaultbackend.onrender.com/searchAm?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
           ),
@@ -36,12 +36,16 @@ const SearchPage = () => {
           axios.get(
             `https://filmvaultbackend.onrender.com/searchAiome?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
           ),
+          axios.get(
+            `https://filmvaultbackend.onrender.com/searchAiokd?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
+          ),
         ]);
 
         const mergedItems = [
           ...resAm.data.items,
           ...resAiom.data.items,
           ...resAiome.data.items,
+          ...resAiokd.data.items,
         ];
 
         const totalCount =

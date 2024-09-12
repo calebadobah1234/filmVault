@@ -35,6 +35,7 @@ const Searchbar = () => {
             `https://filmvaultbackend.onrender.com/searchAm?title=${searchValue}&skip=1&limit=5`,
             `https://filmvaultbackend.onrender.com/searchAiom?title=${searchValue}&skip=1&limit=5`,
             `https://filmvaultbackend.onrender.com/searchAiome?title=${searchValue}&skip=1&limit=5`,
+            `https://filmvaultbackend.onrender.com/searchAiokd?title=${searchValue}&skip=1&limit=5`,
           ];
 
           const responses = await Promise.all(
@@ -51,7 +52,7 @@ const Searchbar = () => {
       } else {
         setSearchResults([]);
       }
-    }, 1500);
+    }, 700);
 
     const handleClickOutside = (event) => {
       if (
@@ -78,7 +79,7 @@ const Searchbar = () => {
           className="flex justify-center items-center mt-8 mb-8 px-4 w-full max-w-3xl mx-auto relative"
         >
           <input
-            placeholder="Search for movie, actor or category"
+            placeholder="Search for movie, Tv Series, Anime or Korean Series"
             value={searchValue}
             onChange={searchChange}
             className="w-full border-2 border-gray-300 bg-white h-12 px-6 pr-12 text-gray-700 text-lg focus:outline-none focus:border-green-400 focus:ring-2 focus:ring-green-200 transition-all duration-300 ease-in-out shadow-md hover:shadow-lg"
@@ -100,6 +101,8 @@ const Searchbar = () => {
                     ? `/series1/${item.title}`
                     : item.type == "aioAnime"
                     ? `/anime1/${item.title}`
+                    : item.type == "aioKdrama"
+                    ? `/kdrama1/${item.title}`
                     : `/movies1/${item.title}`
                 }
                 key={item._id}
@@ -112,7 +115,9 @@ const Searchbar = () => {
                   {(item.img || item.imageUrl) && (
                     <Image
                       src={
-                        item.type == "aioMovie" || item.type == "aioAnime"
+                        item.type == "aioMovie" ||
+                        item.type == "aioAnime" ||
+                        item.type == "aioKdrama"
                           ? item.imageUrl
                           : item.img
                       }

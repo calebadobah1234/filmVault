@@ -60,6 +60,15 @@ const Navbar = () => {
                   <span className="absolute bottom-0 left-0 w-full h-0.5 bg-green-400 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-in-out"></span>
                 </Link>
               </li>
+              <li className="relative group mb-2 md:mb-0">
+                <Link
+                  href={`/category-page-kdrama?category=all&limit=30=&skip=1&currentPage=1`}
+                  className="hover:text-green-400 uppercase text-lg md:text-xl font-bold relative px-2 py-1 transition-colors duration-300 ease-in-out"
+                >
+                  Korean Series
+                  <span className="absolute bottom-0 left-0 w-full h-0.5 bg-green-400 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-in-out"></span>
+                </Link>
+              </li>
               <Categories />
             </ul>
           </div>
