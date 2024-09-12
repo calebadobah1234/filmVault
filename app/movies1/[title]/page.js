@@ -4,6 +4,7 @@ import RelatedContent from "@/app/components/RelatedContent";
 import axios from "axios";
 import LatestItems from "@/app/components/LatestItems";
 import Link from "next/link";
+import { JsonLd } from "react-schemaorg";
 
 export async function generateMetadata({ params }) {
   const res = await fetch(
@@ -15,11 +16,15 @@ export async function generateMetadata({ params }) {
   const data1 = await res.json();
   const data = data1[0];
   return {
-    title: `FilmVault.xyz|${data.title} free download`,
-    description: data.description,
+    title: `${data.title} ${data.year} free HD download | FilmVault.xyz`,
+    description: `Watch and download ${data.title} (${
+      data.year
+    }) for free in HD quality. ${data.description.slice(0, 200)}`,
     openGraph: {
-      title: data.title,
-      description: data.description,
+      title: `${data.title} ${data.year} free HD download | FilmVault.xyz`,
+      description: `Watch and download ${data.title} (${
+        data.year
+      }) for free in HD quality. ${data.description.slice(0, 200)}`,
       images: [
         {
           url: data.img,
@@ -29,6 +34,7 @@ export async function generateMetadata({ params }) {
         },
       ],
       type: "website",
+      site_name: "FilmVault.xyz",
     },
     twitter: {
       card: "summary_large_image",
@@ -82,6 +88,35 @@ const page = async ({ params }) => {
 
   return (
     <>
+      <JsonLd
+        item={{
+          "@context": "https://schema.org",
+          "@type": "Movie",
+          name: data.title,
+          description: data.description,
+          datePublished: data.year,
+          image: data.imageUrl,
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: data.imdbRating,
+            bestRating: "10",
+            worstRating: "1",
+            ratingCount: "1000",
+          },
+          genre: activeCategories,
+          actor: actors.map((actor) => ({
+            "@type": "Person",
+            name: actor,
+          })),
+          isAccessibleForFree: true,
+          offers: {
+            "@type": "Offer",
+            availability: "https://schema.org/InStock",
+            price: "0",
+            priceCurrency: "USD",
+          },
+        }}
+      />
       <div className="container mx-auto p-4 ">
         <div className="flex flex-col md:flex-row bg-gray-50 rounded-lg shadow-md overflow-hidden py-4">
           <div className="md:w-1/3 flex max-md:justify-start max-md:ml-6 lg:justify-end items-center">
