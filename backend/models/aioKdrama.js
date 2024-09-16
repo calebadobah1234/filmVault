@@ -1,5 +1,11 @@
 const mongoose = require("mongoose");
 
+const commentSchema = new mongoose.Schema({
+  content: { type: String, required: true },
+  author: { type: String, default: "Anonymous" },
+  createdAt: { type: Date, default: Date.now },
+});
+
 const aioKdramaSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -50,6 +56,7 @@ const aioKdramaSchema = new mongoose.Schema({
     type: String,
     default: "aioKdrama",
   },
+  comments: [commentSchema],
 });
 
 aioKdramaSchema.index({ title: 1 });

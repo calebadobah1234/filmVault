@@ -5,6 +5,7 @@ import axios from "axios";
 import LatestItems from "@/app/components/LatestItems";
 import Link from "next/link";
 import { JsonLd } from "react-schemaorg";
+import CommentSection from "@/app/components/CommentSection";
 
 export async function generateMetadata({ params }) {
   const res = await fetch(
@@ -207,6 +208,7 @@ const page = async ({ params }) => {
             hide={true}
           />
         </div>
+        <CommentSection itemId={data._id} linkIdentifier="Am" />
       </div>
     </>
   );

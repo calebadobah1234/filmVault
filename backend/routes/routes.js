@@ -41,6 +41,8 @@ const {
   getHighestRatedMoviesAm,
   getCategoryDataAm,
   getOtherActorMoviesAm,
+  getCommentsAm,
+  addCommentAm,
   getMoviesByYear,
   increaseSearchPriority,
 } = require("../controllers/avaMovies");
@@ -58,6 +60,8 @@ const {
   getOtherActorMoviesAiom,
   getMoviesByYearAiom,
   increaseSearchPriorityAiom,
+  addCommentAiom,
+  getCommentsAiom,
 } = require("../controllers/aioMovie");
 
 const {
@@ -73,6 +77,8 @@ const {
   getOtherActorMoviesAiome,
   getMoviesByYearAiome,
   increaseSearchPriorityAiome,
+  addCommentAiome,
+  getCommentsAiome,
 } = require("../controllers/aioAnime");
 
 const {
@@ -88,6 +94,8 @@ const {
   getOtherActorMoviesAiokd,
   getMoviesByYearAiokd,
   increaseSearchPriorityAiokd,
+  addCommentAiokd,
+  getCommentsAiokd,
 } = require("../controllers/aioKdrama");
 
 const { register, login, authentication } = require("../controllers/auth");
@@ -131,6 +139,7 @@ router.route("/get-category-dataAm").get(getCategoryDataAm);
 router.route("/get-other-actor-movies/:actor").get(getOtherActorMoviesAm);
 router.route("/get-movies-by-year").get(getMoviesByYear);
 router.route("/increase-search-priority").post(increaseSearchPriority);
+router.route("/commentAm/:id").get(getCommentsAm).post(addCommentAm);
 
 router.route("/get-20-itemsAiom").get(get20ItemsAiom);
 router.route("/get-item-detailsAiom/:title").get(getItemDetailsAiom);
@@ -144,6 +153,7 @@ router.route("/get-category-dataAiom").get(getCategoryDataAiom);
 router.route("/get-other-actor-moviesAiom/:actor").get(getOtherActorMoviesAiom);
 router.route("/get-movies-by-yearAiom").get(getMoviesByYearAiom);
 router.route("/increase-search-priorityAiom").post(increaseSearchPriorityAiom);
+router.route("/commentAiom/:id").get(getCommentsAiom).post(addCommentAiom);
 
 router.route("/get-20-itemsAiokd").get(get20ItemsAiokd);
 router.route("/get-item-detailsAiokd/:title").get(getItemDetailsAiokd);
@@ -161,6 +171,7 @@ router.route("/get-movies-by-yearAiokd").get(getMoviesByYearAiokd);
 router
   .route("/increase-search-priorityAiokd")
   .post(increaseSearchPriorityAiokd);
+router.route("/commentAiokd/:id").get(getCommentsAiokd).post(addCommentAiokd);
 
 router.route("/get-20-itemsAiome").get(get20ItemsAiome);
 router.route("/get-item-detailsAiome/:title").get(getItemDetailsAiome);
@@ -178,5 +189,6 @@ router.route("/get-movies-by-yearAiome").get(getMoviesByYearAiome);
 router
   .route("/increase-search-priorityAiome")
   .post(increaseSearchPriorityAiome);
+router.route("/commentAiome/:id").get(getCommentsAiome).post(addCommentAiome);
 
 module.exports = router;

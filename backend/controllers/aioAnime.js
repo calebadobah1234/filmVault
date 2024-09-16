@@ -410,6 +410,45 @@ const increaseSearchPriorityAiome = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+const addCommentAiome = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { content, author } = req.body;
+
+    const movie = await aioAnime.findById(id);
+    if (!movie) {
+      return res.status(404).json({ message: "Movie not found" });
+    }
+
+    movie.comments.push({ content, author });
+    await movie.save();
+    console.log(movie);
+    console.log("done");
+
+    res.status(201).json(movie);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error adding comment", error: error.message });
+  }
+};
+
+const getCommentsAiome = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const movie = await aioAnime.findById(id);
+    if (!movie) {
+      return res.status(404).json({ message: "Movie not found" });
+    }
+    res.json(movie.comments);
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error fetching comments", error: error.message });
+  }
+};
+
 module.exports = {
   get20ItemsAiome,
   getItemDetailsAiome,
@@ -423,4 +462,6 @@ module.exports = {
   getOtherActorMoviesAiome,
   getMoviesByYearAiome,
   increaseSearchPriorityAiome,
+  addCommentAiome,
+  getCommentsAiome,
 };

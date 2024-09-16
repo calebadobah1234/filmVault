@@ -1,5 +1,11 @@
 const mongoose = require("mongoose");
 
+const commentSchema = new mongoose.Schema({
+  content: { type: String, required: true },
+  author: { type: String, default: "Anonymous" },
+  createdAt: { type: Date, default: Date.now },
+});
+
 const aioAnimeSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -50,6 +56,7 @@ const aioAnimeSchema = new mongoose.Schema({
     type: String,
     default: "aioAnime",
   },
+  comments: [commentSchema],
 });
 
 aioAnimeSchema.index({ title: 1 });

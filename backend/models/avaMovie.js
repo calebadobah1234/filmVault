@@ -1,5 +1,11 @@
 const mongoose = require("mongoose");
 
+const commentSchema = new mongoose.Schema({
+  content: { type: String, required: true },
+  author: { type: String, default: "Anonymous" },
+  createdAt: { type: Date, default: Date.now },
+});
+
 const avaMovieSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -54,6 +60,8 @@ const avaMovieSchema = new mongoose.Schema({
     type: String,
     default: "avaMovie",
   },
+
+  comments: [commentSchema],
 });
 
 avaMovieSchema.index({ title: 1 });

@@ -6,6 +6,7 @@ import LatestItems from "@/app/components/LatestItems";
 import Link from "next/link";
 import DownloadSection from "@/app/components/DownloadSection";
 import { JsonLd } from "react-schemaorg";
+import CommentSection from "@/app/components/CommentSection";
 
 export async function generateMetadata({ params }) {
   const res = await fetch(
@@ -201,6 +202,7 @@ const page = async ({ params }) => {
             kdrama={true}
           />
         </div>
+        <CommentSection itemId={data._id} linkIdentifier="Aiokd" />
       </div>
     </>
   );
