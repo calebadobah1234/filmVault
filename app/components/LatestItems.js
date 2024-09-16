@@ -91,7 +91,15 @@ const LatestItems = (props) => {
                     />
                   </Link>
                 </div>
-
+                <div className="absolute top-4 left-0 bg-blue-300 group-hover:text-white rounded-sm ml-3 px-2 py-1 text-xs text-white transition-all duration-300 ease-in-out transform group-hover:translate-y-1">
+                  {props.series || item.type == "aioMovie"
+                    ? "Series"
+                    : props.anime || item.type == "aioAnime"
+                    ? "Anime"
+                    : props.kdrama || item.type == "aioKdrama"
+                    ? "K Series"
+                    : "Movie"}
+                </div>
                 <div
                   className={`absolute left-0 bottom-8 ${
                     props.relatedContent
