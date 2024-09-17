@@ -103,7 +103,7 @@ const LatestItems = (props) => {
                 <div
                   className={`absolute left-0 bottom-8 ${
                     props.relatedContent
-                      ? "mb-32 max-sm:mb-36"
+                      ? "mb-24 max-sm:mb-36"
                       : "max-sm:mb-32 mb-24"
                   } text-blue-300 group-hover:text-white group-hover:bg-yellow-500 rounded-sm ml-3 bg-red-500 px-2 py-1 text-xs transition-all duration-300 ease-in-out transform group-hover:translate-y-1`}
                 >
@@ -118,7 +118,7 @@ const LatestItems = (props) => {
                   <div
                     className={`absolute right-0 bottom-8 text-red-500 ${
                       props.relatedContent
-                        ? "mb-32 max-sm:mb-36"
+                        ? "mb-24 max-sm:mb-36"
                         : "max-sm:mb-32 mb-24"
                     } rounded-sm mr-3 bg-yellow-500 px-2 py-1 text-xs group-hover:text-white group-hover:bg-red-500 transition-all duration-300 ease-in-out transform group-hover:translate-y-1`}
                   >
