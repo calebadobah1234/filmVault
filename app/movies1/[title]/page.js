@@ -20,12 +20,16 @@ export async function generateMetadata({ params }) {
     title: `${data.title} ${data.year} free HD download | FilmVault.xyz`,
     description: `Watch and download ${data.title} (${
       data.year
-    }) for free in HD quality. ${data.description.slice(0, 200)}`,
+    }) for free in HD quality. ${
+      data.description ? data.description.slice(0, 200) : ""
+    }`,
     openGraph: {
       title: `${data.title} ${data.year} free HD download | FilmVault.xyz`,
       description: `Watch and download ${data.title} (${
         data.year
-      }) for free in HD quality. ${data.description.slice(0, 200)}`,
+      }) for free in HD quality. ${
+        data.description ? data.description.slice(0, 200) : ""
+      }`,
       images: [
         {
           url: data.img,
@@ -159,8 +163,12 @@ const page = async ({ params }) => {
                 ))}
               </div>
               <p className="text-gray-700 mb-4">
-                <span className="font-semibold">IMDB Rating:</span>{" "}
-                <span className="text-yellow-500">{data.imdb}/10</span>
+                {data.imdb !== undefined && data.imdb !== null ? (
+                  <>
+                    <span className="font-semibold">IMDB Rating:</span>{" "}
+                    <span className="text-yellow-500">{data.imdb}/10</span>
+                  </>
+                ) : null}
               </p>
               <div className="text-gray-700 mb-4">
                 <span className="font-semibold">About: </span>

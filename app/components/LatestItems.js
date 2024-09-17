@@ -83,7 +83,7 @@ const LatestItems = (props) => {
                       src={localImagePath}
                       alt={item.title}
                       objectFit="cover"
-                      className="rounded-md transition duration-500 ease-in-out transform group-hover:brightness-75 relative w-full h-full"
+                      className="rounded-md transition duration-500 ease-in-out transform group-hover:brightness-75 relative w-full h-full aspect-[2/3]"
                       placeholder="blur"
                       blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8/+F9PQAI8wNPvd7POQAAAABJRU5ErkJggg=="
                       width={180}
@@ -113,25 +113,31 @@ const LatestItems = (props) => {
                       : item.categories[1]}
                   </p>
                 </div>
-                <div
-                  className={`absolute right-0 bottom-8 text-red-500 ${
-                    props.relatedContent
-                      ? "mb-32 max-sm:mb-36"
-                      : "max-sm:mb-32 mb-24"
-                  } rounded-sm mr-3 bg-yellow-500 px-2 py-1 text-xs group-hover:text-white group-hover:bg-red-500 transition-all duration-300 ease-in-out transform group-hover:translate-y-1`}
-                >
-                  <p>
-                    {props.series ||
-                    item.type == "aioMovie" ||
-                    item.type == "aioAnime" ||
-                    item.type == "aioKdrama"
-                      ? item.imdbRating
-                      : props.anime || props.kdrama
-                      ? item.imdbRating
-                      : imdb}
-                    /10
-                  </p>
-                </div>
+
+                {item.imdbRating || imdb ? (
+                  <div
+                    className={`absolute right-0 bottom-8 text-red-500 ${
+                      props.relatedContent
+                        ? "mb-32 max-sm:mb-36"
+                        : "max-sm:mb-32 mb-24"
+                    } rounded-sm mr-3 bg-yellow-500 px-2 py-1 text-xs group-hover:text-white group-hover:bg-red-500 transition-all duration-300 ease-in-out transform group-hover:translate-y-1`}
+                  >
+                    <p>
+                      {props.series ||
+                      item.type == "aioMovie" ||
+                      item.type == "aioAnime" ||
+                      item.type == "aioKdrama"
+                        ? item.imdbRating
+                        : props.anime || props.kdrama
+                        ? item.imdbRating
+                        : imdb}
+                      /10
+                    </p>
+                  </div>
+                ) : (
+                  <></>
+                )}
+
                 <div className="absolute text-black font-sans font-bold antialiased text-sm transition-colors duration-300 ease-in-out group-hover:text-green-400 w-full">
                   <div className="p-2">
                     <Link
