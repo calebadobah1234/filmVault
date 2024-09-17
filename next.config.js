@@ -27,6 +27,7 @@ const nextConfig = {
       "localhost",
       "avamovie.shop",
       "aio-film.ir",
+      "blogger.googleusercontent.com",
     ],
   },
 };
