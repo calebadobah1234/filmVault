@@ -97,7 +97,7 @@ const Searchbar = () => {
             {searchResults.map((item, index) => (
               <Link
                 href={
-                  item.type == "aioMovie"
+                  item.type == "aioMovie" || item.type == "moviePovie"
                     ? `/series1/${item.title}`
                     : item.type == "aioAnime"
                     ? `/anime1/${item.title}`
@@ -117,7 +117,8 @@ const Searchbar = () => {
                       src={
                         item.type == "aioMovie" ||
                         item.type == "aioAnime" ||
-                        item.type == "aioKdrama"
+                        item.type == "aioKdrama" ||
+                        item.type == "moviePovie"
                           ? item.imageUrl
                           : item.img
                       }

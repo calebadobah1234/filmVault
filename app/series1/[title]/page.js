@@ -161,7 +161,9 @@ const page = async ({ params }) => {
               </div>
               <p className="text-gray-700 mb-4">
                 <span className="font-semibold">IMDB Rating:</span>{" "}
-                <span className="text-yellow-500">{data.imdbRating}/10</span>
+                <span className="text-yellow-500">
+                  {data.imdbRating ? data.imdbRating : data.imdb}/10
+                </span>
               </p>
               <div className="text-gray-700 mb-4">
                 <span className="font-semibold">About: </span>

@@ -28,6 +28,7 @@ const nextConfig = {
       "avamovie.shop",
       "aio-film.ir",
       "blogger.googleusercontent.com",
+      "moviepovie.com",
     ],
   },
 };
