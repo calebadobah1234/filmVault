@@ -57,7 +57,8 @@ const LatestItems = (props) => {
               item.type == "aioAnime" ||
               item.type == "aioMovie" ||
               item.type == "aioKdrama" ||
-              item.type == "moviePovie"
+              item.type == "moviePovie" ||
+              item.type == "series"
                 ? `${item.imageUrl}`
                 : `/images1/${sanitizedTitle}`
             }`;
@@ -73,7 +74,8 @@ const LatestItems = (props) => {
                     href={
                       props.series ||
                       item.type == "aioMovie" ||
-                      item.type == "moviePovie"
+                      item.type == "moviePovie" ||
+                      item.type == "series"
                         ? `/series1/${item.title}`
                         : props.anime || item.type == "aioAnime"
                         ? `/anime1/${item.title}`
@@ -97,7 +99,8 @@ const LatestItems = (props) => {
                 <div className="absolute top-4 left-0 bg-blue-300 group-hover:text-white rounded-sm ml-3 px-2 py-1 text-xs text-white transition-all duration-300 ease-in-out transform group-hover:translate-y-1">
                   {props.series ||
                   item.type == "aioMovie" ||
-                  item.type == "moviePovie"
+                  item.type == "moviePovie" ||
+                  item.type == "series"
                     ? "Series"
                     : props.anime || item.type == "aioAnime"
                     ? "Anime"
@@ -132,7 +135,8 @@ const LatestItems = (props) => {
                       item.type == "aioAnime" ||
                       item.type == "aioKdrama" ||
                       props.anime ||
-                      props.kdrama
+                      props.kdrama ||
+                      item.type == "series"
                         ? item.imdbRating
                         : imdb}
                       /10
@@ -148,7 +152,8 @@ const LatestItems = (props) => {
                       href={
                         props.series ||
                         item.type == "aioMovie" ||
-                        item.type == "moviePovie"
+                        item.type == "moviePovie" ||
+                        item.type == "series"
                           ? `/series1/${item.title}`
                           : props.anime || item.type == "aioAnime"
                           ? `/anime1/${item.title}`

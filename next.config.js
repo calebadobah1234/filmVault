@@ -29,6 +29,7 @@ const nextConfig = {
       "aio-film.ir",
       "blogger.googleusercontent.com",
       "moviepovie.com",
+      'm.media-amazon.com'
     ],
   },
 };
