@@ -1,12 +1,28 @@
 "use client";
-
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useSearchParams } from "next/navigation";
-import { Helmet } from "react-helmet"; // Add this import
+import { Helmet } from "react-helmet";
 import Loading from "@/app/components/Loading";
 import SearchItems from "@/app/components/SearchItems";
 import Pagination from "@/app/components/Pagination";
+
+const calculateRelevance = (item, searchKey) => {
+  const title = item.title.toLowerCase();
+  const key = searchKey.toLowerCase();
+
+  // Calculate a simple relevance score
+  let score = 0;
+  if (title.startsWith(key)) score += 3;
+  if (title.includes(key)) score += 2;
+
+  // Count the number of words from the search key that appear in the title
+  const keyWords = key.split(" ");
+  const titleWords = title.split(" ");
+  score += keyWords.filter((word) => titleWords.includes(word)).length;
+
+  return score;
+};
 
 const SearchPage = () => {
   const searchParams = useSearchParams();
@@ -49,13 +65,20 @@ const SearchPage = () => {
           ...resAiokd.data.items,
         ];
 
+        // Sort merged items by relevance
+        const sortedItems = mergedItems.sort((a, b) => {
+          const relevanceA = calculateRelevance(a, key);
+          const relevanceB = calculateRelevance(b, key);
+          return relevanceB - relevanceA;
+        });
+
         const totalCount =
           resAm.data.totalCount +
           resAiom.data.totalCount +
           resAiome.data.totalCount +
           resAiokd.data.totalCount;
 
-        setFoundItems(mergedItems);
+        setFoundItems(sortedItems);
         setTotalCount(totalCount);
       } catch (error) {
         console.error("Error fetching data:", error);
