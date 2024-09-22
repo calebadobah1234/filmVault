@@ -121,7 +121,8 @@ const Searchbar = () => {
                         item.type == "aioAnime" ||
                         item.type == "aioKdrama" ||
                         item.type == "moviePovie" ||
-                        item.type == "series"
+                        item.type == "series" ||
+                        item.type == "serMovie"
                           ? item.imageUrl
                           : item.img
                       }

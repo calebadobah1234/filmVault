@@ -58,7 +58,8 @@ const LatestItems = (props) => {
               item.type == "aioMovie" ||
               item.type == "aioKdrama" ||
               item.type == "moviePovie" ||
-              item.type == "series"
+              item.type == "series" ||
+              item.type == "serMovie"
                 ? `${item.imageUrl}`
                 : `/images1/${sanitizedTitle}`
             }`;
@@ -136,7 +137,8 @@ const LatestItems = (props) => {
                       item.type == "aioKdrama" ||
                       props.anime ||
                       props.kdrama ||
-                      item.type == "series"
+                      item.type == "series" ||
+                      item.type == "serMovie"
                         ? item.imdbRating
                         : imdb}
                       /10

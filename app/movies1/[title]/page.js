@@ -126,7 +126,7 @@ const page = async ({ params }) => {
         <div className="flex flex-col md:flex-row bg-gray-50 rounded-lg shadow-md overflow-hidden py-4">
           <div className="md:w-1/3 flex max-md:justify-start max-md:ml-6 lg:justify-end items-center">
             <Image
-              src={data.img}
+              src={data.img ? data.img : data.imageUrl}
               width={200}
               height={300}
               alt={data.title}
@@ -141,10 +141,16 @@ const page = async ({ params }) => {
               <p className="text-gray-700 mb-4">
                 <span className="font-semibold">Released:</span>{" "}
                 <Link
-                  href={`/year-page?year=${data.movieInfo.yearOfPublication}&limit=30&skip=1&pageNumber=1`}
+                  href={`/year-page?year=${
+                    data.movieInfo?.yearOfPublication
+                      ? data.movieInfo.yearOfPublication
+                      : data.year
+                  }&limit=30&skip=1&pageNumber=1`}
                 >
                   <span className="text-blue-500 hover:underline">
-                    {data.movieInfo.yearOfPublication}
+                    {data.movieInfo?.yearOfPublication
+                      ? data.movieInfo.yearOfPublication
+                      : data.year}
                   </span>
                 </Link>
               </p>
