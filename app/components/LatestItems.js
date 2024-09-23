@@ -5,7 +5,7 @@ import ScrollHorizontal from "./ScrollHorizontal";
 import { FaAngleRight } from "react-icons/fa";
 
 const sanitizeTitle = (title) => {
-  return title.replace(/[^a-zA-Z0-9]/g, "_") + ".jpg";
+  return title?.replace(/[^a-zA-Z0-9]/g, "_") + ".jpg";
 };
 
 const LatestItems = (props) => {
