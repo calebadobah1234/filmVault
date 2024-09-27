@@ -4,13 +4,13 @@ import RelatedContent from "@/app/components/RelatedContent";
 import axios from "axios";
 import LatestItems from "@/app/components/LatestItems";
 import Link from "next/link";
-import DownloadSection from "@/app/components/DownloadSection";
 import { JsonLd } from "react-schemaorg";
 import CommentSection from "@/app/components/CommentSection";
+import VideoPlayer from "@/app/components/VideoPlayer";
 
 export async function generateMetadata({ params }) {
   const res = await fetch(
-    `https://filmvaultbackend.onrender.com/get-item-detailsAiom/${params.title}`,
+    `https://filmvaultbackend.onrender.com/get-item-detailsAm/${params.title}`,
     {
       cache: "force-cache",
     }
@@ -21,12 +21,16 @@ export async function generateMetadata({ params }) {
     title: `${data.title} ${data.year} free HD download | FilmVault.xyz`,
     description: `Watch and download ${data.title} (${
       data.year
-    }) for free in HD quality. ${data.description.slice(0, 200)}`,
+    }) for free in HD quality. ${
+      data.description ? data.description.slice(0, 200) : ""
+    }`,
     openGraph: {
       title: `${data.title} ${data.year} free HD download | FilmVault.xyz`,
       description: `Watch and download ${data.title} (${
         data.year
-      }) for free in HD quality. ${data.description.slice(0, 200)}`,
+      }) for free in HD quality. ${
+        data.description ? data.description.slice(0, 200) : ""
+      }`,
       images: [
         {
           url: data.img,
@@ -49,9 +53,9 @@ export async function generateMetadata({ params }) {
 
 const page = async ({ params }) => {
   const res = await fetch(
-    `https://filmvaultbackend.onrender.com/get-item-detailsAiom/${params.title}`,
+    `https://filmvaultbackend.onrender.com/get-item-detailsAm/${params.title}`,
     {
-      revalidate: 10800,
+      revalidate: 86400,
     }
   );
   const resData = await res.json();
@@ -68,7 +72,7 @@ const page = async ({ params }) => {
         title: title,
       }).toString();
       const response = await fetch(
-        `https://filmvaultbackend.onrender.com/get-related-contentAiom?${queryString}`,
+        `https://filmvaultbackend.onrender.com/get-related-contentAm?${queryString}`,
 
         {
           cache: "force-cache",
@@ -93,7 +97,7 @@ const page = async ({ params }) => {
       <JsonLd
         item={{
           "@context": "https://schema.org",
-          "@type": "Tv Series",
+          "@type": "Movie",
           name: data.title,
           description: data.description,
           datePublished: data.year,
@@ -120,16 +124,9 @@ const page = async ({ params }) => {
         }}
       />
       <div className="container mx-auto p-4 ">
+        <VideoPlayer />
         <div className="flex flex-col md:flex-row bg-gray-50 rounded-lg shadow-md overflow-hidden py-4">
-          <div className="md:w-1/3 flex max-md:justify-start max-md:ml-6 lg:justify-end items-center">
-            <Image
-              src={data.imageUrl}
-              width={200}
-              height={300}
-              alt={data.title}
-              className="rounded-md"
-            />
-          </div>
+          <div className="md:w-1/3 flex max-md:justify-start max-md:ml-6 lg:justify-end items-center"></div>
           <div className="p-6 md:w-2/3 flex flex-col justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-800 mb-4">
@@ -137,20 +134,26 @@ const page = async ({ params }) => {
               </h1>
               <p className="text-gray-700 mb-4">
                 <span className="font-semibold">Released:</span>{" "}
-                {/* <Link
-                  href={`/year-page?year=${data.year}&limit=30&skip=1&pageNumber=1`}
-                > */}
-                <span className="text-blue-500 hover:underline">
-                  {data.year}
-                </span>
-                {/* </Link> */}
+                <Link
+                  href={`/year-page?year=${
+                    data.movieInfo?.yearOfPublication
+                      ? data.movieInfo.yearOfPublication
+                      : data.year
+                  }&limit=30&skip=1&pageNumber=1`}
+                >
+                  <span className="text-blue-500 hover:underline">
+                    {data.movieInfo?.yearOfPublication
+                      ? data.movieInfo.yearOfPublication
+                      : data.year}
+                  </span>
+                </Link>
               </p>
               <div className="text-sm text-gray-600 mb-4">
                 <span className="font-semibold">Genre: </span>
                 {activeCategories.map((item, index) => (
                   <Link
                     key={index}
-                    href={`/category-page-series/?category=${item}&skip=${1}&currentPage=${1}`}
+                    href={`/category-page/?category=${item}&skip=${1}&currentPage=${1}`}
                   >
                     <span className="text-green-500 hover:underline cursor-pointer mr-2">
                       {item}
@@ -160,10 +163,12 @@ const page = async ({ params }) => {
                 ))}
               </div>
               <p className="text-gray-700 mb-4">
-                <span className="font-semibold">IMDB Rating:</span>{" "}
-                <span className="text-yellow-500">
-                  {data.imdbRating ? data.imdbRating : data.imdb}/10
-                </span>
+                {data.imdb !== undefined && data.imdb !== null ? (
+                  <>
+                    <span className="font-semibold">IMDB Rating:</span>{" "}
+                    <span className="text-yellow-500">{data.imdb}/10</span>
+                  </>
+                ) : null}
               </p>
               <div className="text-gray-700 mb-4">
                 <span className="font-semibold">About: </span>
@@ -172,7 +177,7 @@ const page = async ({ params }) => {
               <div className="text-gray-700">
                 <span className="font-semibold">Actors:</span>{" "}
                 {data.actors.map((item, index) => (
-                  <Link key={index} href={`/actor-page-series/${item}`}>
+                  <Link key={index} href={`/actors-page/${item}`}>
                     <span className="text-blue-500 hover:underline cursor-pointer">
                       {item}
                       {index < data.actors.length - 1 ? ", " : ""}
@@ -185,8 +190,20 @@ const page = async ({ params }) => {
         </div>
 
         <div className="mt-12 text-center">
-          <div className="flex flex-col flex-wrap justify-center mt-6 gap-4">
-            <DownloadSection seasons={data.seasons} />
+          <h2 className="text-2xl font-bold text-gray-800">Download Links</h2>
+          <div className="flex flex-wrap justify-center mt-6 gap-4">
+            {data.episodesData.map(
+              (item, index) =>
+                !item.downloadLink.includes("buy-subscription") && (
+                  <a
+                    href={item.downloadLink}
+                    key={index}
+                    className="max-md:min-w-[100%] bg-gray-800 text-white py-4 px-8 rounded-lg shadow-lg hover:bg-gray-700 transition duration-200"
+                  >
+                    {item.quality} | {item.size}
+                  </a>
+                )
+            )}
           </div>
         </div>
 
@@ -197,10 +214,9 @@ const page = async ({ params }) => {
             flex={true}
             relatedContent={true}
             hide={true}
-            series={true}
           />
         </div>
-        <CommentSection itemId={data._id} linkIdentifier="Aiom" />
+        <CommentSection itemId={data._id} linkIdentifier="Am" />
       </div>
     </>
   );

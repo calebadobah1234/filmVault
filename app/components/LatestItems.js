@@ -59,8 +59,10 @@ const LatestItems = (props) => {
               item.type == "aioKdrama" ||
               item.type == "moviePovie" ||
               item.type == "series" ||
-              item.type == "serMovie"
+              (item.type == "serMovie" && !item.img)
                 ? `${item.imageUrl}`
+                : item.type == "serMovie" && item.img
+                ? `${item.img}`
                 : `/images1/${sanitizedTitle}`
             }`;
             return (
@@ -132,15 +134,7 @@ const LatestItems = (props) => {
                     } rounded-sm mr-3 bg-yellow-500 px-2 py-1 text-xs group-hover:text-white group-hover:bg-red-500 transition-all duration-300 ease-in-out transform group-hover:translate-y-1`}
                   >
                     <p>
-                      {item.type == "aioMovie" ||
-                      item.type == "aioAnime" ||
-                      item.type == "aioKdrama" ||
-                      props.anime ||
-                      props.kdrama ||
-                      item.type == "series" ||
-                      item.type == "serMovie"
-                        ? item.imdbRating
-                        : imdb}
+                      {item.imdbRating ? item.imdbRating : imdb}
                       /10
                     </p>
                   </div>
