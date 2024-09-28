@@ -52,18 +52,14 @@ const LatestItems = (props) => {
             console.log(item);
             const sanitizedTitle = sanitizeTitle(item.title);
             const localImagePath = `${
-              props.series ||
-              props.anime ||
-              item.type == "aioAnime" ||
               item.type == "aioMovie" ||
+              item.type == "aioAnime" ||
               item.type == "aioKdrama" ||
               item.type == "moviePovie" ||
               item.type == "series" ||
-              (item.type == "serMovie" && !item.img)
-                ? `${item.imageUrl}`
-                : item.type == "serMovie" && item.img
-                ? `${item.img}`
-                : `/images1/${sanitizedTitle}`
+              item.type == "serMovie"
+                ? item.imageUrl
+                : item.img
             }`;
             return (
               <div
@@ -87,16 +83,20 @@ const LatestItems = (props) => {
                         : `/movies1/${item.title}`
                     }
                   >
-                    <Image
-                      src={localImagePath}
-                      alt={item.title}
-                      objectFit="cover"
-                      className="rounded-md transition duration-500 ease-in-out transform group-hover:brightness-75 relative w-full h-full aspect-[2/3]"
-                      placeholder="blur"
-                      blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8/+F9PQAI8wNPvd7POQAAAABJRU5ErkJggg=="
-                      width={180}
-                      height={250}
-                    />
+                    {item.img || item.imageUrl ? (
+                      <Image
+                        src={localImagePath}
+                        alt={item.title}
+                        objectFit="cover"
+                        className="rounded-md transition duration-500 ease-in-out transform group-hover:brightness-75 relative w-full h-full aspect-[2/3]"
+                        placeholder="blur"
+                        blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8/+F9PQAI8wNPvd7POQAAAABJRU5ErkJggg=="
+                        width={180}
+                        height={250}
+                      />
+                    ) : (
+                      <></>
+                    )}
                   </Link>
                 </div>
                 <div className="absolute top-4 left-0 bg-blue-300 group-hover:text-white rounded-sm ml-3 px-2 py-1 text-xs text-white transition-all duration-300 ease-in-out transform group-hover:translate-y-1">
