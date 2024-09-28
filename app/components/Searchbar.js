@@ -99,8 +99,7 @@ const Searchbar = () => {
                 href={
                   item.type == "aioMovie" ||
                   item.type == "moviePovie" ||
-                  item.type == "series" ||
-                  !item.type
+                  item.type == "series"
                     ? `/series1/${item.title}`
                     : item.type == "aioAnime"
                     ? `/anime1/${item.title}`
