@@ -51,7 +51,7 @@ const page = async ({ params }) => {
   const res = await fetch(
     `https://filmvaultbackend.onrender.com/get-item-detailsAiom/${params.title}`,
     {
-      revalidate: 10800,
+      revalidate: 3600,
     }
   );
   const resData = await res.json();
@@ -93,14 +93,14 @@ const page = async ({ params }) => {
       <JsonLd
         item={{
           "@context": "https://schema.org",
-          "@type": "Tv Series",
+          "@type": "TVSeries",
           name: data.title,
           description: data.description,
           datePublished: data.year,
-          image: data.imageUrl,
+          image: data.imageUrl ? data.imageUrl : data.img,
           aggregateRating: {
             "@type": "AggregateRating",
-            ratingValue: data.imdbRating,
+            ratingValue: data.imdbRating ? data.imdbRating : data.imdb,
             bestRating: "10",
             worstRating: "1",
             ratingCount: "1000",

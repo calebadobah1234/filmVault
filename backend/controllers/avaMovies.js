@@ -224,7 +224,7 @@ const getCategoryDataAm = async (req, res) => {
         .limit(limit);
       totalCount = await avaMovie.countDocuments();
     } else {
-      // Use the existing aggregation pipeline for specific categories
+      // Use the modified aggregation pipeline for specific categories
       const pipeline = [
         {
           $match: {
@@ -245,15 +245,27 @@ const getCategoryDataAm = async (req, res) => {
                 category.toLowerCase(),
               ],
             },
-            yearOfPublication: { $toInt: "$movieInfo.yearOfPublication" },
+            yearInt: {
+              $cond: [
+                { $ifNull: ["$year", false] },
+                { $toInt: "$year" },
+                {
+                  $cond: [
+                    { $ifNull: ["$movieInfo.yearOfPublication", false] },
+                    { $toInt: "$movieInfo.yearOfPublication" },
+                    { $toInt: { $substr: ["$title", -4, 4] } },
+                  ],
+                },
+              ],
+            },
           },
         },
         {
           $sort: {
             categoryIndex: 1,
-            yearOfPublication: -1,
+            yearInt: -1,
             lastModified: -1,
-            _id: 1,
+            _id: -1,
           },
         },
         {
@@ -277,6 +289,7 @@ const getCategoryDataAm = async (req, res) => {
     handleServerError(res, error);
   }
 };
+
 const getOtherActorMoviesAm = async (req, res) => {
   try {
     const { actor } = req.params;

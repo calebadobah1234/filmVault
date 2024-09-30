@@ -93,7 +93,7 @@ const page = async ({ params }) => {
       <JsonLd
         item={{
           "@context": "https://schema.org",
-          "@type": "Anime",
+          "@type": "TVSeries",
           name: data.title,
           description: data.description,
           datePublished: data.year,

@@ -99,11 +99,13 @@ const page = async ({ params }) => {
           "@type": "Movie",
           name: data.title,
           description: data.description,
-          datePublished: data.year,
-          image: data.imageUrl,
+          datePublished: data.year
+            ? data.year
+            : data.movieInfo.yearOfPublication,
+          image: data.imageUrl ? data.imageUrl : data.img,
           aggregateRating: {
             "@type": "AggregateRating",
-            ratingValue: data.imdbRating,
+            ratingValue: data.imdbRating ? data.imdbRating : data.imdb,
             bestRating: "10",
             worstRating: "1",
             ratingCount: "1000",

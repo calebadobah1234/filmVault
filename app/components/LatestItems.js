@@ -85,7 +85,7 @@ const LatestItems = (props) => {
                   >
                     {item.img || item.imageUrl ? (
                       <Image
-                        src={localImagePath}
+                        src={localImagePath == "N/A" ? "/" : localImagePath}
                         alt={item.title}
                         objectFit="cover"
                         className="rounded-md transition duration-500 ease-in-out transform group-hover:brightness-75 relative w-full h-full aspect-[2/3]"

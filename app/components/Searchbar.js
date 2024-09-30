@@ -6,7 +6,7 @@ import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
 
-const Searchbar = () => {
+const Searchbar = (props) => {
   const [searchValue, setSearchValue] = useState("");
   const router = useRouter();
   const [searchResults, setSearchResults] = useState([]);
@@ -97,13 +97,14 @@ const Searchbar = () => {
             {searchResults.map((item, index) => (
               <Link
                 href={
+                  props.series ||
                   item.type == "aioMovie" ||
                   item.type == "moviePovie" ||
                   item.type == "series"
                     ? `/series1/${item.title}`
-                    : item.type == "aioAnime"
+                    : props.anime || item.type == "aioAnime"
                     ? `/anime1/${item.title}`
-                    : item.type == "aioKdrama"
+                    : props.kdrama || item.type == "aioKdrama"
                     ? `/kdrama1/${item.title}`
                     : `/movies1/${item.title}`
                 }
