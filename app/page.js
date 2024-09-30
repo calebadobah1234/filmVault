@@ -1,10 +1,5 @@
 import { use } from "react";
-import TopPost from "./components/TopPost";
-import LatestNews from "./components/LatestNews";
-import Pagination from "./components/Pagination";
 import LatestItems from "./components/LatestItems";
-import SlideShow from "./components/SlideShow";
-import ChangeSlideRight from "./components/ChangeSlideRight";
 
 const BASE_URL = "https://filmvaultbackend.onrender.com";
 
@@ -60,16 +55,6 @@ async function fetchAllData() {
       key: "actionMovies",
       options: { next: { revalidate: 21600 } },
     },
-    {
-      url: `${BASE_URL}/get-category-dataAm?category=drama&limit=20&skip=0`,
-      key: "dramaMovies",
-      options: { next: { revalidate: 21600 } },
-    },
-    {
-      url: `${BASE_URL}/get-category-dataAm?category=romance&limit=20&skip=0`,
-      key: "romanceMovies",
-      options: { next: { revalidate: 21600 } },
-    },
   ];
 
   const results = await Promise.all(
@@ -88,16 +73,7 @@ export default function Home() {
     return <div>Error loading data. Please try again later.</div>;
   }
 
-  const {
-    moviesData,
-    animeData,
-    seriesData,
-    highestRatedData,
-    actionMovies,
-    dramaMovies,
-    romanceMovies,
-    kdramaData,
-  } = data;
+  const { moviesData, animeData, seriesData, actionMovies, kdramaData } = data;
 
   return (
     <div>
@@ -141,28 +117,6 @@ export default function Home() {
             link={true}
             flex={true}
             showMoreCategory="action"
-            itemsToShow={14}
-          />
-          <LatestItems
-            data={dramaMovies?.items}
-            title="Drama"
-            link={true}
-            flex={true}
-            showMoreCategory="drama"
-            itemsToShow={14}
-          />
-          <LatestItems
-            data={romanceMovies?.items}
-            title="Romance"
-            link={true}
-            flex={true}
-            showMoreCategory="Romance"
-            itemsToShow={14}
-          />
-          <LatestItems
-            data={highestRatedData}
-            title="Highest Rated"
-            flex={true}
             itemsToShow={14}
           />
         </div>
