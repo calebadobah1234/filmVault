@@ -1,14 +1,21 @@
 import Pagination from "@/app/components/Pagination";
 import React from "react";
-import Link from "next/link";
-import Image from "next/image";
-import LatestItems from "@/app/components/LatestItems";
 import SearchItems from "@/app/components/SearchItems";
+
+export async function generateMetadata({ searchParams }) {
+  const category = searchParams.category;
+  const currentPage = searchParams.currentPage;
+
+  return {
+    title: `${category} Tv Series - Page ${currentPage}`,
+    description: `Browse and download ${category} tv series for free on page ${currentPage} of our collection.`,
+  };
+}
 
 const page = async ({ searchParams }) => {
   const res = await fetch(
     `https://filmvaultbackend.onrender.com/get-category-dataAiom/?category=${searchParams.category}&limit=30&skip=${searchParams.skip}`,
-    { next: { revalidate: 21600 } }
+    { next: { revalidate: 86400 } }
   );
   const data = await res.json();
 

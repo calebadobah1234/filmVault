@@ -28,22 +28,22 @@ async function fetchAllData() {
     {
       url: `${BASE_URL}/get-20-itemsAm`,
       key: "moviesData",
-      options: { next: { revalidate: 900 } },
+      options: { next: { revalidate: 21600 } },
     },
     {
       url: `${BASE_URL}/get-20-itemsAiom`,
       key: "seriesData",
-      options: { next: { revalidate: 900 } },
+      options: { next: { revalidate: 21600 } },
     },
     {
       url: `${BASE_URL}/get-20-itemsAiome`,
       key: "animeData",
-      options: { next: { revalidate: 900 } },
+      options: { next: { revalidate: 21600 } },
     },
     {
       url: `${BASE_URL}/get-20-itemsAiokd`,
       key: "kdramaData",
-      options: { next: { revalidate: 900 } },
+      options: { next: { revalidate: 21600 } },
     },
     {
       url: `${BASE_URL}/get-highest-rated-moviesAm`,

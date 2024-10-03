@@ -20,13 +20,13 @@ export async function generateMetadata({ params }) {
   return {
     title: `${data.title} ${data.year} free HD download | FilmVault.xyz`,
     description: `Watch and download ${data.title} (${
-      data.year
-    }) for free in HD quality. ${data.description.slice(0, 200)}`,
+      data.year ? data.year : ""
+    }) for free in HD quality. ${data.description.slice(0, 300)}`,
     openGraph: {
       title: `${data.title} ${data.year} free HD download | FilmVault.xyz`,
       description: `Watch and download ${data.title} (${
-        data.year
-      }) for free in HD quality. ${data.description.slice(0, 200)}`,
+        data.year ? data.year : ""
+      }) for free in HD quality. ${data.description.slice(0, 300)}`,
       images: [
         {
           url: data.img,
@@ -51,7 +51,7 @@ const page = async ({ params }) => {
   const res = await fetch(
     `https://filmvaultbackend.onrender.com/get-item-detailsAiokd/${params.title}`,
     {
-      revalidate: 36000,
+      revalidate: 86400,
     }
   );
   const resData = await res.json();

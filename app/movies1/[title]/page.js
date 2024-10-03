@@ -17,18 +17,22 @@ export async function generateMetadata({ params }) {
   const data1 = await res.json();
   const data = data1[0];
   return {
-    title: `${data.title} ${data.year} free HD download | FilmVault.xyz`,
+    title: `${data.title} ${
+      data.year ? data.year : ""
+    } free HD download | FilmVault.xyz`,
     description: `Watch and download ${data.title} (${
       data.year
     }) for free in HD quality. ${
-      data.description ? data.description.slice(0, 200) : ""
+      data.description ? data.description.slice(0, 300) : ""
     }`,
     openGraph: {
-      title: `${data.title} ${data.year} free HD download | FilmVault.xyz`,
+      title: `${data.title} ${
+        data.year ? data.year : ""
+      } free HD download | FilmVault.xyz`,
       description: `Watch and download ${data.title} (${
-        data.year
+        data.year ? data.year : ""
       }) for free in HD quality. ${
-        data.description ? data.description.slice(0, 200) : ""
+        data.description ? data.description.slice(0, 300) : ""
       }`,
       images: [
         {

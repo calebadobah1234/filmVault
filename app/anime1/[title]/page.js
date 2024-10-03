@@ -1,7 +1,5 @@
 import React from "react";
 import Image from "next/image";
-import RelatedContent from "@/app/components/RelatedContent";
-import axios from "axios";
 import LatestItems from "@/app/components/LatestItems";
 import Link from "next/link";
 import DownloadSection from "@/app/components/DownloadSection";
@@ -18,15 +16,19 @@ export async function generateMetadata({ params }) {
   const data1 = await res.json();
   const data = data1[0];
   return {
-    title: `${data.title} ${data.year} free HD download | FilmVault.xyz`,
+    title: `${data.title} ${
+      data.year ? data.year : ""
+    } free HD download | FilmVault.xyz`,
     description: `Watch and download ${data.title} (${
       data.year
-    }) for free in HD quality. ${data.description.slice(0, 200)}`,
+    }) for free in HD quality. ${data.description.slice(0, 300)}`,
     openGraph: {
-      title: `${data.title} ${data.year} free HD download | FilmVault.xyz`,
+      title: `${data.title} ${
+        data.year ? data.year : ""
+      } free HD download | FilmVault.xyz`,
       description: `Watch and download ${data.title} (${
-        data.year
-      }) for free in HD quality. ${data.description.slice(0, 200)}`,
+        data.year ? data.year : ""
+      }) for free in HD quality. ${data.description.slice(0, 300)}`,
       images: [
         {
           url: data.img,
@@ -51,7 +53,7 @@ const page = async ({ params }) => {
   const res = await fetch(
     `https://filmvaultbackend.onrender.com/get-item-detailsAiome/${params.title}`,
     {
-      revalidate: 36000,
+      revalidate: 86400,
     }
   );
   const resData = await res.json();
