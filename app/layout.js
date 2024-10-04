@@ -3,6 +3,7 @@ import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import { Oswald } from "next/font/google";
 import { GoogleAnalytics, GoogleTagManager } from "@next/third-parties/google";
+import { Analytics } from "@vercel/analytics/react";
 
 const oswald = Oswald({ subsets: ["latin"] });
 
@@ -19,6 +20,7 @@ export default function RootLayout({ children }) {
 
       <body className="text-black">
         <GoogleAnalytics gaId={"G-G5F92NBCCE"} />
+        <Analytics />
         <Navbar />
         {children}
         <Footer />
