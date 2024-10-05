@@ -4,17 +4,25 @@ import React, { useState } from "react";
 import Image from "next/image";
 
 const ImageWithFallback = ({ src, alt, ...props }) => {
-  const [imgSrc, setImgSrc] = useState(src);
-  const [imgError, setImgError] = useState(false);
+  const [error, setError] = useState(false);
 
-  const handleError = () => {
-    if (!imgError) {
-      setImgSrc("/placeholder.jpg"); // Replace with your placeholder image path
-      setImgError(true);
-    }
-  };
+  if (error) {
+    return (
+      <img
+        src={src}
+        alt={alt}
+        {...props}
+        onError={(e) => {
+          e.target.onerror = null; // Prevent infinite loop
+          e.target.src = "/placeholder.jpg"; // Replace with your placeholder image path
+        }}
+      />
+    );
+  }
 
-  return <Image src={imgSrc} alt={alt} {...props} onError={handleError} />;
+  return (
+    <Image src={src} alt={alt} {...props} onError={() => setError(true)} />
+  );
 };
 
 export default ImageWithFallback;
