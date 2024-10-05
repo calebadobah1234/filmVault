@@ -1,9 +1,9 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import ScrollHorizontal from "./ScrollHorizontal";
-import { FaAngleRight } from "react-icons/fa";
 
+import { FaAngleRight } from "react-icons/fa";
+import ImageWithFallback from "./ImageWithFallback";
 const sanitizeTitle = (title) => {
   return title?.replace(/[^a-zA-Z0-9]/g, "_") + ".jpg";
 };
@@ -84,15 +84,14 @@ const LatestItems = (props) => {
                     }
                   >
                     {item.img || item.imageUrl ? (
-                      <Image
+                      <ImageWithFallback
                         src={localImagePath == "N/A" ? "/" : localImagePath}
                         alt={item.title}
-                        objectFit="cover"
-                        className="rounded-md transition duration-500 ease-in-out transform group-hover:brightness-75 relative w-full h-full aspect-[2/3]"
-                        placeholder="blur"
-                        blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8/+F9PQAI8wNPvd7POQAAAABJRU5ErkJggg=="
+                        className="rounded-md transition duration-500 ease-in-out transform group-hover:brightness-75 relative w-full h-full object-cover aspect-[2/3]"
                         width={180}
                         height={250}
+                        placeholder="blur"
+                        blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8/+F9PQAI8wNPvd7POQAAAABJRU5ErkJggg=="
                       />
                     ) : (
                       <></>
