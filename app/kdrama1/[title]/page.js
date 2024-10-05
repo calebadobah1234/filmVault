@@ -7,6 +7,7 @@ import Link from "next/link";
 import DownloadSection from "@/app/components/DownloadSection";
 import { JsonLd } from "react-schemaorg";
 import CommentSection from "@/app/components/CommentSection";
+import ImageWithFallback from "@/app/components/ImageWithFallback";
 
 export async function generateMetadata({ params }) {
   const res = await fetch(
@@ -122,7 +123,7 @@ const page = async ({ params }) => {
       <div className="container mx-auto p-4 ">
         <div className="flex flex-col md:flex-row bg-gray-50 rounded-lg shadow-md overflow-hidden py-4">
           <div className="md:w-1/3 flex max-md:justify-start max-md:ml-6 lg:justify-end items-center">
-            <Image
+            <ImageWithFallback
               src={data.imageUrl}
               width={200}
               height={300}
