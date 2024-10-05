@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import Image from "next/image";
 import Link from "next/link";
+import ImageWithFallback from "./ImageWithFallback";
 
 const Searchbar = (props) => {
   const [searchValue, setSearchValue] = useState("");
@@ -116,7 +117,7 @@ const Searchbar = (props) => {
                   className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
                 >
                   {(item.img || item.imageUrl) && (
-                    <Image
+                    <ImageWithFallback
                       src={
                         item.type == "aioMovie" ||
                         item.type == "aioAnime" ||
