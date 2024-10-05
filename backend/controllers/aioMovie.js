@@ -237,7 +237,7 @@ const getCategoryDataAiom = async (req, res) => {
       // If category is "all", fetch all items
       items = await aioMovie
         .find()
-        .sort({ lastModified: -1, yearOfPublication: -1, _id: 1 })
+        .sort({ lastModified: -1, _id: -1, yearOfPublication: -1 })
         .skip(skip)
         .limit(limit);
       totalCount = await aioMovie.countDocuments();
@@ -269,9 +269,9 @@ const getCategoryDataAiom = async (req, res) => {
         {
           $sort: {
             categoryIndex: 1,
-            yearOfPublication: -1,
             lastModified: -1,
-            _id: 1,
+            _id: -1,
+            yearOfPublication: -1,
           },
         },
         {

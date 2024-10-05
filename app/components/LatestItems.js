@@ -11,7 +11,7 @@ const sanitizeTitle = (title) => {
 const LatestItems = (props) => {
   const data = props.relatedContent
     ? props.data.slice(0, 12)
-    : props.data.slice(0, props.itemsToShow ? props.itemsToShow : 12);
+    : props.data?.slice(0, props.itemsToShow ? props.itemsToShow : 12);
   const className = props.title && props.title.replace(/\s/g, "");
 
   return (

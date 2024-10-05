@@ -219,7 +219,7 @@ const getCategoryDataAm = async (req, res) => {
       // If category is "all", fetch all items
       items = await avaMovie
         .find()
-        .sort({ lastModified: -1, yearOfPublication: -1, _id: 1 })
+        .sort({ lastModified: -1, yearOfPublication: -1, _id: -1 })
         .skip(skip)
         .limit(limit);
       totalCount = await avaMovie.countDocuments();
@@ -246,26 +246,47 @@ const getCategoryDataAm = async (req, res) => {
               ],
             },
             yearInt: {
-              $cond: [
-                { $ifNull: ["$year", false] },
-                { $toInt: "$year" },
-                {
+              $let: {
+                vars: {
+                  yearValue: {
+                    $cond: [
+                      { $ifNull: ["$year", false] },
+                      "$year",
+                      {
+                        $cond: [
+                          { $ifNull: ["$movieInfo.yearOfPublication", false] },
+                          "$movieInfo.yearOfPublication",
+                          { $substr: ["$title", -4, 4] },
+                        ],
+                      },
+                    ],
+                  },
+                },
+                in: {
                   $cond: [
-                    { $ifNull: ["$movieInfo.yearOfPublication", false] },
-                    { $toInt: "$movieInfo.yearOfPublication" },
-                    { $toInt: { $substr: ["$title", -4, 4] } },
+                    { $eq: [{ $type: "$$yearValue" }, "string"] },
+                    {
+                      $cond: [
+                        {
+                          $regexMatch: { input: "$$yearValue", regex: /^\d+$/ },
+                        },
+                        { $toInt: "$$yearValue" },
+                        0, // Default to 0 for non-numeric strings
+                      ],
+                    },
+                    { $ifNull: ["$$yearValue", 0] }, // Use the value if it's already a number, or 0 if null
                   ],
                 },
-              ],
+              },
             },
           },
         },
         {
           $sort: {
-            categoryIndex: 1,
-            yearInt: -1,
             lastModified: -1,
+            yearInt: -1,
             _id: -1,
+            categoryIndex: 1,
           },
         },
         {
