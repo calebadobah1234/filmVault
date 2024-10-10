@@ -62,6 +62,9 @@ const page = async ({ params }) => {
       revalidate: 86400,
     }
   );
+  const sanitizeTitle = (title) => {
+    return title?.replace(/[^a-zA-Z0-9]/g, "_") + ".jpg";
+  };
   const resData = await res.json();
   const data = resData[0];
 
@@ -133,7 +136,13 @@ const page = async ({ params }) => {
         <div className="flex flex-col md:flex-row bg-gray-50 rounded-lg shadow-md overflow-hidden py-4">
           <div className="md:w-1/3 flex max-md:justify-start max-md:ml-6 lg:justify-end items-center">
             <ImageWithFallback
-              src={data.img ? data.img : data.imageUrl}
+              src={
+                data.img && !data.img.includes("avamovie")
+                  ? data.img
+                  : data.img && data.img.includes("avamovie")
+                  ? `/images1/${sanitizeTitle(data.title)}`
+                  : data.imageUrl
+              }
               width={200}
               height={300}
               alt={data.title}
