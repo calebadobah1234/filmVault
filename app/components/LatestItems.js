@@ -59,6 +59,8 @@ const LatestItems = (props) => {
               item.type == "series" ||
               item.type == "serMovie"
                 ? item.imageUrl
+                : item.img && item.img.includes("avamovie")
+                ? `/${sanitizeTitle(item.title)}`
                 : item.img
             }`;
             return (

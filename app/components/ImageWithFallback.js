@@ -14,7 +14,8 @@ const ImageWithFallback = ({ src, alt, ...props }) => {
         {...props}
         onError={(e) => {
           e.target.onerror = null; // Prevent infinite loop
-          e.target.src = "/placeholder.jpg"; // Replace with your placeholder image path
+          e.target.src =
+            "https://th.bing.com/th/id/OIP.vemXta-UoBudoiVJZZgKZgHaHa?rs=1&pid=ImgDetMain"; // Replace with your placeholder image path
         }}
       />
     );
