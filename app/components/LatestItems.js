@@ -49,8 +49,8 @@ const LatestItems = (props) => {
         >
           {data.map((item) => {
             let imdb = item.imdb;
-            console.log(item);
             const sanitizedTitle = sanitizeTitle(item.title);
+            console.log("/images1/" + sanitizedTitle);
             const localImagePath = `${
               item.type == "aioMovie" ||
               item.type == "aioAnime" ||
@@ -60,7 +60,7 @@ const LatestItems = (props) => {
               item.type == "serMovie"
                 ? item.imageUrl
                 : item.img && item.img.includes("avamovie")
-                ? `/${sanitizeTitle(item.title)}`
+                ? `/images1/${sanitizedTitle}`
                 : item.img
             }`;
             return (
