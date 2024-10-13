@@ -87,7 +87,12 @@ const LatestItems = (props) => {
                   >
                     {item.img || item.imageUrl ? (
                       <ImageWithFallback
-                        src={localImagePath == "N/A" ? "/" : localImagePath}
+                        src={
+                          localImagePath == "N/A" ||
+                          localImagePath == "undefined"
+                            ? "/"
+                            : localImagePath
+                        }
                         alt={item.title}
                         className="rounded-md transition duration-500 ease-in-out transform group-hover:brightness-75 relative w-full h-full object-cover aspect-[2/3]"
                         width={180}

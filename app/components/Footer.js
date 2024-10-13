@@ -30,7 +30,10 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link href="/movies" className="hover:text-green-400">
+                <Link
+                  href="/category-page?category=all&limit=30=&skip=1&currentPage=1"
+                  className="hover:text-green-400"
+                >
                   Free Movies
                 </Link>
               </li>

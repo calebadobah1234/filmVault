@@ -3,20 +3,23 @@ import Image from "next/image";
 import Categories from "./Categories";
 import Searchbar from "./Searchbar";
 import dynamic from "next/dynamic";
+import { headers } from "next/headers";
 
 const MobileNav = dynamic(() => import("./MobileNav"), { ssr: false });
 
 const Navbar = () => {
-  const categories = ["Action", "Comedy", "Drama", "Sci-Fi", "Horror"]; // Add your categories here
-
+  const headersList = headers();
+  const pathname = headersList.get("x-invoke-path") || "";
+  const isHomePage = pathname === "/";
+  const HeadingTag = isHomePage ? "h1" : "h2";
   return (
     <>
       <div className="bg-gray-900 text-white w-full">
         <div className="flex justify-between md:justify-center items-center py-4 px-4">
           <Link href={"/"}>
-            <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500">
+            <HeadingTag className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500">
               FilmVault.XYZ
-            </h1>
+            </HeadingTag>
           </Link>
           {/* <MobileNav categories={categories} /> */}
           <MobileNav />
