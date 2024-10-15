@@ -12,7 +12,9 @@ const Searchbar = (props) => {
   const router = useRouter();
   const [searchResults, setSearchResults] = useState([]);
   const searchContainerRef = useRef(null);
-
+  const sanitizeTitle = (title) => {
+    return title?.replace(/[^a-zA-Z0-9]/g, "_") + ".jpg";
+  };
   const searchChange = (e) => {
     setSearchValue(e.target.value);
   };
@@ -95,49 +97,53 @@ const Searchbar = (props) => {
             ref={searchContainerRef}
             className="absolute z-10 w-full max-w-3xl bg-white border border-gray-300 rounded-md shadow-lg -mt-7"
           >
-            {searchResults.map((item, index) => (
-              <Link
-                href={
-                  props.series ||
-                  item.type == "aioMovie" ||
-                  item.type == "moviePovie" ||
-                  item.type == "series"
-                    ? `/series1/${item.title}`
-                    : props.anime || item.type == "aioAnime"
-                    ? `/anime1/${item.title}`
-                    : props.kdrama || item.type == "aioKdrama"
-                    ? `/kdrama1/${item.title}`
-                    : `/movies1/${item.title}`
-                }
-                key={item._id}
-                onClick={clearSearchResults}
-              >
-                <li
-                  key={index}
-                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center"
+            {searchResults.map((item, index) => {
+              const sanitizedTitle = sanitizeTitle(item.title);
+              return (
+                <Link
+                  href={
+                    props.series ||
+                    item.type == "aioMovie" ||
+                    item.type == "moviePovie" ||
+                    item.type == "series"
+                      ? `/series1/${item.title}`
+                      : props.anime || item.type == "aioAnime"
+                      ? `/anime1/${item.title}`
+                      : props.kdrama || item.type == "aioKdrama"
+                      ? `/kdrama1/${item.title}`
+                      : `/movies1/${item.title}`
+                  }
+                  key={item._id}
+                  onClick={clearSearchResults}
                 >
-                  {(item.img || item.imageUrl) && (
-                    <ImageWithFallback
-                      src={
-                        item.type == "aioMovie" ||
-                        item.type == "aioAnime" ||
-                        item.type == "aioKdrama" ||
-                        item.type == "moviePovie" ||
-                        item.type == "series" ||
-                        item.type == "serMovie"
-                          ? item.imageUrl
-                          : item.img
-                      }
-                      alt={item.title}
-                      width={40}
-                      height={40}
-                      className="mr-3 rounded-sm"
-                    />
-                  )}
-                  <span>{item.title}</span>
-                </li>
-              </Link>
-            ))}
+                  <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center">
+                    {(item.img || item.imageUrl) && (
+                      <ImageWithFallback
+                        src={
+                          item.type == "aioMovie" ||
+                          item.type == "aioAnime" ||
+                          item.type == "aioKdrama" ||
+                          item.type == "moviePovie" ||
+                          item.type == "series" ||
+                          item.type == "serMovie" ||
+                          (item.imageUrl &&
+                            item.imageUrl.includes("m.media-amazon"))
+                            ? item.imageUrl
+                            : item.img && item.img.includes("avamovie")
+                            ? `/images1/${sanitizedTitle}`
+                            : item.img
+                        }
+                        alt={item.title}
+                        width={40}
+                        height={40}
+                        className="mr-3 rounded-sm"
+                      />
+                    )}
+                    <span>{item.title}</span>
+                  </li>
+                </Link>
+              );
+            })}
           </ul>
         )}
       </div>
