@@ -10,7 +10,7 @@ import ImageWithFallback from "@/app/components/ImageWithFallback";
 
 export async function generateMetadata({ params }) {
   const res = await fetch(
-    `https://filmvaultbackend.onrender.com/get-item-detailsAm/${params.title}`,
+    `https://filmvaultbackend-2.onrender.com/get-item-detailsAm/${params.title}`,
     {
       cache: "force-cache",
     }
@@ -57,7 +57,7 @@ export async function generateMetadata({ params }) {
 
 const page = async ({ params }) => {
   const res = await fetch(
-    `https://filmvaultbackend.onrender.com/get-item-detailsAm/${params.title}`,
+    `https://filmvaultbackend-2.onrender.com/get-item-detailsAm/${params.title}`,
     {
       revalidate: 86400,
     }
@@ -79,7 +79,7 @@ const page = async ({ params }) => {
         title: title,
       }).toString();
       const response = await fetch(
-        `https://filmvaultbackend.onrender.com/get-related-contentAm?${queryString}`,
+        `https://filmvaultbackend-2.onrender.com/get-related-contentAm?${queryString}`,
 
         {
           cache: "force-cache",
