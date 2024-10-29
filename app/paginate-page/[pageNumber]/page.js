@@ -7,7 +7,7 @@ import SearchItems from "@/app/components/SearchItems";
 
 const page = async ({ params }) => {
   const res = await fetch(
-    `https://filmvaultbackend-2.onrender.com/get-paginate-contentAm/${params.pageNumber}`,
+    `https://filmvaultbackend-3.onrender.com/get-paginate-contentAm/${params.pageNumber}`,
     { cache: "no-cache" }
   );
   const data = await res.json();

@@ -1,7 +1,8 @@
 import { use } from "react";
 import LatestItems from "./components/LatestItems";
+import TrendingItems from "./components/TrendingItems";
 
-const BASE_URL = "https://filmvaultbackend.onrender.com";
+const BASE_URL = "https://filmvaultbackend-3.onrender.com/";
 
 export const metadata = {
   title: "FilmVault.xyz: Free Hd movies download",
@@ -79,6 +80,13 @@ export default function Home() {
     <div>
       <div className="mt-5 flex justify-center">
         <div>
+          {/* <TrendingItems
+            data={moviesData}
+            title="Trending"
+            flex={false}
+            itemsToShow={14}
+            showMoreCategory="all"
+          /> */}
           <LatestItems
             data={moviesData}
             title="Latest Movies"

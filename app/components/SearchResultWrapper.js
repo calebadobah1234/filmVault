@@ -6,7 +6,7 @@ const SearchResultWrapper = ({ children, title, isSearchPage }) => {
   const handleResultClick = async () => {
     try {
       const response = await fetch(
-        `https://filmvaultbackend-2.onrender.com/increase-search-priority?title=${encodeURIComponent(
+        `https://filmvaultbackend-3.onrender.com/increase-search-priority?title=${encodeURIComponent(
           title
         )}`,
         {
