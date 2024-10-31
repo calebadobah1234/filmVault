@@ -214,10 +214,14 @@ const page = async ({ params }) => {
         <div className="mt-12 text-center">
           <h2 className="text-2xl font-bold text-gray-800">Download Links</h2>
           <div className="flex flex-wrap justify-center mt-6 gap-4">
-            {data.episodesData.map(
-              (item, index) =>
-                (!item.downloadLink.includes("buy-subscription") ||
-                  !item.downloadLink.includes("Duble")) && (
+            {data.episodesData.map((item, index) => {
+              // Only show links that DON'T include either "buy-subscription" OR "Duble"
+              const isValidLink =
+                !item.downloadLink.includes("buy-subscription") &&
+                !item.downloadLink.includes("Duble");
+
+              return (
+                isValidLink && (
                   <a
                     href={item.downloadLink}
                     key={index}
@@ -226,7 +230,8 @@ const page = async ({ params }) => {
                     {item.quality} | {item.size}
                   </a>
                 )
-            )}
+              );
+            })}
           </div>
         </div>
 
