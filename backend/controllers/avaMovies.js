@@ -217,11 +217,28 @@ const getCategoryDataAm = async (req, res) => {
 
     if (category.toLowerCase() === "all") {
       // If category is "all", fetch all items
-      items = await avaMovie
-        .find()
-        .sort({ lastModified: -1, yearOfPublication: -1, _id: -1 })
-        .skip(skip)
-        .limit(limit);
+      items = await avaMovie.aggregate([
+        {
+          $addFields: {
+            effectiveYear: {
+              $ifNull: ["$movieInfo.yearOfPublication", "$year"],
+            },
+          },
+        },
+        {
+          $sort: {
+            effectiveYear: -1,
+            _id: -1,
+          },
+        },
+        {
+          $skip: skip,
+        },
+        {
+          $limit: limit,
+        },
+      ]);
+
       totalCount = await avaMovie.countDocuments();
     } else {
       // Use the modified aggregation pipeline for specific categories

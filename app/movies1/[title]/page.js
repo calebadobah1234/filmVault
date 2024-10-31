@@ -216,7 +216,8 @@ const page = async ({ params }) => {
           <div className="flex flex-wrap justify-center mt-6 gap-4">
             {data.episodesData.map(
               (item, index) =>
-                !item.downloadLink.includes("buy-subscription") && (
+                (!item.downloadLink.includes("buy-subscription") ||
+                  !item.downloadLink.includes("Duble")) && (
                   <a
                     href={item.downloadLink}
                     key={index}
