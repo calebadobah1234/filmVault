@@ -57,7 +57,6 @@ const LatestItems = (props) => {
               item.type == "aioKdrama" ||
               item.type == "moviePovie" ||
               item.type == "series" ||
-              item.type == "serMovie" ||
               (item.imageUrl && item.imageUrl.includes("m.media-amazon"))
                 ? item.imageUrl
                 : item.img && item.img.includes("avamovie")

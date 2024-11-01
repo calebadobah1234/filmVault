@@ -72,23 +72,70 @@ const page = async ({ params }) => {
   const actors = data.actors || [];
 
   async function fetchRelatedContent(categories, actors, title) {
-    try {
-      const queryString = new URLSearchParams({
-        categories: categories.join(","),
-        actors: actors.join(","),
-        title: title,
-      }).toString();
-      const response = await fetch(
-        `https://filmvaultbackend-3.onrender.com/get-related-contentAm?${queryString}`,
+    // Input validation and cleaning
+    if (!Array.isArray(categories) || !Array.isArray(actors) || !title) {
+      console.error("Invalid input parameters:", { categories, actors, title });
+      return [];
+    }
 
-        {
-          cache: "force-cache",
+    // Clean and deduplicate the data
+    const uniqueActors = [...new Set(actors)]
+      .filter(Boolean)
+      .map((actor) => actor.trim());
+
+    const uniqueCategories = [...new Set(categories)]
+      .filter(Boolean)
+      .map((category) => category.trim());
+
+    try {
+      // Create the query parameters
+      const params = {
+        categories: uniqueCategories.join(","),
+        actors: uniqueActors.join(","),
+        title: title.trim(),
+      };
+
+      // Log the exact data being sent
+      console.log("Request parameters:", params);
+
+      const queryString = new URLSearchParams(params).toString();
+      const url = `https://filmvaultbackend-3.onrender.com/get-related-contentAm?${queryString}`;
+
+      console.log("Fetching from URL:", url);
+
+      const response = await fetch(url, {
+        cache: "force-cache",
+        headers: {
+          Accept: "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorInfo;
+        try {
+          errorInfo = JSON.parse(errorText);
+        } catch (e) {
+          errorInfo = errorText;
         }
-      );
-      if (!response.ok) throw new Error("Network response was not ok");
-      return response.json();
+
+        console.error("API Error Details:", {
+          status: response.status,
+          statusText: response.statusText,
+          url: url,
+          error: errorInfo,
+        });
+
+        throw new Error(`API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data;
     } catch (error) {
-      console.error("Error fetching related content:", error);
+      console.error("Error fetching related content:", {
+        error: error.message,
+        params: { categories: uniqueCategories, actors: uniqueActors, title },
+      });
       return [];
     }
   }
@@ -185,10 +232,13 @@ const page = async ({ params }) => {
                 ))}
               </div>
               <p className="text-gray-700 mb-4">
-                {data.imdb !== undefined && data.imdb !== null ? (
+                {(data.imdb !== undefined && data.imdb !== null) ||
+                data.imdbRating ? (
                   <>
                     <span className="font-semibold">IMDB Rating:</span>{" "}
-                    <span className="text-yellow-500">{data.imdb}/10</span>
+                    <span className="text-yellow-500">
+                      {data.imdb ? data.imdb : data.imdbRating}/10
+                    </span>
                   </>
                 ) : null}
               </p>

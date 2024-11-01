@@ -29,9 +29,14 @@ const nextConfig = {
       "aio-film.ir",
       "blogger.googleusercontent.com",
       "moviepovie.com",
-      'm.media-amazon.com'
+      "m.media-amazon.com",
     ],
   },
 };
-
+module.exports = {
+  webpack: (config) => {
+    config.resolve.fallback = { punycode: false };
+    return config;
+  },
+};
 module.exports = nextConfig;

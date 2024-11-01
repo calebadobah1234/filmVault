@@ -134,13 +134,27 @@ const getRelatedContentAm = async (req, res) => {
       });
     }
 
-    const categoriesArray = categories ? categories.split(",") : [];
-    const actorsArray = actors ? actors.split(",") : [];
+    const categoriesArray = categories
+      ? categories.split(",").filter(Boolean)
+      : [];
+    const actorsArray = actors ? actors.split(",").filter(Boolean) : [];
+
+    // Escape special regex characters in title
+    const escapedTitle = title
+      ? title.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+      : "";
 
     // Create a base query that excludes exact title matches
     const baseQuery = {
-      title: { $not: { $regex: `^${title}$`, $options: "i" } },
+      title: { $not: { $regex: `^${escapedTitle}$`, $options: "i" } },
     };
+
+    // Safely create word-based search terms
+    const titleWords = escapedTitle
+      .split(/\s+/)
+      .filter((word) => word.length > 0)
+      .map((word) => word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+      .join("|");
 
     const pipeline = [
       { $match: baseQuery },
@@ -153,19 +167,27 @@ const getRelatedContentAm = async (req, res) => {
                 $multiply: [
                   {
                     $size: {
-                      $setIntersection: ["$categories", categoriesArray],
+                      $setIntersection: [
+                        { $ifNull: ["$categories", []] },
+                        categoriesArray,
+                      ],
                     },
                   },
-                  2, // Weight for category matches
+                  2,
                 ],
               },
               // Actor matching score
               {
                 $multiply: [
                   {
-                    $size: { $setIntersection: ["$actors", actorsArray] },
+                    $size: {
+                      $setIntersection: [
+                        { $ifNull: ["$actors", []] },
+                        actorsArray,
+                      ],
+                    },
                   },
-                  2, // Weight for actor matches
+                  2,
                 ],
               },
               // Partial Title matching score
@@ -173,16 +195,27 @@ const getRelatedContentAm = async (req, res) => {
                 $cond: [
                   {
                     $regexMatch: {
-                      input: "$title",
-                      regex: new RegExp(title.split(" ").join("|"), "i"),
+                      input: { $ifNull: ["$title", ""] },
+                      regex: titleWords,
+                      options: "i",
                     },
                   },
-                  3, // Weight for partial title matches
+                  3,
                   0,
                 ],
               },
               // IMDB rating score
-              { $divide: ["$imdb", 2] }, // Add IMDB rating to relevance score
+              {
+                $add: [
+                  {
+                    $cond: [
+                      { $ifNull: ["$imdb", false] },
+                      { $divide: [{ $ifNull: ["$imdb", 0] }, 2] },
+                      0,
+                    ],
+                  },
+                ],
+              },
             ],
           },
         },
@@ -195,8 +228,13 @@ const getRelatedContentAm = async (req, res) => {
 
     res.status(200).json(items);
   } catch (error) {
-    console.error("Server error:", error);
-    handleServerError(res, error);
+    console.error("Server error:", error.message, error.stack);
+    // Send a more detailed error response
+    res.status(500).json({
+      error: "Internal Server Error",
+      message: error.message,
+      details: process.env.NODE_ENV === "development" ? error.stack : undefined,
+    });
   }
 };
 
