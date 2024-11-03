@@ -266,9 +266,10 @@ const page = async ({ params }) => {
           <div className="flex flex-wrap justify-center mt-6 gap-4">
             {data.episodesData.map((item, index) => {
               // Only show links that DON'T include either "buy-subscription" OR "Duble"
-              const isValidLink =
-                !item.downloadLink.includes("buy-subscription") &&
-                !item.downloadLink.includes("Duble");
+              const blockedTerms = ["buy-subscription", "Duble", "Dubbed"];
+              const isValidLink = !blockedTerms.some((term) =>
+                item.downloadLink.includes(term)
+              );
 
               return (
                 isValidLink && (
