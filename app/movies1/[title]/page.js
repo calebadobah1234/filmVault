@@ -188,6 +188,8 @@ const page = async ({ params }) => {
                   ? data.img
                   : data.img && data.img.includes("avamovie")
                   ? `/images1/${sanitizeTitle(data.title)}`
+                  : data.imageUrl == "N/A"
+                  ? "/"
                   : data.imageUrl
               }
               width={200}

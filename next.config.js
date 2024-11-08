@@ -30,6 +30,7 @@ const nextConfig = {
       "blogger.googleusercontent.com",
       "moviepovie.com",
       "m.media-amazon.com",
+      "aiofilm3.ir",
     ],
   },
 };

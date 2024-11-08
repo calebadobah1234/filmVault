@@ -124,11 +124,7 @@ const LatestItems = (props) => {
                       : "max-sm:mb-32 mb-24"
                   } text-blue-300 group-hover:text-white group-hover:bg-yellow-500 rounded-sm ml-3 bg-red-500 px-2 py-1 text-xs transition-all duration-300 ease-in-out transform group-hover:translate-y-1`}
                 >
-                  <p>
-                    {item.categories[0]
-                      ? item.categories[0]
-                      : item.categories[1]}
-                  </p>
+                  {item?.categories?.[0] && <p>{item.categories[0]}</p>}
                 </div>
 
                 {item.imdbRating || imdb ? (
