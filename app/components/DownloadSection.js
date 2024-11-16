@@ -8,10 +8,6 @@ const DownloadSection = ({ seasons }) => {
     setOpenSeason(openSeason === seasonNumber ? null : seasonNumber);
   };
 
-  const nonEmptySeasons = seasons.filter((season) =>
-    season.resolutions.some((resolution) => resolution.episodes.length > 0)
-  );
-
   const getDisplayText = (episode) => {
     const persianRegex = /[\u0600-\u06FF]/;
     let displayText = "";
@@ -46,6 +42,17 @@ const DownloadSection = ({ seasons }) => {
 
     return displayText.trim() || "Unknown Episode";
   };
+
+  // Filter out seasons with no episodes after removing "duble" episodes
+  const nonEmptySeasons = seasons.filter((season) =>
+    season.resolutions.some((resolution) => {
+      // Filter out episodes containing "duble" and check if there are any remaining episodes
+      const filteredEpisodes = resolution.episodes.filter(
+        (episode) => !getDisplayText(episode).toLowerCase().includes("duble")
+      );
+      return filteredEpisodes.length > 0;
+    })
+  );
 
   return (
     <div className="mt-12 max-w-4xl mx-auto">
@@ -88,49 +95,55 @@ const DownloadSection = ({ seasons }) => {
             }`}
           >
             <div className="p-4">
-              {season.resolutions.map(
-                (resolution, resIndex) =>
-                  resolution.episodes.length > 0 && (
-                    <div key={resIndex} className="mb-4">
-                      {resolution.resolution === "Unknown" ? (
-                        <></>
-                      ) : (
-                        <h4 className="text-lg font-medium text-gray-700 mb-2">
-                          {resolution.resolution} Resolution
-                        </h4>
-                      )}
+              {season.resolutions.map((resolution, resIndex) => {
+                // Filter out episodes containing "duble"
+                const filteredEpisodes = resolution.episodes.filter(
+                  (episode) =>
+                    !getDisplayText(episode).toLowerCase().includes("duble")
+                );
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {resolution.episodes.map((episode, epIndex) => (
-                          <a
-                            key={epIndex}
-                            href={episode.downloadLink}
-                            className="flex items-center justify-between p-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200"
-                            target="_blank"
-                            rel="noopener noreferrer"
+                // Only render resolution section if it has episodes after filtering
+                return filteredEpisodes.length > 0 ? (
+                  <div key={resIndex} className="mb-4">
+                    {resolution.resolution === "Unknown" ? (
+                      <></>
+                    ) : (
+                      <h4 className="text-lg font-medium text-gray-700 mb-2">
+                        {resolution.resolution} Resolution
+                      </h4>
+                    )}
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {filteredEpisodes.map((episode, epIndex) => (
+                        <a
+                          key={epIndex}
+                          href={episode.downloadLink}
+                          className="flex items-center justify-between p-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <span className="truncate mr-2">
+                            {getDisplayText(episode)}
+                          </span>
+                          <svg
+                            className="w-4 h-4 flex-shrink-0"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
                           >
-                            <span className="truncate mr-2">
-                              {getDisplayText(episode)}
-                            </span>
-                            <svg
-                              className="w-4 h-4 flex-shrink-0"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                              />
-                            </svg>
-                          </a>
-                        ))}
-                      </div>
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+                            />
+                          </svg>
+                        </a>
+                      ))}
                     </div>
-                  )
-              )}
+                  </div>
+                ) : null;
+              })}
             </div>
           </div>
         </div>
