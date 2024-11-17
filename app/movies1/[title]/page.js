@@ -7,6 +7,7 @@ import Link from "next/link";
 import { JsonLd } from "react-schemaorg";
 import CommentSection from "@/app/components/CommentSection";
 import ImageWithFallback from "@/app/components/ImageWithFallback";
+import Script from "next/script";
 
 export async function generateMetadata({ params }) {
   const res = await fetch(
@@ -179,6 +180,16 @@ const page = async ({ params }) => {
           },
         }}
       />
+      <Script id="ad-options">
+        {`atOptions = {
+          'key' : 'db2206c1070f56974805612fc96f6ba4',
+          'format' : 'iframe',
+          'height' : 250,
+          'width' : 300,
+          'params' : {}
+        };`}
+      </Script>
+      <Script src="//www.highperformanceformat.com/db2206c1070f56974805612fc96f6ba4/invoke.js" />
       <div className="container mx-auto p-4 ">
         <div className="flex flex-col md:flex-row bg-gray-50 rounded-lg shadow-md overflow-hidden py-4">
           <div className="md:w-1/3 flex max-md:justify-start max-md:ml-6 lg:justify-end items-center">
