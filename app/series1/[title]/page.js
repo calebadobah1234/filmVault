@@ -6,6 +6,7 @@ import { JsonLd } from "react-schemaorg";
 import CommentSection from "@/app/components/CommentSection";
 import ImageWithFallback from "@/app/components/ImageWithFallback";
 import Script from "next/script";
+import AdScript from "@/app/components/Adscript";
 
 export async function generateMetadata({ params }) {
   const res = await fetch(
@@ -193,13 +194,7 @@ const page = async ({ params }) => {
             <DownloadSection seasons={data.seasons} />
           </div>
         </div>
-        <Script
-          src="//pl25046019.profitablecpmrate.com/a2ec5d29f1060455d67da23054ccb38b/invoke.js"
-          data-cfasync="false"
-          async
-          strategy="afterInteractive"
-        />
-        <div id="container-a2ec5d29f1060455d67da23054ccb38b"></div>
+        <AdScript />
         <div className="mt-12">
           <LatestItems
             title="You May Also Like"

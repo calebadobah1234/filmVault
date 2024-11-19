@@ -1,7 +1,5 @@
 import React from "react";
-import Image from "next/image";
-import RelatedContent from "@/app/components/RelatedContent";
-import axios from "axios";
+import AdScript from "@/app/components/Adscript";
 import LatestItems from "@/app/components/LatestItems";
 import Link from "next/link";
 import { JsonLd } from "react-schemaorg";
@@ -289,13 +287,7 @@ const page = async ({ params }) => {
             })}
           </div>
         </div>
-        <Script
-          src="//pl25046019.profitablecpmrate.com/a2ec5d29f1060455d67da23054ccb38b/invoke.js"
-          data-cfasync="false"
-          async
-          strategy="afterInteractive"
-        />
-        <div id="container-a2ec5d29f1060455d67da23054ccb38b"></div>
+        <AdScript />
         <div className="mt-12">
           <LatestItems
             title="You May Also Like"
