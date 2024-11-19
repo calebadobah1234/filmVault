@@ -15,14 +15,14 @@ const SearchItems = (props) => {
       ) : (
         <></>
       )} */}
+      <Script
+        src="//pl25046019.profitablecpmrate.com/a2ec5d29f1060455d67da23054ccb38b/invoke.js"
+        data-cfasync="false"
+        async
+        strategy="afterInteractive"
+      />
+      <div id="container-a2ec5d29f1060455d67da23054ccb38b"></div>
       <div className="mt-5 flex justify-center">
-        <Script
-          src="//pl25046019.profitablecpmrate.com/a2ec5d29f1060455d67da23054ccb38b/invoke.js"
-          data-cfasync="false"
-          async
-          strategy="afterInteractive"
-        />
-        <div id="container-a2ec5d29f1060455d67da23054ccb38b"></div>
         <LatestItems data={props.data} flex={true} itemsToShow={120} />
       </div>
     </>

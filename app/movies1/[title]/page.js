@@ -264,16 +264,6 @@ const page = async ({ params }) => {
             </div>
           </div>
         </div>
-        <Script id="ad-options">
-          {`atOptions = {
-          'key' : 'db2206c1070f56974805612fc96f6ba4',
-          'format' : 'iframe',
-          'height' : 250,
-          'width' : 300,
-          'params' : {}
-        };`}
-        </Script>
-        <Script src="//www.highperformanceformat.com/db2206c1070f56974805612fc96f6ba4/invoke.js" />
 
         <div className="mt-12 text-center">
           <h2 className="text-2xl font-bold text-gray-800">Download Links</h2>
