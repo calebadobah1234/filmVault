@@ -1,6 +1,5 @@
 import { use } from "react";
 import LatestItems from "./components/LatestItems";
-import TrendingItems from "./components/TrendingItems";
 
 const BASE_URL = "https://filmvaultbackend-4.onrender.com";
 

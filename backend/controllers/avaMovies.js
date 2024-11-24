@@ -254,19 +254,53 @@ const getCategoryDataAm = async (req, res) => {
     let items, totalCount;
 
     if (category.toLowerCase() === "all") {
-      // If category is "all", fetch all items
+      // Modified "all" category pipeline to handle N/A years
       items = await avaMovie.aggregate([
         {
           $addFields: {
             effectiveYear: {
               $ifNull: ["$movieInfo.yearOfPublication", "$year"],
             },
+            // Add a sorting field that puts numeric years first
+            yearSortValue: {
+              $cond: {
+                if: {
+                  $and: [
+                    {
+                      $ne: [
+                        {
+                          $type: {
+                            $ifNull: ["$movieInfo.yearOfPublication", "$year"],
+                          },
+                        },
+                        "missing",
+                      ],
+                    },
+                    {
+                      $ne: [
+                        { $ifNull: ["$movieInfo.yearOfPublication", "$year"] },
+                        "N/A",
+                      ],
+                    },
+                    {
+                      $ne: [
+                        { $ifNull: ["$movieInfo.yearOfPublication", "$year"] },
+                        null,
+                      ],
+                    },
+                  ],
+                },
+                then: 1,
+                else: 0,
+              },
+            },
           },
         },
         {
           $sort: {
-            effectiveYear: -1,
-            _id: -1,
+            yearSortValue: -1, // Sort valid years first
+            effectiveYear: -1, // Then by year value
+            _id: -1, // Finally by _id
           },
         },
         {
@@ -279,7 +313,7 @@ const getCategoryDataAm = async (req, res) => {
 
       totalCount = await avaMovie.countDocuments();
     } else {
-      // Use the modified aggregation pipeline for specific categories
+      // Modified specific category pipeline
       const pipeline = [
         {
           $match: {
@@ -334,14 +368,28 @@ const getCategoryDataAm = async (req, res) => {
                 },
               },
             },
+            // Add a sorting field that puts numeric years first
+            yearSortValue: {
+              $cond: {
+                if: {
+                  $and: [
+                    { $ne: [{ $type: "$yearInt" }, "missing"] },
+                    { $ne: ["$yearInt", 0] },
+                  ],
+                },
+                then: 1,
+                else: 0,
+              },
+            },
           },
         },
         {
           $sort: {
-            lastModified: -1,
-            yearInt: -1,
-            _id: -1,
-            categoryIndex: 1,
+            yearSortValue: -1, // Sort valid years first
+            lastModified: -1, // Then by last modified
+            yearInt: -1, // Then by year value
+            _id: -1, // Then by _id
+            categoryIndex: 1, // Finally by category index
           },
         },
         {
