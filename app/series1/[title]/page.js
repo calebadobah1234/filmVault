@@ -10,7 +10,7 @@ import AdScript from "@/app/components/Adscript";
 
 export async function generateMetadata({ params }) {
   const res = await fetch(
-    `https://filmvaultbackend-3.onrender.com/get-item-detailsAiom/${params.title}`,
+    `https://filmvaultbackend-4.onrender.com/get-item-detailsAiom/${params.title}`,
     {
       cache: "force-cache",
     }
@@ -53,7 +53,7 @@ export async function generateMetadata({ params }) {
 
 const page = async ({ params }) => {
   const res = await fetch(
-    `https://filmvaultbackend-3.onrender.com/get-item-detailsAiom/${params.title}`,
+    `https://filmvaultbackend-4.onrender.com/get-item-detailsAiom/${params.title}`,
     {
       revalidate: 86400,
     }
@@ -72,7 +72,7 @@ const page = async ({ params }) => {
         title: title,
       }).toString();
       const response = await fetch(
-        `https://filmvaultbackend-3.onrender.com/get-related-contentAiom?${queryString}`,
+        `https://filmvaultbackend-4.onrender.com/get-related-contentAiom?${queryString}`,
 
         {
           cache: "force-cache",

@@ -45,16 +45,16 @@ const SearchPage = () => {
       try {
         const [resAm, resAiom, resAiome, resAiokd] = await Promise.all([
           axios.get(
-            `https://filmvaultbackend-3.onrender.com/searchAm?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
+            `https://filmvaultbackend-4.onrender.com/searchAm?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
           ),
           axios.get(
-            `https://filmvaultbackend-3.onrender.com/searchAiom?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
+            `https://filmvaultbackend-4.onrender.com/searchAiom?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
           ),
           axios.get(
-            `https://filmvaultbackend-3.onrender.com/searchAiome?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
+            `https://filmvaultbackend-4.onrender.com/searchAiome?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
           ),
           axios.get(
-            `https://filmvaultbackend-3.onrender.com/searchAiokd?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
+            `https://filmvaultbackend-4.onrender.com/searchAiokd?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
           ),
         ]);
 

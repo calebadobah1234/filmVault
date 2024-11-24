@@ -7,7 +7,7 @@ import SearchItems from "@/app/components/SearchItems";
 
 const page = async ({ searchParams }) => {
   const res = await fetch(
-    `https://filmvaultbackend-3.onrender.com/get-movies-by-year?year=${searchParams.year}&limit=30&skip=${searchParams.skip}`,
+    `https://filmvaultbackend-4.onrender.com/get-movies-by-year?year=${searchParams.year}&limit=30&skip=${searchParams.skip}`,
     { next: { revalidate: 21600 } }
   );
   const data = await res.json();

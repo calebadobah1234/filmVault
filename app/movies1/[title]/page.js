@@ -9,7 +9,7 @@ import Script from "next/script";
 
 export async function generateMetadata({ params }) {
   const res = await fetch(
-    `https://filmvaultbackend-3.onrender.com/get-item-detailsAm/${params.title}`,
+    `https://filmvaultbackend-4.onrender.com/get-item-detailsAm/${params.title}`,
     {
       cache: "force-cache",
     }
@@ -56,7 +56,7 @@ export async function generateMetadata({ params }) {
 
 const page = async ({ params }) => {
   const res = await fetch(
-    `https://filmvaultbackend-3.onrender.com/get-item-detailsAm/${params.title}`,
+    `https://filmvaultbackend-4.onrender.com/get-item-detailsAm/${params.title}`,
     {
       revalidate: 86400,
     }
@@ -98,7 +98,7 @@ const page = async ({ params }) => {
       console.log("Request parameters:", params);
 
       const queryString = new URLSearchParams(params).toString();
-      const url = `https://filmvaultbackend-3.onrender.com/get-related-contentAm?${queryString}`;
+      const url = `https://filmvaultbackend-4.onrender.com/get-related-contentAm?${queryString}`;
 
       console.log("Fetching from URL:", url);
 

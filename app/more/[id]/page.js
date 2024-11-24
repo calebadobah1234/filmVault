@@ -6,7 +6,7 @@ import LatestItems from "@/app/components/LatestItems";
 
 export const generateMetadata = async ({ params }) => {
   const res = await fetch(
-    `https://filmvaultbackend-3.onrender.com/get-item-detailsS/${params.id}`,
+    `https://filmvaultbackend-4.onrender.com/get-item-detailsS/${params.id}`,
     {
       next: { revalidate: 60 },
     }
@@ -83,7 +83,7 @@ let categories = [
 
 const page = async ({ params }) => {
   const res = await fetch(
-    `https://filmvaultbackend-3.onrender.com/get-item-detailsS/${params.id}`,
+    `https://filmvaultbackend-4.onrender.com/get-item-detailsS/${params.id}`,
     {
       revalidate: 90000,
     }
@@ -98,13 +98,13 @@ const page = async ({ params }) => {
 
   const res9 = await axios.all([
     axios.get(
-      `https://filmvaultbackend-3.onrender.com/get-related-contentS/${category1}`
+      `https://filmvaultbackend-4.onrender.com/get-related-contentS/${category1}`
     ),
     axios.get(
-      `https://filmvaultbackend-3.onrender.com/get-related-contentS/${category2}`
+      `https://filmvaultbackend-4.onrender.com/get-related-contentS/${category2}`
     ),
     axios.get(
-      `https://filmvaultbackend-3.onrender.com/get-related-contentS/${category3}`
+      `https://filmvaultbackend-4.onrender.com/get-related-contentS/${category3}`
     ),
   ]);
   console.log(data.categories[0]);
@@ -124,7 +124,7 @@ const page = async ({ params }) => {
   const uniqueCombinedData = Object.values(uniqueDataMap);
 
   // const addViews = await axios.post(
-  //   `https://filmvaultbackend-3.onrender.com/get-item-detailsS/${params.id}`
+  //   `https://filmvaultbackend-4.onrender.com/get-item-detailsS/${params.id}`
   // );
   let image = data.img.split(",")[0];
   const modifiedImg = decodeURIComponent(

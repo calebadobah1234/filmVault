@@ -10,7 +10,7 @@ const SlideShow = () => {
     const fetchData = async () => {
       try {
         const res = await fetch(
-          "https://filmvaultbackend-3.onrender.com/slideShow"
+          "https://filmvaultbackend-4.onrender.com/slideShow"
         );
         const mainData = await res.json();
         console.log(mainData);
