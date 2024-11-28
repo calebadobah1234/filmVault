@@ -9,7 +9,7 @@ import Script from "next/script";
 
 export async function generateMetadata({ params }) {
   const res = await fetch(
-    `filmvaultbackend-xpgy.onrender.com/get-item-detailsAm/${params.title}`,
+    `https://filmvaultbackend-xpgy.onrender.com/get-item-detailsAm/${params.title}`,
     {
       cache: "force-cache",
     }
