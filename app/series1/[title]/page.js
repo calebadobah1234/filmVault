@@ -72,7 +72,7 @@ const page = async ({ params }) => {
         title: title,
       }).toString();
       const response = await fetch(
-        `https://filmvaultbackend-4.onrender.com/get-related-contentAiom?${queryString}`,
+        `https://filmvaultbackend-xpgy.onrender.com/get-related-contentAiom?${queryString}`,
 
         {
           cache: "force-cache",
