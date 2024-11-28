@@ -98,7 +98,7 @@ const page = async ({ params }) => {
       console.log("Request parameters:", params);
 
       const queryString = new URLSearchParams(params).toString();
-      const url = `https://filmvaultbackend-4.onrender.com/get-related-contentAm?${queryString}`;
+      const url = `https://filmvaultbackend-xpgy.onrender.com/get-related-contentAm?${queryString}`;
 
       console.log("Fetching from URL:", url);
 
