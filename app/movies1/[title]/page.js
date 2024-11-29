@@ -16,22 +16,21 @@ export async function generateMetadata({ params }) {
   );
   const data1 = await res.json();
   const data = data1[0];
+
+  // Check if the year is already in the title
+  const shouldAddYear = !data.title.includes(data.year);
+  const titleWithYear = shouldAddYear
+    ? `${data.title} ${data.year}`
+    : data.title;
+
   return {
-    title: `${data.title} ${
-      data.year ? data.year : ""
-    } free HD download | FilmVault.xyz`,
-    description: `Watch and download ${data.title} (${
-      data.year
-    }) for free in HD quality. ${
+    title: `${titleWithYear} free HD download | FilmVault.xyz`,
+    description: `Watch and download ${titleWithYear} for free in HD quality. ${
       data.description ? data.description.slice(0, 300) : ""
     }`,
     openGraph: {
-      title: `${data.title} ${
-        data.year ? data.year : ""
-      } free HD download | FilmVault.xyz`,
-      description: `Watch and download ${data.title} (${
-        data.year ? data.year : ""
-      }) for free in HD quality. ${
+      title: `${titleWithYear} free HD download | FilmVault.xyz`,
+      description: `Watch and download ${titleWithYear} for free in HD quality. ${
         data.description ? data.description.slice(0, 300) : ""
       }`,
       images: [
