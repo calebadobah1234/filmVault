@@ -14,7 +14,7 @@ const CommentSection = ({ itemId, linkIdentifier }) => {
   const fetchComments = async () => {
     try {
       const response = await axios.get(
-        `https://filmvaultbackend-4.onrender.com/comment${linkIdentifier}/${itemId}`
+        `https://filmvaultbackend-xpgy.onrender.com/comment${linkIdentifier}/${itemId}`
       );
       setComments(response.data);
     } catch (error) {
@@ -26,7 +26,7 @@ const CommentSection = ({ itemId, linkIdentifier }) => {
     e.preventDefault();
     try {
       await axios.post(
-        `https://filmvaultbackend-4.onrender.com/comment${linkIdentifier}/${itemId}`,
+        `https://filmvaultbackend-xpgy.onrender.com/comment${linkIdentifier}/${itemId}`,
         {
           content: newComment,
           author: authorName || "Anonymous",

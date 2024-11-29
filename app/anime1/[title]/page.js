@@ -9,7 +9,7 @@ import ImageWithFallback from "@/app/components/ImageWithFallback";
 
 export async function generateMetadata({ params }) {
   const res = await fetch(
-    `https://filmvaultbackend-4.onrender.com/get-item-detailsAiome/${params.title}`,
+    `https://filmvaultbackend-xpgy.onrender.com/get-item-detailsAiome/${params.title}`,
     {
       cache: "force-cache",
     }
@@ -52,7 +52,7 @@ export async function generateMetadata({ params }) {
 
 const page = async ({ params }) => {
   const res = await fetch(
-    `https://filmvaultbackend-4.onrender.com/get-item-detailsAiome/${params.title}`,
+    `https://filmvaultbackend-xpgy.onrender.com/get-item-detailsAiome/${params.title}`,
     {
       revalidate: 86400,
     }
@@ -71,7 +71,7 @@ const page = async ({ params }) => {
         title: title,
       }).toString();
       const response = await fetch(
-        `https://filmvaultbackend-4.onrender.com/get-related-contentAiome?${queryString}`,
+        `https://filmvaultbackend-xpgy.onrender.com/get-related-contentAiome?${queryString}`,
 
         {
           cache: "force-cache",
