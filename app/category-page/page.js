@@ -13,7 +13,7 @@ export async function generateMetadata({ searchParams }) {
 }
 const page = async ({ searchParams }) => {
   const res = await fetch(
-    `https://filmvaultbackend-xpgy.onrender.com/get-category-dataAm/?category=${searchParams.category}&limit=30&skip=${searchParams.skip}`,
+    `https://filmvaultbackend-3.onrender.com/get-category-dataAm/?category=${searchParams.category}&limit=30&skip=${searchParams.skip}`,
     { next: { revalidate: 86400 } }
   );
   const data = await res.json();
