@@ -9,7 +9,7 @@ import Script from "next/script";
 
 export async function generateMetadata({ params }) {
   const res = await fetch(
-    `https://filmvaultbackend-xpgy.onrender.com/get-item-detailsAm/${params.title}`,
+    `https://filmvaultbackend-3.onrender.com/get-item-detailsAm/${params.title}`,
     {
       cache: "force-cache",
     }
@@ -55,7 +55,7 @@ export async function generateMetadata({ params }) {
 
 const page = async ({ params }) => {
   const res = await fetch(
-    `https://filmvaultbackend-xpgy.onrender.com/get-item-detailsAm/${params.title}`,
+    `https://filmvaultbackend-3.onrender.com/get-item-detailsAm/${params.title}`,
     {
       revalidate: 86400,
     }
