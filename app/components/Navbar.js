@@ -79,7 +79,7 @@ const Navbar = () => {
                 >
                   PC Games And Software
                   <span className="absolute bottom-0 left-0 w-full h-0.5 bg-green-400 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-in-out"></span>
-                </Link>
+                </a>
               </li>
               <Categories />
             </ul>
