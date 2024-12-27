@@ -405,6 +405,9 @@ const MobileNav = () => {
               <NavLink href="/category-page-kdrama?category=all&limit=30&skip=1&currentPage=1">
                 Korean Series
               </NavLink>
+                <NavLink href="https://www.craacksoft.xyz/">
+                Korean Series
+              </NavLink>
             </ul>
             <div className="px-4 py-2">
               <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">
