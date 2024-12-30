@@ -31,6 +31,7 @@ const nextConfig = {
       "moviepovie.com",
       "m.media-amazon.com",
       "aiofilm3.ir",
+      "aiofilm.com"
     ],
   },
 };
