@@ -263,29 +263,29 @@ const page = async ({ params }) => {
         </div>
 
         <div className="mt-12 text-center">
-          <h2 className="text-2xl font-bold text-gray-800">Download Links</h2>
-          <div className="flex flex-wrap justify-center mt-6 gap-4">
-            {data.episodesData.map((item, index) => {
-              // Only show links that DON'T include either "buy-subscription" OR "Duble"
-              const blockedTerms = ["buy-subscription", "Duble", "Dubbed"];
-              const isValidLink = !blockedTerms.some((term) =>
-                item.downloadLink.includes(term)
-              );
+        <h2 className="text-2xl font-bold text-gray-800">Download Links</h2>
+        <div className="flex flex-wrap justify-center mt-6 gap-4">
+          {data.episodesData.map((item, index) => {
+            const blockedTerms = ["buy-subscription", "Duble", "Dubbed"];
+            const isValidLink = !blockedTerms.some((term) =>
+              item.downloadLink.includes(term)
+            );
 
-              return (
-                isValidLink && (
-                  <a
-                    href={item.downloadLink}
-                    key={index}
-                    className="max-md:min-w-[100%] bg-gray-800 text-white py-4 px-8 rounded-lg shadow-lg hover:bg-gray-700 transition duration-200"
-                  >
-                    {item.quality} | {item.size}
-                  </a>
-                )
-              );
-            })}
-          </div>
+            return (
+              isValidLink && (
+                <a
+                  href={item.downloadLink}
+                  key={index}
+                  download={`${data.title}_${item.quality}.mp4`}
+                  className="max-md:min-w-[100%] bg-gray-800 text-white py-4 px-8 rounded-lg shadow-lg hover:bg-gray-700 transition duration-200"
+                >
+                  {item.quality} | {item.size}
+                </a>
+              )
+            );
+          })}
         </div>
+      </div>
         <AdScript />
         <div className="mt-12">
           <LatestItems
