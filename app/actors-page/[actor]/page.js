@@ -7,7 +7,7 @@ import SearchItems from "@/app/components/SearchItems";
 
 const page = async ({ params }) => {
   const res = await fetch(
-    `https://filmvaultbackend-xpgy.onrender.com/get-other-actor-movies/${params.actor}`,
+    `https://filmvaultbackend-3-b6cs.onrender.com/get-other-actor-movies/${params.actor}`,
     { cache: "no-cache" }
   );
   const data = await res.json();

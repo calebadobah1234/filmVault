@@ -1,7 +1,7 @@
 import { use } from "react";
 import LatestItems from "./components/LatestItems";
 
-const BASE_URL = "https://filmvaultbackend-2-gftk.onrender.com";
+const BASE_URL = "https://filmvaultbackend-3-b6cs.onrender.com";
 
 export const metadata = {
   title: "FilmVault.xyz: Free Hd movies download",
