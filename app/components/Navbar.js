@@ -74,6 +74,15 @@ const Navbar = () => {
               </li>
               <li className="relative group mb-2 md:mb-0">
                 <a
+                  href={`https://www.mp3vault.xyz/`}
+                  className="hover:text-green-400 uppercase text-lg md:text-xl font-bold relative px-2 py-1 transition-colors duration-300 ease-in-out"
+                >
+                  Music
+                  <span className="absolute bottom-0 left-0 w-full h-0.5 bg-green-400 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-in-out"></span>
+                </a>
+              </li>
+              <li className="relative group mb-2 md:mb-0">
+                <a
                   href={`https://www.cracksoft.xyz/`}
                   className="hover:text-green-400 uppercase text-lg md:text-xl font-bold relative px-2 py-1 transition-colors duration-300 ease-in-out"
                 >
