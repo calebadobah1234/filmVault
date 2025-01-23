@@ -14,7 +14,7 @@ export async function generateMetadata({ searchParams }) {
 
 const page = async ({ searchParams }) => {
   const res = await fetch(
-    `https://filmvaultbackend-3-b6cs.onrender.com/get-category-dataAiokd/?category=${searchParams.category}&limit=30&skip=${searchParams.skip}`,
+    `https://api3.mp3vault.xyz/get-category-dataAiokd/?category=${searchParams.category}&limit=30&skip=${searchParams.skip}`,
     { next: { revalidate: 86400 } }
   );
   const data = await res.json();

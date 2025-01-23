@@ -35,10 +35,10 @@ const Searchbar = (props) => {
       if (searchValue.trim() !== "") {
         try {
           const endpoints = [
-            `https://filmvaultbackend-3-b6cs.onrender.com/searchAm?title=${searchValue}&skip=1&limit=5`,
-            `https://filmvaultbackend-3-b6cs.onrender.com/searchAiom?title=${searchValue}&skip=1&limit=5`,
-            `https://filmvaultbackend-3-b6cs.onrender.com/searchAiome?title=${searchValue}&skip=1&limit=5`,
-            `https://filmvaultbackend-3-b6cs.onrender.com/searchAiokd?title=${searchValue}&skip=1&limit=5`,
+            `https://api3.mp3vault.xyz/searchAm?title=${searchValue}&skip=1&limit=5`,
+            `https://api3.mp3vault.xyz/searchAiom?title=${searchValue}&skip=1&limit=5`,
+            `https://api3.mp3vault.xyz/searchAiome?title=${searchValue}&skip=1&limit=5`,
+            `https://api3.mp3vault.xyz/searchAiokd?title=${searchValue}&skip=1&limit=5`,
           ];
 
           const responses = await Promise.all(

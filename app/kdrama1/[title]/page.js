@@ -11,7 +11,7 @@ import ImageWithFallback from "@/app/components/ImageWithFallback";
 
 export async function generateMetadata({ params }) {
   const res = await fetch(
-    `https://filmvaultbackend-3-b6cs.onrender.com/get-item-detailsAiokd/${params.title}`,
+    `https://api3.mp3vault.xyz/get-item-detailsAiokd/${params.title}`,
     {
       cache: "force-cache",
     }
@@ -50,7 +50,7 @@ export async function generateMetadata({ params }) {
 
 const page = async ({ params }) => {
   const res = await fetch(
-    `https://filmvaultbackend-3-b6cs.onrender.com/get-item-detailsAiokd/${params.title}`,
+    `https://api3.mp3vault.xyz/get-item-detailsAiokd/${params.title}`,
     {
       revalidate: 86400,
     }
@@ -69,7 +69,7 @@ const page = async ({ params }) => {
         title: title,
       }).toString();
       const response = await fetch(
-        `https://filmvaultbackend-3-b6cs.onrender.com/get-related-contentAiokd?${queryString}`,
+        `https://api3.mp3vault.xyz/get-related-contentAiokd?${queryString}`,
 
         {
           cache: "force-cache",

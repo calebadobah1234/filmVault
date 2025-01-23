@@ -45,16 +45,16 @@ const SearchPage = () => {
       try {
         const [resAm, resAiom, resAiome, resAiokd] = await Promise.all([
           axios.get(
-            `https://filmvaultbackend-3-b6cs.onrender.com/searchAm?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
+            `https://api3.mp3vault.xyz/searchAm?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
           ),
           axios.get(
-            `https://filmvaultbackend-3-b6cs.onrender.com/searchAiom?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
+            `https://api3.mp3vault.xyz/searchAiom?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
           ),
           axios.get(
-            `https://filmvaultbackend-3-b6cs.onrender.com/searchAiome?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
+            `https://api3.mp3vault.xyz/searchAiome?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
           ),
           axios.get(
-            `https://filmvaultbackend-3-b6cs.onrender.com/searchAiokd?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
+            `https://api3.mp3vault.xyz/searchAiokd?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
           ),
         ]);
 
