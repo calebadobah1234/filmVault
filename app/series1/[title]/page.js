@@ -7,6 +7,7 @@ import CommentSection from "@/app/components/CommentSection";
 import ImageWithFallback from "@/app/components/ImageWithFallback";
 import Script from "next/script";
 import AdScript from "@/app/components/Adscript";
+import EnhancedSeriesStreamingComponent from "@/app/components/StreamingComponentSeries";
 
 export async function generateMetadata({ params }) {
   const res = await fetch(
@@ -53,7 +54,7 @@ export async function generateMetadata({ params }) {
 
 const page = async ({ params }) => {
   const res = await fetch(
-    `https://filmvaultbackend-3-b6cs.onrender.com/get-item-detailsAiom/${params.title}`,
+    `https://api3.mp3vault.xyz/get-item-detailsAiom/${params.title}`,
     {
       revalidate: 86400,
     }
@@ -72,7 +73,7 @@ const page = async ({ params }) => {
         title: title,
       }).toString();
       const response = await fetch(
-        `https://filmvaultbackend-3-b6cs.onrender.com/get-related-contentAiom?${queryString}`,
+        `https://api3.mp3vault.xyz/get-related-contentAiom?${queryString}`,
 
         {
           cache: "force-cache",
@@ -188,6 +189,8 @@ const page = async ({ params }) => {
             </div>
           </div>
         </div>
+
+        <EnhancedSeriesStreamingComponent seasons={data.seasons} />
 
         <div className="mt-12 text-center">
           <div className="flex flex-col flex-wrap justify-center mt-6 gap-4">

@@ -6,6 +6,7 @@ import DownloadSection from "@/app/components/DownloadSection";
 import { JsonLd } from "react-schemaorg";
 import CommentSection from "@/app/components/CommentSection";
 import ImageWithFallback from "@/app/components/ImageWithFallback";
+import EnhancedSeriesStreamingComponent from "@/app/components/StreamingComponentSeries";
 
 export async function generateMetadata({ params }) {
   const res = await fetch(
@@ -188,7 +189,7 @@ const page = async ({ params }) => {
             </div>
           </div>
         </div>
-
+        <EnhancedSeriesStreamingComponent seasons={data.seasons} />
         <div className="mt-12 text-center">
           <div className="flex flex-col flex-wrap justify-center mt-6 gap-4">
             <DownloadSection seasons={data.seasons} />

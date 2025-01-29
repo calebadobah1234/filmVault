@@ -1,4 +1,5 @@
 import React from "react";
+
 import AdScript from "@/app/components/Adscript";
 import LatestItems from "@/app/components/LatestItems";
 import Link from "next/link";
@@ -6,6 +7,9 @@ import { JsonLd } from "react-schemaorg";
 import CommentSection from "@/app/components/CommentSection";
 import ImageWithFallback from "@/app/components/ImageWithFallback";
 import Script from "next/script";
+// import StreamingComponent from "@/app/components/StreamingComponent"
+import dynamic from 'next/dynamic';
+import ClientOnly from '@/app/components/ClientOnly';
 
 export async function generateMetadata({ params }) {
   const res = await fetch(
@@ -52,6 +56,14 @@ export async function generateMetadata({ params }) {
     },
   };
 }
+
+const StreamingComponent = dynamic(
+  () => import('@/app/components/StreamingComponent'),
+  { 
+    ssr: false,
+    loading: () => <div className="h-96 bg-gray-900 rounded-xl animate-pulse" />
+  }
+);
 
 const page = async ({ params }) => {
   const res = await fetch(
@@ -261,6 +273,19 @@ const page = async ({ params }) => {
             </div>
           </div>
         </div>
+
+        <div className="mt-8">
+  <h2 className="text-2xl font-bold text-gray-800 mb-4">Stream Now</h2>
+  <ClientOnly>
+    <StreamingComponent 
+      sources={data.episodesData.filter(item => 
+        !["buy-subscription", "Duble", "Dubbed"].some(term => 
+          item.downloadLink.includes(term)
+        )
+      )}
+    />
+  </ClientOnly>
+</div>
 
         <div className="mt-12 text-center">
         <h2 className="text-2xl font-bold text-gray-800">Download Links</h2>
