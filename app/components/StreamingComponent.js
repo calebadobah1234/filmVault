@@ -312,7 +312,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
       console.log("Download response:", responseData);
   
       if (!responseData.wasabi_url) {
-        throw new Error('No valid download URL received from server');
+        throw new Error('No valid Streaming URL received from server');
       }
   
       // Parse object key from Wasabi URL
@@ -391,6 +391,11 @@ const EnhancedStreamingComponent = ({ sources }) => {
       });
 
       if (source?.downloadLink) {
+        if (source.downloadLink.includes('dl4.sermovie')) {
+          setProcessingStatus('blocked');
+          setErrorMessage('Video will soon be available for streaming');
+          return;
+        }
         await processVideo(source.downloadLink);
       }
     }
@@ -421,17 +426,21 @@ const EnhancedStreamingComponent = ({ sources }) => {
   useEffect(() => {
     const processSelectedQuality = async () => {
       if (selectedQuality && sources?.length > 0) {
-        console.log("Processing quality:", selectedQuality);
         const source = sources.find(s => {
           const resolution = getResolutionNumber(s.quality);
           return resolution.toString() === selectedQuality;
         });
 
         if (source?.downloadLink) {
+          // Check if URL contains dl4.sermovie
+          if (source.downloadLink.includes('dl4.sermovie')) {
+            setProcessingStatus('blocked');
+            setErrorMessage('Video will soon be available for streaming');
+            return;
+          }
+          
           console.log("Found source URL:", source.downloadLink);
           await processVideo(source.downloadLink);
-        } else {
-          console.error("No download URL found for selected quality:", selectedQuality);
         }
       }
     };
@@ -579,6 +588,16 @@ const EnhancedStreamingComponent = ({ sources }) => {
       onMouseLeave={() => !isFullscreen && hideControls()}
     >
       <div className={`relative flex items-center justify-center ${isFullscreen ? 'h-screen w-screen' : 'aspect-video'}`}>
+        {/* Blocked status display */}
+        {processingStatus === 'blocked' && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80">
+            <div className="text-white text-lg text-center p-4">
+              Video will soon be available for streaming
+            </div>
+          </div>
+        )}
+  
+        {/* Downloading status display */}
         {processingStatus === 'downloading' && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80">
             <FaSpinner className="animate-spin text-white text-4xl mb-4" />
@@ -586,6 +605,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
           </div>
         )}
   
+        {/* Ready status display */}
         {processingStatus === 'ready' && streamingUrl && (
           <>
             {!hasStarted && (
@@ -674,99 +694,102 @@ const EnhancedStreamingComponent = ({ sources }) => {
           </>
         )}
   
-  {isBuffering && isPlayerReady && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-          <FaSpinner className="animate-spin text-white text-4xl" />
-        </div>
-      )}
-
-      {processingStatus === 'error' && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 p-4">
-          <div className="text-red-500 mb-4 text-center">
-            Error: {errorMessage}
+        {/* Buffering indicator */}
+        {isBuffering && isPlayerReady && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+            <FaSpinner className="animate-spin text-white text-4xl" />
           </div>
-          <button
-            onClick={handleRetry}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center"
-          >
-            <FaRotate className="mr-2" />
-            Retry
-          </button>
-        </div>
-      )}
+        )}
   
-  <div
-        ref={controlsRef}
-        className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 transition-opacity duration-300 ${
-          showControls ? 'opacity-100' : 'opacity-0'
-        }`}
-      >
-        <div className="flex items-center space-x-2 mb-4">
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step="any"
-            value={played}
-            onMouseDown={handleSeekMouseDown}
-            onChange={handleSeekChange}
-            onMouseUp={handleSeekMouseUp}
-            onTouchStart={handleSeekTouchStart}
-            onTouchMove={handleSeekTouchMove}
-            onTouchEnd={handleSeekTouchEnd}
-            className="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer"
-          />
-        </div>
-
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={handlePlayPause}
-              className="text-white hover:text-gray-300 transition"
-            >
-              {playing ? <FaPause size={20} /> : <FaPlay size={20} />}
-            </button>
-
-            <div className="text-gray-400 text-sm">
-              {formatTime(currentTime)} / {formatTime(duration)}
+        {/* Error status display */}
+        {processingStatus === 'error' && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 p-4">
+            <div className="text-red-500 mb-4 text-center">
+              Error: {errorMessage}
             </div>
-          </div>
-
-          <div className="flex items-center space-x-4">
-            <select
-              value={selectedQuality}
-              onChange={(e) => setSelectedQuality(e.target.value)}
-              className="bg-gray-700 text-white px-3 py-1 rounded-md"
-            >
-              {qualities.map(quality => (
-                <option key={quality} value={quality}>
-                  {quality}p
-                </option>
-              ))}
-            </select>
-
-            {isMobile && isFullscreen && (
-              <button
-                onClick={handleRotate}
-                className="text-white hover:text-gray-300 transition"
-                aria-label="Rotate screen"
-              >
-                <FaRotate size={20} />
-              </button>
-            )}
-
             <button
-              onClick={handleFullscreen}
-              className="text-white hover:text-gray-300 transition"
+              onClick={handleRetry}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center"
             >
-              <FaExpand size={20} />
+              <FaRotate className="mr-2" />
+              Retry
             </button>
+          </div>
+        )}
+  
+        {/* Controls */}
+        <div
+          ref={controlsRef}
+          className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 transition-opacity duration-300 ${
+            showControls ? 'opacity-100' : 'opacity-0'
+          }`}
+        >
+          <div className="flex items-center space-x-2 mb-4">
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step="any"
+              value={played}
+              onMouseDown={handleSeekMouseDown}
+              onChange={handleSeekChange}
+              onMouseUp={handleSeekMouseUp}
+              onTouchStart={handleSeekTouchStart}
+              onTouchMove={handleSeekTouchMove}
+              onTouchEnd={handleSeekTouchEnd}
+              className="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer"
+            />
+          </div>
+  
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={handlePlayPause}
+                className="text-white hover:text-gray-300 transition"
+              >
+                {playing ? <FaPause size={20} /> : <FaPlay size={20} />}
+              </button>
+  
+              <div className="text-gray-400 text-sm">
+                {formatTime(currentTime)} / {formatTime(duration)}
+              </div>
+            </div>
+  
+            <div className="flex items-center space-x-4">
+              <select
+                value={selectedQuality}
+                onChange={(e) => setSelectedQuality(e.target.value)}
+                className="bg-gray-700 text-white px-3 py-1 rounded-md"
+              >
+                {qualities.map(quality => (
+                  <option key={quality} value={quality}>
+                    {quality}p
+                  </option>
+                ))}
+              </select>
+  
+              {isMobile && isFullscreen && (
+                <button
+                  onClick={handleRotate}
+                  className="text-white hover:text-gray-300 transition"
+                  aria-label="Rotate screen"
+                >
+                  <FaRotate size={20} />
+                </button>
+              )}
+  
+              <button
+                onClick={handleFullscreen}
+                className="text-white hover:text-gray-300 transition"
+              >
+                <FaExpand size={20} />
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
-);
+  );
 };
 
 export default EnhancedStreamingComponent;

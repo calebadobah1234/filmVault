@@ -442,11 +442,14 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
   };
 
   const sanitizeFilename = (filename) => {
-    return encodeURIComponent(filename)
-      .replace(/%5B/g, '[')
-      .replace(/%5D/g, ']')
-      .replace(/%20/g, '.')
-      .replace(/%2E/g, '.');
+    // First decode any existing encoded characters to avoid double encoding
+    const decodedFilename = decodeURIComponent(filename);
+    
+    // Now properly encode the filename while preserving square brackets
+    return encodeURIComponent(decodedFilename)
+      .replace(/%5B/g, '[')  // Only replace %5B with [
+      .replace(/%5D/g, ']')  // Only replace %5D with ]
+      .replace(/%20/g, '.'); // Replace spaces with dots if needed
   };
 
   // Function to process video through backend
@@ -455,17 +458,17 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
       console.log("Starting video processing for URL:", url);
       setProcessingStatus('checking');
       setStreamingUrl(null);
-
+  
       if (!url) {
         throw new Error('No URL provided for processing');
       }
-
+  
       const originalFilename = url.split('/').pop() || 'video';
       const sanitizedFilename = sanitizeFilename(originalFilename);
-
+  
       // First check if file exists
       const initialFileCheck = await checkFileExists(sanitizedFilename);
-
+  
       if (initialFileCheck) {
         console.log("File already exists in Bunny CDN");
         const cdnUrl = `https://filmvault.b-cdn.net/${sanitizedFilename}`;
@@ -473,33 +476,33 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
         setProcessingStatus('ready');
         return;
       }
-
+  
       console.log("File not found in CDN, proceeding with download");
       setProcessingStatus('downloading');
-
+  
       const encodedUrl = encodeURIComponent(url);
       const encodedFilename = encodeURIComponent(originalFilename);
       const apiUrl = `https://api4.mp3vault.xyz/download?url=${encodedUrl}&filename=${encodedFilename}`;
-
+  
       const downloadResponse = await fetch(apiUrl, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
         }
       });
-
+  
       if (!downloadResponse.ok) {
         const errorText = await downloadResponse.text();
         throw new Error(`Download failed with status ${downloadResponse.status}: ${errorText}`);
       }
-
+  
       const responseData = await downloadResponse.json();
       console.log("Download response:", responseData);
-
+  
       if (!responseData.wasabi_url) {
         throw new Error('No Wasabi URL received in response');
       }
-
+  
       // Generate CDN URL from Wasabi URL
       let objectKey;
       try {
@@ -512,49 +515,41 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
         } else {
           objectKey = sanitizedFilename;
         }
-
-        if (responseData.wasabi_url) {
-          const cdnUrl = `https://filmvault.b-cdn.net/${objectKey}`;
-          setStreamingUrl(cdnUrl);
-          await extractSubtitles(cdnUrl);
-          setProcessingStatus('ready');
+  
+        const cdnUrl = `https://filmvault.b-cdn.net/${objectKey}`;
+        console.log("Generated CDN URL:", cdnUrl);
+  
+        // Wait for file to be available in CDN
+        let retryCount = 0;
+        const maxRetries = 5;
+        const retryDelay = 2000; // 2 seconds
+  
+        const waitForFile = async () => {
+          while (retryCount < maxRetries) {
+            const fileExists = await checkFileExists(objectKey);
+            if (fileExists) {
+              console.log("File confirmed available in CDN");
+              setStreamingUrl(cdnUrl);
+              setProcessingStatus('ready');
+              return true;
+            }
+            console.log(`File not yet available in CDN, retry ${retryCount + 1}/${maxRetries}`);
+            await new Promise(resolve => setTimeout(resolve, retryDelay));
+            retryCount++;
+          }
+          return false;
+        };
+  
+        const fileAvailable = await waitForFile();
+        if (!fileAvailable) {
+          throw new Error('File not available in CDN after maximum retries');
         }
   
       } catch (error) {
         console.error('Error parsing Wasabi URL:', error);
-        objectKey = sanitizedFilename;
+        throw new Error('Failed to generate CDN URL');
       }
-     
-
-      const cdnUrl = `https://filmvault.b-cdn.net/${objectKey}`;
-      console.log("Generated CDN URL:", cdnUrl);
-
-      // Wait for file to be available in CDN
-      let retryCount = 0;
-      const maxRetries = 5;
-      const retryDelay = 2000; // 2 seconds
-
-      const waitForFile = async () => {
-        while (retryCount < maxRetries) {
-          const fileExists = await checkFileExists(objectKey);
-          if (fileExists) {
-            console.log("File confirmed available in CDN");
-            setStreamingUrl(cdnUrl);
-            setProcessingStatus('ready');
-            return true;
-          }
-          console.log(`File not yet available in CDN, retry ${retryCount + 1}/${maxRetries}`);
-          await new Promise(resolve => setTimeout(resolve, retryDelay));
-          retryCount++;
-        }
-        return false;
-      };
-
-      const fileAvailable = await waitForFile();
-      if (!fileAvailable) {
-        throw new Error('File not available in CDN after maximum retries');
-      }
-
+  
     } catch (error) {
       console.error('Video processing error:', error);
       setProcessingStatus('error');
@@ -789,18 +784,16 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
         </select>
       </div>
 
-
-
       {/* Video Player Container */}
       <div
         ref={containerRef}
-        className="bg-gray-900 rounded-xl overflow-hidden shadow-xl relative group"
+        className="bg-gray-900 rounded-xl overflow-hidden shadow-xl relative group w-full"
         onMouseMove={showControlsWithTimeout}
         onMouseLeave={() => !isFullscreen && hideControls()}
       >
-        <div className={`relative ${isFullscreen ? 'h-screen flex items-center justify-center' : 'aspect-video'}`}>
+        <div className={`relative ${isFullscreen ? 'h-screen w-screen' : 'aspect-video'}`}>
           {processingStatus === 'downloading' && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80">
+            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-20">
               <FaSpinner className="animate-spin text-white text-4xl mb-4" />
               <span className="text-white">Processing video...</span>
             </div>
@@ -809,7 +802,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
           {processingStatus === 'ready' && streamingUrl && (
             <>
               {!hasStarted && (
-                <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-20">
                   <button
                     onClick={handlePlayPause}
                     className="text-white text-4xl hover:scale-110 transition-transform"
@@ -818,20 +811,30 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
                   </button>
                 </div>
               )}
-              <div className={`video-wrapper ${isFullscreen ? 'w-full h-full flex items-center justify-center' : ''}`}>
+              <div 
+                className={`video-wrapper relative w-full h-full ${
+                  isFullscreen ? 'fixed inset-0 bg-black' : ''
+                }`}
+                style={{
+                  aspectRatio: isFullscreen ? 'unset' : '16/9'
+                }}
+              >
                 <ReactPlayer
                   ref={playerRef}
                   url={streamingUrl}
                   playing={playing}
                   volume={volume}
-                  width={isFullscreen ? 'auto' : '100%'}
-                  height={isFullscreen ? '100%' : '100%'}
-                  className={`${isFullscreen ? 'max-w-full max-h-full m-auto' : 'absolute top-0 left-0'}`}
+                  width="100%"
+                  height="100%"
                   style={{
-                    margin: isFullscreen ? 'auto' : undefined,
-                    maxHeight: isFullscreen ? '100vh' : undefined,
-                    display: isFullscreen ? 'block' : undefined
+                    position: 'absolute',
+                    top: '0',
+                    left: '0',
+                    maxWidth: '100%',
+                    maxHeight: '100%',
+                    objectFit: 'contain'
                   }}
+                  className="react-player"
                   onProgress={handleProgress}
                   onDuration={setDuration}
                   onBuffer={handleBuffer}
@@ -839,40 +842,18 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
                   onReady={handlePlayerReady}
                   onError={handleError}
                   onClick={handleVideoClick}
-                  config={{
-                    file: {
-                      attributes: {
-                        controlsList: 'nodownload',
-                        crossOrigin: 'anonymous'
-                      },
-                      tracks: subtitles.map(subtitle => ({
-                        kind: 'subtitles',
-                        src: subtitle.src,
-                        srcLang: subtitle.language,
-                        label: subtitle.label,
-                        default: subtitle.id === selectedSubtitle
-                      })),
-                      forceVideo: true,
-                      hlsOptions: {
-                        maxBufferSize: 600 * 1024 * 1024,
-                        maxBufferLength: 600,
-                        startPosition: -1,
-                        debug: false
-                      }
-                    }
-                  }}
+                  config={playerConfig}
                 />
               </div>
             </>
           )}
 
           {isBuffering && isPlayerReady && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+            <div className="absolute inset-0 flex items-center justify-center bg-black/50 z-20">
               <FaSpinner className="animate-spin text-white text-4xl" />
             </div>
           )}
         </div>
-
         {/* Player Controls */}
         <div
           ref={controlsRef}
