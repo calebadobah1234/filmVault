@@ -11,7 +11,7 @@ import EnhancedSeriesStreamingComponent from "@/app/components/StreamingComponen
 
 export async function generateMetadata({ params }) {
   const res = await fetch(
-    `https://filmvaultbackend-3-b6cs.onrender.com/get-item-detailsAiom/${params.title}`,
+    `https://api3.mp3vault.xyz/get-item-detailsAiom/${params.title}`,
     {
       cache: "force-cache",
     }

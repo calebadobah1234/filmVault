@@ -112,100 +112,107 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
       if (num > 0 && num < 1000) return num;
     }
   
+    // Pattern 4: Look for SXXEXX pattern
+    const sPattern = /S\d{1,2}E(\d{1,3})/i;
+    const sMatch = filename.match(sPattern);
+    if (sMatch) {
+      const num = parseInt(sMatch[1]);
+      if (num > 0 && num < 1000) return num;
+    }
+  
     return null;
   };
 
-  // Update episodes when season changes
   useEffect(() => {
-    if (selectedSeason && seasons) {
+    const updateEpisodes = () => {
+      console.log('Updating episodes for season:', selectedSeason, 'quality:', selectedQuality);
+      if (!selectedSeason || !seasons) return;
+
       const season = seasons.find(s => s.seasonNumber.toString() === selectedSeason);
-      if (season && season.resolutions.length > 0) {
-        const matchingEpisodes = [];
-  
-        season.resolutions.forEach(resolution => {
-          // Create a map to track episodes by filename (without quality) to avoid duplicates
-          const episodeMap = new Map();
+      if (!season) return;
+
+      const collectedEpisodes = [];
+
+      // First pass: Collect episodes matching selected quality
+      season.resolutions.forEach(resolution => {
+        resolution.episodes.forEach(episode => {
+          const quality = detectQualityFromUrl(episode.downloadLink);
+          console.log(`Episode ${episode.downloadLink} quality: ${quality}`);
           
-          resolution.episodes.forEach((episode, index) => {
-            const episodeQuality = detectQualityFromUrl(episode.downloadLink);
-            if (episodeQuality === selectedQuality) {
-              // Get filename without quality and extension
-              const filename = episode.downloadLink.split('/').pop();
-              const baseFilename = filename.replace(/\[\d+[pP]\]/, '').replace(/\.\w+$/, '');
-              
-              // If this base filename hasn't been seen yet, process it
-              if (!episodeMap.has(baseFilename)) {
-                // Try to detect episode number from filename first
-                const detectedEpisode = detectEpisodeFromUrl(filename);
-                
-                // Create a new episode object with a properly determined episode number
-                const processedEpisode = {
-                  ...episode,
-                  episodeNumber: detectedEpisode || (index + 1) // Use index + 1 as fallback
-                };
-                
-                episodeMap.set(baseFilename, processedEpisode);
-                matchingEpisodes.push(processedEpisode);
-              }
-            }
-          });
-        });
-  
-        if (matchingEpisodes.length > 0) {
-          // Sort episodes by episode number
-          matchingEpisodes.sort((a, b) => {
-            const aNum = a.episodeNumber || 0;
-            const bNum = b.episodeNumber || 0;
-            return aNum - bNum;
-          });
-          setEpisodes(matchingEpisodes);
-        } else {
-          // Fallback to all episodes if no quality matches
-          const allEpisodes = season.resolutions[0].episodes.map((episode, index) => {
-            // Try to detect episode number from filename first
+          if (quality === selectedQuality) {
             const filename = episode.downloadLink.split('/').pop();
             const detectedEpisode = detectEpisodeFromUrl(filename);
             
-            return {
+            const processedEpisode = {
               ...episode,
-              episodeNumber: detectedEpisode || (index + 1) // Use index + 1 as fallback
+              // Preserve existing episodeNumber if available
+              episodeNumber: episode.episodeNumber ?? detectedEpisode ?? (collectedEpisodes.length + 1)
             };
+
+            // Check for duplicates
+            if (!collectedEpisodes.some(e => e.episodeNumber === processedEpisode.episodeNumber)) {
+              collectedEpisodes.push(processedEpisode);
+            }
+          }
+        });
+      });
+
+      // Fallback: If no matches, collect all episodes
+      if (collectedEpisodes.length === 0) {
+        console.log('No quality matches, falling back to all episodes');
+        season.resolutions.forEach(resolution => {
+          resolution.episodes.forEach(episode => {
+            const processedEpisode = {
+              ...episode,
+              episodeNumber: episode.episodeNumber ?? (collectedEpisodes.length + 1)
+            };
+            collectedEpisodes.push(processedEpisode);
           });
-          
-          // Sort episodes by episode number
-          allEpisodes.sort((a, b) => {
-            const aNum = a.episodeNumber || 0;
-            const bNum = b.episodeNumber || 0;
-            return aNum - bNum;
-          });
-          setEpisodes(allEpisodes);
-        }
+        });
       }
-    }
+
+      // Sort and update episodes
+      collectedEpisodes.sort((a, b) => a.episodeNumber - b.episodeNumber);
+      console.log('Processed episodes:', collectedEpisodes);
+      setEpisodes(collectedEpisodes);
+
+      // Update selected episode if needed
+      if (collectedEpisodes.length > 0 && !collectedEpisodes.some(e => e.episodeNumber.toString() === selectedEpisode)) {
+        const newEpisode = collectedEpisodes[0].episodeNumber.toString();
+        console.log(`Updating selected episode to ${newEpisode}`);
+        setSelectedEpisode(newEpisode);
+      }
+    };
+
+    updateEpisodes();
   }, [selectedSeason, selectedQuality, seasons]);
+
 
   // Process video when quality, season, or episode changes
   useEffect(() => {
     const processSelectedContent = async () => {
-      if (selectedSeason && selectedEpisode && selectedQuality && seasons) {
-        const season = seasons.find(s => s.seasonNumber.toString() === selectedSeason);
-        if (season) {
-          const resolution = season.resolutions.find(r => r.resolution.includes(selectedQuality + 'p'));
-          if (resolution) {
-            const episode = resolution.episodes.find((e,index) => e.episodeNumber?e.episodeNumber?.toString() === selectedEpisode: index+1 === parseInt(selectedEpisode));
-            console.log("Processing episode:", episode);
-            if (episode.downloadLink ) {
-              await processVideo(episode.downloadLink);
-            } else{
-              console.log("No download link found for episode:", episode);
-            }
-          }
-        }
+      console.log('Processing content - Season:', selectedSeason, 
+        'Episode:', selectedEpisode, 
+        'Quality:', selectedQuality,
+        'Episodes count:', episodes.length);
+
+      if (!selectedEpisode || !episodes.length) return;
+
+      const targetEpisode = episodes.find(e => 
+        e.episodeNumber?.toString() === selectedEpisode
+      );
+
+      console.log('Found target episode:', targetEpisode);
+
+      if (targetEpisode?.downloadLink) {
+        console.log('Starting video processing for:', targetEpisode.downloadLink);
+        setProcessingStatus('checking');
+        await processVideo(targetEpisode.downloadLink);
       }
     };
 
     processSelectedContent();
-  }, [selectedQuality, selectedSeason, selectedEpisode, seasons]);
+  }, [selectedSeason, selectedEpisode, episodes, selectedQuality]);
 
   const detectQualityFromUrl = (url) => {
     // First check if quality is in folder structure
@@ -726,26 +733,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  const handleVolumeChange = (e) => {
-    setVolume(parseFloat(e.target.value));
-    showControlsWithTimeout();
-  };
-
-  const groupEpisodesByQuality = (episodes) => {
-    const qualityGroups = new Map();
-
-    episodes.forEach(episode => {
-      const quality = detectQualityFromUrl(episode.downloadLink);
-      if (quality) {
-        if (!qualityGroups.has(quality)) {
-          qualityGroups.set(quality, []);
-        }
-        qualityGroups.get(quality).push(episode);
-      }
-    });
-
-    return qualityGroups;
-  };
+ 
 
   const handleSeekMouseDown = () => setSeeking(true);
 
