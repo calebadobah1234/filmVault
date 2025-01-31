@@ -556,7 +556,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
                   },
                   forceVideo: true,
                   hlsOptions: {
-                    maxBufferSize: 600 * 1024 * 1024,
+                    maxBufferSize: 80 * 1024 * 1024,
                     maxBufferLength: 600,
                     startPosition: -1,
                     debug: false,

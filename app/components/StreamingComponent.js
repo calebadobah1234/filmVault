@@ -36,6 +36,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
   const retryDelay = 2000;
   const processingTimeoutRef = useRef(null);
   const activeRequestRef = useRef(null);
+  const [videoMetadataLoaded, setVideoMetadataLoaded] = useState(false);
 
   
 
@@ -556,12 +557,29 @@ const EnhancedStreamingComponent = ({ sources }) => {
 
   // Add an onReady handler to ReactPlayer
   const handlePlayerReady = () => {
-    setIsPlayerReady(true);
-    setIsBuffering(false);
+    // Check if the video element is available and metadata is loaded
+    const videoElement = playerRef.current?.getInternalPlayer();
+    if (videoElement) {
+      if (videoElement.readyState >= 1) {
+        setVideoMetadataLoaded(true);
+        setIsPlayerReady(true);
+        setIsBuffering(false);
+      } else {
+        // Add metadata loading listener if metadata isn't loaded yet
+        const handleLoadedMetadata = () => {
+          setVideoMetadataLoaded(true);
+          setIsPlayerReady(true);
+          setIsBuffering(false);
+          videoElement.removeEventListener('loadedmetadata', handleLoadedMetadata);
+        };
+        videoElement.addEventListener('loadedmetadata', handleLoadedMetadata);
+      }
+    }
   };
 
+
   const handleBuffer = () => {
-    if (isPlayerReady) {
+    if (isPlayerReady && videoMetadataLoaded) {
       setIsBuffering(true);
     }
   };
@@ -603,6 +621,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
   const handleError = () => {
     setIsBuffering(false);
     setIsPlayerReady(false);
+    setVideoMetadataLoaded(false);
   };
 
   useEffect(() => {
@@ -741,8 +760,8 @@ const EnhancedStreamingComponent = ({ sources }) => {
                     },
                     forceVideo: true,
                     hlsOptions: {
-                      maxBufferSize: 600 * 1024 * 1024,
-                      maxBufferLength: 600,
+                      maxBufferSize: 80 * 1024 * 1024,
+                      maxBufferLength: 200,
                       startPosition: -1,
                       debug: true,
                       backBufferLength: 300,
@@ -766,9 +785,9 @@ const EnhancedStreamingComponent = ({ sources }) => {
             </div>
           </>
         )}
+
   
-        {/* Buffering indicator */}
-        {isBuffering && isPlayerReady && (
+{(isBuffering || (processingStatus === 'ready' && !videoMetadataLoaded)) && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/50">
             <FaSpinner className="animate-spin text-white text-4xl" />
           </div>
