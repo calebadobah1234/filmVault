@@ -30,6 +30,12 @@ const EnhancedStreamingComponent = ({ sources }) => {
   const [screenOrientation, setScreenOrientation] = useState('portrait');
   const [errorMessage, setErrorMessage] = useState('');
   const abortControllerRef = useRef(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const maxRetries = 3;
+  const retryDelay = 2000;
+  const processingTimeoutRef = useRef(null);
+  const activeRequestRef = useRef(null);
 
   
 
@@ -59,6 +65,15 @@ const EnhancedStreamingComponent = ({ sources }) => {
   const handleSeekTouchStart = (e) => {
     setSeeking(true);
   };
+
+  useEffect(() => {
+    return () => {
+      cancelActiveRequest();
+      if (processingTimeoutRef.current) {
+        clearTimeout(processingTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!isFullscreen) {
@@ -196,189 +211,237 @@ const EnhancedStreamingComponent = ({ sources }) => {
 
 
   // Function to check if file exists in Wasabi using a range request
-  const checkFileExists = async (filename) => {
-    const url = `https://filmvault.b-cdn.net/${filename}`;
-    console.log('Checking file existence for:', url);
+  const checkFileExists = async (filename, signal) => {
+    const encodedFilename = sanitizeFilename(filename);
+    const url = `https://filmvault.b-cdn.net/${encodedFilename}`;
+    
+    console.log('Checking existence with URL:', url);
+    console.log('URL components:', {
+      protocol: url.split('://')[0],
+      domain: url.split('://')[1].split('/')[0],
+      path: '/' + url.split('://')[1].split('/').slice(1).join('/')
+    });
     
     try {
-      // Using fetch with regular cors mode first
-      const response = await fetch(url, {
+      // Try HEAD request first
+      const headResponse = await fetch(url, {
         method: 'HEAD',
-        cache: 'no-cache'
+        cache: 'no-cache',
+        signal: signal
       });
       
-      // If we get here, we can check the status
-      console.log('Response status:', response.status);
-      return response.status === 200;
-    } catch (corsError) {
-      console.log('CORS request failed, trying alternative check');
+      console.log('HEAD request status:', headResponse.status);
+      console.log('HEAD request headers:', Object.fromEntries(headResponse.headers.entries()));
       
-      // Fallback to checking with regular GET request
-      try {
-        const response = await fetch(url, {
-          method: 'GET',
-          cache: 'no-cache'
-        });
-        
-        return response.status === 200;
-      } catch (error) {
-        console.error('Error checking file:', {
-          message: error.message,
-          name: error.name
-        });
-        return false;
+      if (headResponse.status === 200) {
+        return true;
       }
-    }
-  };
-
-  const sanitizeFilename = (filename) => {
-    // First decode any existing encoded characters to avoid double encoding
-    const decodedFilename = decodeURIComponent(filename);
-    
-    // Now properly encode the filename while preserving square brackets
-    return encodeURIComponent(decodedFilename)
-      .replace(/%5B/g, '[')  // Only replace %5B with [
-      .replace(/%5D/g, ']')  // Only replace %5D with ]
-      .replace(/%20/g, '.'); // Replace spaces with dots if needed
-  };
-
-  // Function to process video through backend
-  const processVideo = async (url, signal) => {
-    try {
-      console.log("Starting video processing for URL:", url);
-      setProcessingStatus('checking');
-      setStreamingUrl(null);
-      setErrorMessage('');
-  
-      if (!url) {
-        throw new Error('No URL provided for processing');
-      }
-  
-      const originalFilename = url.split('/').pop() || 'video';
-      const sanitizedFilename = sanitizeFilename(originalFilename);
-  
-      // First check if file exists in CDN
-      try {
-        const initialFileCheck = await checkFileExists(sanitizedFilename);
-        if (initialFileCheck) {
-          console.log("File already exists in Bunny CDN");
-          const cdnUrl = `https://filmvault.b-cdn.net/${sanitizedFilename}`;
-          setStreamingUrl(cdnUrl);
-          setProcessingStatus('ready');
-          return;
-        }
-      } catch (cdnError) {
-        console.log("Initial CDN check failed, proceeding with download:", cdnError);
-      }
-  
-      console.log("File not found in CDN, proceeding with download");
-      setProcessingStatus('downloading');
-  
-      const encodedUrl = encodeURIComponent(url);
-      const encodedFilename = encodeURIComponent(originalFilename);
-      const apiUrl = `https://api4.mp3vault.xyz/download?url=${encodedUrl}&filename=${encodedFilename}`;
-  
-      // Setup abort controller with timeout
-      const requestController = new AbortController();
-      const timeoutId = setTimeout(() => {
-        requestController.abort();
-        console.log("API request timed out");
-      }, 240000); // 2 minute timeout
-  
-      let downloadResponse;
-      try {
-        downloadResponse = await fetch(apiUrl, {
-          method: 'GET',
-          headers: {
-            'Accept': 'application/json',
-          },
-          signal: requestController.signal
-        });
-        clearTimeout(timeoutId);
-      } catch (error) {
-        clearTimeout(timeoutId);
-        if (error.name === 'AbortError') {
-          throw new Error('Server response timed out. Please try again.');
-        }
-        throw new Error(`Network error: ${error.message}`);
-      }
-  
-      if (!downloadResponse.ok) {
-        const errorText = await downloadResponse.text();
-        throw new Error(`Server error (${downloadResponse.status}): ${errorText}`);
-      }
-  
-      const responseData = await downloadResponse.json();
-      console.log("Download response:", responseData);
-  
-      if (!responseData.wasabi_url) {
-        throw new Error('No valid Streaming URL received from server');
-      }
-  
-      // Parse object key from Wasabi URL
-      let objectKey;
-      try {
-        const wasabiUrl = new URL(responseData.wasabi_url);
-        const pathParts = wasabiUrl.pathname.split('/');
-        const bucketIndex = pathParts.findIndex(part => part === 'filmvault.xyz');
-        objectKey = bucketIndex !== -1 && bucketIndex + 1 < pathParts.length
-          ? pathParts.slice(bucketIndex + 1).join('/')
-          : sanitizedFilename;
-        objectKey = sanitizeFilename(objectKey);
-      } catch (error) {
-        console.error('Error parsing Wasabi URL:', error);
-        objectKey = sanitizedFilename;
-      }
-  
-      const cdnUrl = `https://filmvault.b-cdn.net/${objectKey}`;
-      console.log("Generated CDN URL:", cdnUrl);
-  
-      // Wait for file to be available in CDN with retries
-      let retryCount = 0;
-      const maxRetries = 10;
-      const retryDelay = 3000; // 3 seconds
-      let fileAvailable = false;
-  
-      while (retryCount < maxRetries && !fileAvailable) {
-        try {
-          console.log(`CDN availability check attempt ${retryCount + 1}/${maxRetries}`);
-          fileAvailable = await checkFileExists(objectKey);
-          
-          if (!fileAvailable) {
-            await new Promise(resolve => setTimeout(resolve, retryDelay));
-            retryCount++;
-          }
-        } catch (checkError) {
-          console.log(`CDN check failed attempt ${retryCount + 1}:`, checkError);
-          await new Promise(resolve => setTimeout(resolve, retryDelay));
-          retryCount++;
-        }
-      }
-  
-      if (!fileAvailable) {
-        throw new Error('Content is taking longer than usual to prepare. Please try again in a few minutes.');
-      }
-  
-      console.log("File confirmed available in CDN");
-      setStreamingUrl(cdnUrl);
-      setProcessingStatus('ready');
-  
+      
+      // If HEAD fails, try GET
+      const getResponse = await fetch(url, {
+        method: 'GET',
+        cache: 'no-cache',
+        signal: signal
+      });
+      
+      console.log('GET request status:', getResponse.status);
+      console.log('GET request headers:', Object.fromEntries(getResponse.headers.entries()));
+      
+      return getResponse.status === 200;
+      
     } catch (error) {
-      console.error('Video processing error:', {
+      console.error('File check error:', error);
+      console.error('Error details:', {
         name: error.name,
         message: error.message,
         stack: error.stack
       });
       
+      if (error.name === 'AbortError') {
+        throw new Error('Request aborted');
+      }
+      throw error;
+    }
+  };
+
+  const cancelActiveRequest = () => {
+    if (activeRequestRef.current) {
+      activeRequestRef.current.abort();
+      activeRequestRef.current = null;
+    }
+  };
+
+  const sanitizeFilename = (filename) => {
+    console.log('Original filename:', filename);
+    
+    // Check if the filename already contains encoded brackets
+    const hasEncodedBrackets = filename.includes('%5B') || filename.includes('%5D');
+    
+    // First decode only if there are no encoded brackets
+    const decodedFilename = hasEncodedBrackets ? filename : decodeURIComponent(filename);
+    console.log('Decoded filename:', decodedFilename);
+    
+    // Remove any existing URL encoding (except for brackets if they're already encoded)
+    const cleanFilename = hasEncodedBrackets ? 
+      decodedFilename : 
+      decodedFilename
+        .replace(/%5B/g, '[')
+        .replace(/%5D/g, ']')
+        .replace(/%20/g, ' ');
+    console.log('Cleaned filename:', cleanFilename);
+    
+    // If brackets are already encoded, keep them as is
+    // If not, encode them as %5B and %5D
+    const encodedFilename = hasEncodedBrackets ?
+      cleanFilename :
+      cleanFilename
+        .replace(/\[/g, '%5B')
+        .replace(/\]/g, '%5D')
+        .replace(/ /g, '.');
+    
+    // Encode the rest of the string, but preserve our encoded brackets
+    const finalEncodedFilename = encodedFilename
+      .replace(/[^A-Za-z0-9%._-]/g, char => encodeURIComponent(char));
+    
+    console.log('Final encoded filename:', finalEncodedFilename);
+    
+    return finalEncodedFilename;
+  };
+
+  // Function to process video through backend
+  const processVideo = async (url, signal) => {
+    try {
+      console.log('Processing video with URL:', url);
+      console.log('URL parts:', {
+        base: url.split('?')[0],
+        query: url.split('?')[1] || 'none'
+      });
+      
+      setProcessingStatus('checking');
+      setErrorMessage('');
+      
+      if (!url) {
+        throw new Error('No URL provided for processing');
+      }
+  
+      const originalFilename = url.split('/').pop() || 'video';
+      console.log('Extracted original filename:', originalFilename);
+      
+      const sanitizedFilename = sanitizeFilename(originalFilename);
+      console.log('Sanitized filename:', sanitizedFilename);
+  
+      if (processingTimeoutRef.current) {
+        clearTimeout(processingTimeoutRef.current);
+      }
+  
+      processingTimeoutRef.current = setTimeout(() => {
+        setProcessingStatus('error');
+        setErrorMessage('Processing timed out. Please try again.');
+      }, 240000);
+  
+      // Initial file check with detailed logging
+      try {
+        console.log('Performing initial file check...');
+        const initialFileCheck = await checkFileExists(originalFilename, signal);
+        console.log('Initial file check result:', initialFileCheck);
+        
+        if (initialFileCheck) {
+          const cdnUrl = `https://filmvault.b-cdn.net/${sanitizedFilename}`;
+          console.log('File found, setting CDN URL:', cdnUrl);
+          setStreamingUrl(cdnUrl);
+          setProcessingStatus('ready');
+          return;
+        }
+      } catch (cdnError) {
+        console.error('Initial CDN check error:', cdnError);
+        if (cdnError.message === 'Request aborted') {
+          throw cdnError;
+        }
+      }
+  
+      console.log('Initiating download process...');
+      setProcessingStatus('downloading');
+  
+      const encodedUrl = encodeURIComponent(url);
+      const encodedFilename = encodeURIComponent(originalFilename);
+      const apiUrl = `https://api4.mp3vault.xyz/download?url=${encodedUrl}&filename=${encodedFilename}`;
+      
+      console.log('Download API URL:', apiUrl);
+  
+      // Initiate download
+      fetch(apiUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      }).then(response => {
+        console.log('Download initiation response:', response.status);
+        return response.json();
+      }).then(data => {
+        console.log('Download initiation data:', data);
+      }).catch(error => {
+        console.error('Download initiation error:', error);
+      });
+  
+      // File checking loop
+      const checkInterval = 5000;
+      const maxAttempts = Math.floor(240000 / checkInterval);
+      let attempts = 0;
+  
+      const checkForFile = async () => {
+        while (attempts < maxAttempts) {
+          try {
+            console.log(`File check attempt ${attempts + 1}/${maxAttempts}`);
+            const fileExists = await checkFileExists(originalFilename, signal);
+            console.log(`File check result for attempt ${attempts + 1}:`, fileExists);
+            
+            if (fileExists) {
+              const cdnUrl = `https://filmvault.b-cdn.net/${sanitizedFilename}`;
+              console.log('File found, setting final CDN URL:', cdnUrl);
+              setStreamingUrl(cdnUrl);
+              setProcessingStatus('ready');
+              setRetryCount(0);
+              setIsRetrying(false);
+              return true;
+            }
+          } catch (error) {
+            console.error(`Error in check attempt ${attempts + 1}:`, error);
+            if (error.message === 'Request aborted') {
+              throw error;
+            }
+          }
+  
+          attempts++;
+          if (attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, checkInterval));
+          }
+        }
+        return false;
+      };
+  
+      const fileFound = await checkForFile();
+      if (!fileFound) {
+        throw new Error('Content is taking longer than usual to prepare');
+      }
+  
+    } catch (error) {
+      console.error('Final error in processVideo:', error);
+      if (error.message === 'Request aborted') {
+        return;
+      }
+  
       setProcessingStatus('error');
       setErrorMessage(error.message || 'Failed to process video');
-      
-      // Auto-retry for specific errors
-      if (error.message.includes('timed out') || error.message.includes('try again')) {
-        setTimeout(() => {
-          setProcessingStatus('checking');
-          processVideo(url, signal);
-        }, 5000);
+  
+      if (retryCount < maxRetries) {
+        setIsRetrying(true);
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+        setRetryCount(prev => prev + 1);
+        await processVideo(url, signal);
+      }
+    } finally {
+      if (processingTimeoutRef.current) {
+        clearTimeout(processingTimeoutRef.current);
       }
     }
   };
@@ -426,21 +489,31 @@ const EnhancedStreamingComponent = ({ sources }) => {
   useEffect(() => {
     const processSelectedQuality = async () => {
       if (selectedQuality && sources?.length > 0) {
+        // Cancel any existing requests before starting new ones
+        cancelActiveRequest();
+
         const source = sources.find(s => {
           const resolution = getResolutionNumber(s.quality);
           return resolution.toString() === selectedQuality;
         });
 
         if (source?.downloadLink) {
-          // Check if URL contains dl4.sermovie
           if (source.downloadLink.includes('dl4.sermovie')) {
             setProcessingStatus('blocked');
             setErrorMessage('Video will soon be available for streaming');
             return;
           }
           
-          console.log("Found source URL:", source.downloadLink);
-          await processVideo(source.downloadLink);
+          const controller = new AbortController();
+          activeRequestRef.current = controller;
+          
+          try {
+            await processVideo(source.downloadLink, controller.signal);
+          } catch (error) {
+            if (error.message !== 'Request aborted') {
+              console.error('Error processing video:', error);
+            }
+          }
         }
       }
     };

@@ -477,78 +477,48 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
         return;
       }
   
-      console.log("File not found in CDN, proceeding with download");
+      console.log("File not found in CDN, initiating download");
       setProcessingStatus('downloading');
   
+      // Initiate download without waiting for completion
       const encodedUrl = encodeURIComponent(url);
       const encodedFilename = encodeURIComponent(originalFilename);
       const apiUrl = `https://api4.mp3vault.xyz/download?url=${encodedUrl}&filename=${encodedFilename}`;
   
-      const downloadResponse = await fetch(apiUrl, {
+      // Fire and forget download request
+      fetch(apiUrl, {
         method: 'GET',
         headers: {
           'Accept': 'application/json',
         }
+      }).catch(error => {
+        console.error('Download initiation error:', error);
+        // Continue checking anyway as the download might have started
       });
   
-      if (!downloadResponse.ok) {
-        const errorText = await downloadResponse.text();
-        throw new Error(`Download failed with status ${downloadResponse.status}: ${errorText}`);
-      }
+      // Start checking for file existence
+      const maxRetries = 24; // 4 minutes (24 tries * 10 seconds)
+      let retryCount = 0;
   
-      const responseData = await downloadResponse.json();
-      console.log("Download response:", responseData);
-  
-      if (!responseData.wasabi_url) {
-        throw new Error('No Wasabi URL received in response');
-      }
-  
-      // Generate CDN URL from Wasabi URL
-      let objectKey;
-      try {
-        const wasabiUrl = new URL(responseData.wasabi_url);
-        const pathParts = wasabiUrl.pathname.split('/');
-        const bucketIndex = pathParts.findIndex(part => part === 'filmvault.xyz');
-        if (bucketIndex !== -1 && bucketIndex + 1 < pathParts.length) {
-          const rawFilename = pathParts.slice(bucketIndex + 1).join('/');
-          objectKey = sanitizeFilename(rawFilename);
-        } else {
-          objectKey = sanitizedFilename;
+      while (retryCount < maxRetries) {
+        console.log(`Checking for file existence, attempt ${retryCount + 1}/${maxRetries}`);
+        
+        const fileExists = await checkFileExists(sanitizedFilename);
+        
+        if (fileExists) {
+          console.log("File found in CDN!");
+          const cdnUrl = `https://filmvault.b-cdn.net/${sanitizedFilename}`;
+          setStreamingUrl(cdnUrl);
+          setProcessingStatus('ready');
+          return;
         }
   
-        const cdnUrl = `https://filmvault.b-cdn.net/${objectKey}`;
-        console.log("Generated CDN URL:", cdnUrl);
-  
-        // Wait for file to be available in CDN
-        let retryCount = 0;
-        const maxRetries = 5;
-        const retryDelay = 2000; // 2 seconds
-  
-        const waitForFile = async () => {
-          while (retryCount < maxRetries) {
-            const fileExists = await checkFileExists(objectKey);
-            if (fileExists) {
-              console.log("File confirmed available in CDN");
-              setStreamingUrl(cdnUrl);
-              setProcessingStatus('ready');
-              return true;
-            }
-            console.log(`File not yet available in CDN, retry ${retryCount + 1}/${maxRetries}`);
-            await new Promise(resolve => setTimeout(resolve, retryDelay));
-            retryCount++;
-          }
-          return false;
-        };
-  
-        const fileAvailable = await waitForFile();
-        if (!fileAvailable) {
-          throw new Error('File not available in CDN after maximum retries');
-        }
-  
-      } catch (error) {
-        console.error('Error parsing Wasabi URL:', error);
-        throw new Error('Failed to generate CDN URL');
+        // Wait 10 seconds before next check
+        await new Promise(resolve => setTimeout(resolve, 10000));
+        retryCount++;
       }
+  
+      throw new Error('File not available after maximum retries (4 minutes timeout)');
   
     } catch (error) {
       console.error('Video processing error:', error);

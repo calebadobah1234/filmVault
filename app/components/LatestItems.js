@@ -76,7 +76,7 @@ const LatestItems = (props) => {
                       props.series ||
                       item.type == "aioMovie" ||
                       item.type == "moviePovie" ||
-                      item.type == "series"
+                      item.type == "series" ||item.seasons
                         ? `/series1/${item.title}`
                         : props.anime || item.type == "aioAnime"
                         ? `/anime1/${item.title}`

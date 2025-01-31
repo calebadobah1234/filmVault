@@ -1,4 +1,4 @@
-"use client";
+"use client"
 import React, { useState } from "react";
 
 const DownloadSection = ({ seasons }) => {
@@ -21,18 +21,18 @@ const DownloadSection = ({ seasons }) => {
 
     if (
       persianRegex.test(episode.fileName) ||
-      episode.fileName.length < 4 ||
-      episode.fileName.endsWith(".>")
+      episode.fileName?.length < 4 ||
+      episode.fileName?.endsWith(".>")
     ) {
       // Use the download link for Persian text, short filenames, or truncated filenames
-      displayText = getFilenameFromUrl(episode.downloadLink);
+      displayText = getFilenameFromUrl(episode.downloadLink || episode.link);
     } else {
       // Use the existing logic for other filenames
       let extension = ".mkv";
-      let endIndex = episode.fileName.indexOf(extension);
+      let endIndex = episode.fileName ? episode.fileName.indexOf(extension) : -1;
       if (endIndex === -1) {
-        // If .mkv is not found, use the whole filename
-        displayText = episode.fileName;
+        // If .mkv is not found, use the whole filename or fallback to URL
+        displayText = episode.fileName || getFilenameFromUrl(episode.downloadLink || episode.link);
       } else {
         displayText = episode.fileName
           .substring(0, endIndex)
@@ -43,10 +43,46 @@ const DownloadSection = ({ seasons }) => {
     return displayText.trim() || "Unknown Episode";
   };
 
+  // Convert the new format to match the old format structure
+  const normalizeSeasons = (seasons) => {
+    return seasons.map(season => {
+      // Check if season follows the new format (with downloadLinks)
+      if (season.episodes && season.episodes[0]?.downloadLinks) {
+        // Group episodes by quality
+        const qualityGroups = {};
+        season.episodes.forEach(episode => {
+          episode.downloadLinks.forEach(link => {
+            const quality = link.quality.replace('دانلود ', ''); // Remove Persian "download" text if present
+            if (!qualityGroups[quality]) {
+              qualityGroups[quality] = [];
+            }
+            qualityGroups[quality].push({
+              fileName: episode.episodeInfo,
+              downloadLink: link.downloadLink,
+              size: link.size
+            });
+          });
+        });
+
+        // Convert to resolutions array format
+        return {
+          seasonNumber: season.seasonNumber,
+          resolutions: Object.entries(qualityGroups).map(([quality, episodes]) => ({
+            resolution: quality,
+            episodes
+          }))
+        };
+      }
+      // Return original format unchanged
+      return season;
+    });
+  };
+
+  const normalizedSeasons = normalizeSeasons(seasons);
+
   // Filter out seasons with no episodes after removing "duble" episodes
-  const nonEmptySeasons = seasons.filter((season) =>
+  const nonEmptySeasons = normalizedSeasons.filter((season) =>
     season.resolutions.some((resolution) => {
-      // Filter out episodes containing "duble" and check if there are any remaining episodes
       const filteredEpisodes = resolution.episodes.filter(
         (episode) => !getDisplayText(episode).toLowerCase().includes("duble")
       );

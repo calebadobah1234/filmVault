@@ -9,6 +9,43 @@ import Script from "next/script";
 import AdScript from "@/app/components/Adscript";
 import EnhancedSeriesStreamingComponent from "@/app/components/StreamingComponentSeries";
 
+// Normalize seasons data function
+const normalizeSeasons = (seasons) => {
+  if (!seasons) return [];
+  
+  return seasons.map(season => {
+    // Check if season follows the new format (with downloadLinks)
+    if (season.episodes && season.episodes[0]?.downloadLinks) {
+      // Group episodes by quality
+      const qualityGroups = {};
+      season.episodes.forEach(episode => {
+        episode.downloadLinks.forEach(link => {
+          const quality = link.quality.replace('دانلود ', ''); // Remove Persian "download" text if present
+          if (!qualityGroups[quality]) {
+            qualityGroups[quality] = [];
+          }
+          qualityGroups[quality].push({
+            fileName: episode.episodeInfo,
+            downloadLink: link.downloadLink,
+            size: link.size
+          });
+        });
+      });
+
+      // Convert to resolutions array format
+      return {
+        seasonNumber: season.seasonNumber,
+        resolutions: Object.entries(qualityGroups).map(([quality, episodes]) => ({
+          resolution: quality,
+          episodes
+        }))
+      };
+    }
+    // Return original format unchanged
+    return season;
+  });
+};
+
 export async function generateMetadata({ params }) {
   const res = await fetch(
     `https://api3.mp3vault.xyz/get-item-detailsAiom/${params.title}`,
@@ -62,6 +99,9 @@ const page = async ({ params }) => {
   const resData = await res.json();
   const data = resData[0];
 
+  // Normalize the seasons data before passing it to components
+  const normalizedSeasons = normalizeSeasons(data.seasons);
+  
   const activeCategories = data.categories || [];
   const actors = data.actors || [];
 
@@ -74,7 +114,6 @@ const page = async ({ params }) => {
       }).toString();
       const response = await fetch(
         `https://api3.mp3vault.xyz/get-related-contentAiom?${queryString}`,
-
         {
           cache: "force-cache",
         }
@@ -125,7 +164,7 @@ const page = async ({ params }) => {
         }}
       />
 
-      <div className="container mx-auto p-4 ">
+      <div className="container mx-auto p-4">
         <div className="flex flex-col md:flex-row bg-gray-50 rounded-lg shadow-md overflow-hidden py-4">
           <div className="md:w-1/3 flex max-md:justify-start max-md:ml-6 lg:justify-end items-center">
             <ImageWithFallback
@@ -143,13 +182,9 @@ const page = async ({ params }) => {
               </h1>
               <p className="text-gray-700 mb-4">
                 <span className="font-semibold">Released:</span>{" "}
-                {/* <Link
-                  href={`/year-page?year=${data.year}&limit=30&skip=1&pageNumber=1`}
-                > */}
                 <span className="text-blue-500 hover:underline">
                   {data.year}
                 </span>
-                {/* </Link> */}
               </p>
               <div className="text-sm text-gray-600 mb-4">
                 <span className="font-semibold">Genre: </span>
@@ -190,11 +225,11 @@ const page = async ({ params }) => {
           </div>
         </div>
 
-        <EnhancedSeriesStreamingComponent seasons={data.seasons} />
+        <EnhancedSeriesStreamingComponent seasons={normalizedSeasons} />
 
         <div className="mt-12 text-center">
           <div className="flex flex-col flex-wrap justify-center mt-6 gap-4">
-            <DownloadSection seasons={data.seasons} />
+            <DownloadSection seasons={normalizedSeasons} />
           </div>
         </div>
         <AdScript />
