@@ -304,22 +304,57 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
 
   const extractSubtitles = async (videoUrl) => {
     try {
+      const videoId = extractVideoIdentifier(videoUrl);
+      const subtitleExtensions = ['.vtt', '.srt'];
+      const subtitleLanguages = ['en', 'eng', 'english', ''];
       const subtitleTracks = [];
-      // Generate tracks for indices 2 to 36 as per ffprobe output
-      for (let trackIndex = 2; trackIndex <= 36; trackIndex++) {
-        subtitleTracks.push({
-          id: trackIndex,
-          label: `Subtitle ${trackIndex - 1}`,
-          src: `${videoUrl}#${trackIndex}`, // Add track index to URL to force unique sources
-          srcLang: 'en',
-          kind: 'subtitles'
-        });
+
+      // Generate possible subtitle URLs
+      const baseUrl = videoUrl.substring(0, videoUrl.lastIndexOf('/'));
+      
+      for (const lang of subtitleLanguages) {
+        for (const ext of subtitleExtensions) {
+          const possibleNames = [
+            `${videoId}${lang ? `.${lang}` : ''}${ext}`,
+            `${videoId}.sub${ext}`,
+            `${videoId}_subtitles${ext}`,
+            `subtitles_${videoId}${ext}`,
+            `${videoId}_captions${ext}`
+          ];
+
+          for (const name of possibleNames) {
+            const subtitleUrl = `${baseUrl}/${name}`;
+            try {
+              const response = await fetch(subtitleUrl, { method: 'HEAD' });
+              if (response.ok) {
+                subtitleTracks.push({
+                  id: subtitleTracks.length,
+                  label: `Subtitles ${lang.toUpperCase() || 'Default'}`,
+                  src: subtitleUrl,
+                  language: lang || 'en'
+                });
+                // Break inner loop if subtitle found for this language
+                break;
+              }
+            } catch (error) {
+              console.log(`No subtitles found at ${subtitleUrl}`);
+            }
+          }
+        }
       }
-      setSubtitles(subtitleTracks);
-      setSelectedSubtitle(2); // Default to first subtitle track
-      setSubtitlesLoaded(true);
+
+      if (subtitleTracks.length > 0) {
+        console.log('Found subtitles:', subtitleTracks);
+        setSubtitles(subtitleTracks);
+        setSelectedSubtitle(subtitleTracks[0].id);
+        setSubtitlesLoaded(true);
+      } else {
+        setSubtitles([]);
+        setSelectedSubtitle(null);
+        setSubtitlesLoaded(true);
+      }
     } catch (error) {
-      console.error('Error generating subtitle tracks:', error);
+      console.error('Error checking for subtitles:', error);
       setSubtitlesLoaded(true);
     }
   };
@@ -535,26 +570,10 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
   };
 
   const handleSubtitleSelect = (subtitleId) => {
-    const videoElement = playerRef.current?.getInternalPlayer();
-    if (videoElement) {
-      // First, disable all tracks
-      Array.from(videoElement.textTracks).forEach(track => {
-        track.mode = 'disabled';
-      });
-
-      // Then enable the selected track if one is selected
-      if (subtitleId !== null) {
-        const targetTrack = videoElement.textTracks[subtitleId - 2];
-        if (targetTrack) {
-          targetTrack.mode = 'showing';
-        }
-      }
-    }
     setSelectedSubtitle(subtitleId);
     setShowSubtitleMenu(false);
     showControlsWithTimeout();
   };
-
   // Handle fullscreen
   useEffect(() => {
     const handler = () => {
@@ -590,35 +609,22 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
 
   // Add an onReady handler to ReactPlayer
   const handlePlayerReady = () => {
+    // Check if the video element is available and metadata is loaded
     const videoElement = playerRef.current?.getInternalPlayer();
     if (videoElement) {
-      const enableTrack = () => {
-        // First disable all tracks
-        Array.from(videoElement.textTracks).forEach(track => {
-          track.mode = 'disabled';
-        });
-
-        // Then enable the selected track if one is selected
-        if (selectedSubtitle !== null) {
-          const targetTrack = videoElement.textTracks[selectedSubtitle - 2];
-          if (targetTrack) {
-            targetTrack.mode = 'showing';
-          }
-        }
-      };
-
       if (videoElement.readyState >= 1) {
-        enableTrack();
         setVideoMetadataLoaded(true);
         setIsPlayerReady(true);
         setIsBuffering(false);
       } else {
-        videoElement.addEventListener('loadedmetadata', () => {
-          enableTrack();
+        // Add metadata loading listener if metadata isn't loaded yet
+        const handleLoadedMetadata = () => {
           setVideoMetadataLoaded(true);
           setIsPlayerReady(true);
           setIsBuffering(false);
-        });
+          videoElement.removeEventListener('loadedmetadata', handleLoadedMetadata);
+        };
+        videoElement.addEventListener('loadedmetadata', handleLoadedMetadata);
       }
     }
   };
@@ -666,7 +672,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
       tracks: subtitles.map(subtitle => ({
         kind: 'subtitles',
         src: subtitle.src,
-        srcLang: subtitle.srcLang,
+        srcLang: subtitle.language,
         label: subtitle.label,
         default: subtitle.id === selectedSubtitle
       })),
@@ -876,7 +882,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
                     tracks: subtitles.map(subtitle => ({
                       kind: 'subtitles',
                       src: subtitle.src,
-                      srcLang: subtitle.srcLang,
+                      srcLang: subtitle.language,
                       label: subtitle.label,
                       default: subtitle.id === selectedSubtitle
                     })),

@@ -8,7 +8,7 @@ import { FaRotate } from 'react-icons/fa6';
 
 const EnhancedStreamingComponent = ({ sources }) => {
   const [playing, setPlaying] = useState(false);
-  const [volume, setVolume] = useState(0.8);
+  const [volume, setVolume] = useState(1);
   const [played, setPlayed] = useState(0);
   const [seeking, setSeeking] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -37,6 +37,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
   const processingTimeoutRef = useRef(null);
   const activeRequestRef = useRef(null);
   const [videoMetadataLoaded, setVideoMetadataLoaded] = useState(false);
+  
 
   
 
@@ -675,11 +676,12 @@ const EnhancedStreamingComponent = ({ sources }) => {
   return (
     <div
       ref={containerRef}
-      className="bg-gray-900 rounded-xl overflow-hidden shadow-xl relative group"
+      className="bg-black rounded-xl overflow-hidden shadow-xl relative group" // Changed bg-gray-800 to bg-black
       onMouseMove={showControlsWithTimeout}
       onMouseLeave={() => !isFullscreen && hideControls()}
     >
-      <div className={`relative flex items-center justify-center ${isFullscreen ? 'h-screen w-screen' : 'aspect-video'}`}>
+      <div className={`relative flex items-center justify-center bg-black ${isFullscreen ? 'h-screen w-screen' : 'aspect-video'}`}> // Added bg-black here too
+        {/* Rest of the component remains exactly the same */}
         {/* Blocked status display */}
         {processingStatus === 'blocked' && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80">
@@ -700,10 +702,12 @@ const EnhancedStreamingComponent = ({ sources }) => {
         {/* Ready status display */}
         {processingStatus === 'ready' && streamingUrl && (
           <>
-            {!hasStarted && (
-              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+            {(!playing || !hasStarted) && (
+              <div 
+                className="absolute inset-0 bg-black/50 flex items-center justify-center cursor-pointer z-10"
+                onClick={handlePlayPause}
+              >
                 <button
-                  onClick={handlePlayPause}
                   className="text-white text-4xl hover:scale-110 transition-transform"
                 >
                   <FaPlay />
@@ -717,7 +721,8 @@ const EnhancedStreamingComponent = ({ sources }) => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                transition: 'transform 0.3s ease'
+                transition: 'transform 0.3s ease',
+                backgroundColor: 'black' // Added black background here
               }}
             >
               <ReactPlayer
@@ -725,6 +730,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
                 url={streamingUrl}
                 playing={playing}
                 volume={volume}
+                muted={false}
                 width="100%"
                 height="100%"
                 style={{
@@ -734,7 +740,8 @@ const EnhancedStreamingComponent = ({ sources }) => {
                   objectFit: 'contain',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  backgroundColor: 'black' // Added black background here
                 }}
                 className={`react-player ${isFullscreen ? 'fullscreen' : ''}`}
                 onProgress={handleProgress}
@@ -752,10 +759,12 @@ const EnhancedStreamingComponent = ({ sources }) => {
                     attributes: {
                       controlsList: 'nodownload',
                       crossOrigin: 'anonymous',
+                      muted:false,
                       style: {
                         width: '100%',
                         height: '100%',
-                        objectFit: 'contain'
+                        objectFit: 'contain',
+                        backgroundColor: 'black' // Added black background here
                       }
                     },
                     forceVideo: true,
@@ -786,8 +795,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
           </>
         )}
 
-  
-{(isBuffering || (processingStatus === 'ready' && !videoMetadataLoaded)) && (
+        {(isBuffering || (processingStatus === 'ready' && !videoMetadataLoaded)) && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/50">
             <FaSpinner className="animate-spin text-white text-4xl" />
           </div>
@@ -883,5 +891,4 @@ const EnhancedStreamingComponent = ({ sources }) => {
     </div>
   );
 };
-
 export default EnhancedStreamingComponent;

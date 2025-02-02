@@ -9,7 +9,7 @@ import screenfull from 'screenfull';
 const EnhancedSeriesStreamingComponent = ({ seasons }) => {
   // Existing state from movie component
   const [playing, setPlaying] = useState(false);
-  const [volume, setVolume] = useState(0.8);
+  const [volume, setVolume] = useState(1);
   const [played, setPlayed] = useState(0);
   const [seeking, setSeeking] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -304,57 +304,22 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
 
   const extractSubtitles = async (videoUrl) => {
     try {
-      const videoId = extractVideoIdentifier(videoUrl);
-      const subtitleExtensions = ['.vtt', '.srt'];
-      const subtitleLanguages = ['en', 'eng', 'english', ''];
       const subtitleTracks = [];
-
-      // Generate possible subtitle URLs
-      const baseUrl = videoUrl.substring(0, videoUrl.lastIndexOf('/'));
-      
-      for (const lang of subtitleLanguages) {
-        for (const ext of subtitleExtensions) {
-          const possibleNames = [
-            `${videoId}${lang ? `.${lang}` : ''}${ext}`,
-            `${videoId}.sub${ext}`,
-            `${videoId}_subtitles${ext}`,
-            `subtitles_${videoId}${ext}`,
-            `${videoId}_captions${ext}`
-          ];
-
-          for (const name of possibleNames) {
-            const subtitleUrl = `${baseUrl}/${name}`;
-            try {
-              const response = await fetch(subtitleUrl, { method: 'HEAD' });
-              if (response.ok) {
-                subtitleTracks.push({
-                  id: subtitleTracks.length,
-                  label: `Subtitles ${lang.toUpperCase() || 'Default'}`,
-                  src: subtitleUrl,
-                  language: lang || 'en'
-                });
-                // Break inner loop if subtitle found for this language
-                break;
-              }
-            } catch (error) {
-              console.log(`No subtitles found at ${subtitleUrl}`);
-            }
-          }
-        }
+      // Generate tracks for indices 2 to 36 as per ffprobe output
+      for (let trackIndex = 2; trackIndex <= 36; trackIndex++) {
+        subtitleTracks.push({
+          id: trackIndex,
+          label: `Subtitle ${trackIndex - 1}`,
+          src: `${videoUrl}#${trackIndex}`, // Add track index to URL to force unique sources
+          srcLang: 'en',
+          kind: 'subtitles'
+        });
       }
-
-      if (subtitleTracks.length > 0) {
-        console.log('Found subtitles:', subtitleTracks);
-        setSubtitles(subtitleTracks);
-        setSelectedSubtitle(subtitleTracks[0].id);
-        setSubtitlesLoaded(true);
-      } else {
-        setSubtitles([]);
-        setSelectedSubtitle(null);
-        setSubtitlesLoaded(true);
-      }
+      setSubtitles(subtitleTracks);
+      setSelectedSubtitle(2); // Default to first subtitle track
+      setSubtitlesLoaded(true);
     } catch (error) {
-      console.error('Error checking for subtitles:', error);
+      console.error('Error generating subtitle tracks:', error);
       setSubtitlesLoaded(true);
     }
   };
@@ -470,11 +435,18 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
     // First decode any existing encoded characters to avoid double encoding
     const decodedFilename = decodeURIComponent(filename);
     
-    // Now properly encode the filename while preserving square brackets
-    return encodeURIComponent(decodedFilename)
-      .replace(/%5B/g, '[')  // Only replace %5B with [
-      .replace(/%5D/g, ']')  // Only replace %5D with ]
-      .replace(/%20/g, '.'); // Replace spaces with dots if needed
+    // Replace specific patterns before general encoding
+    let sanitized = decodedFilename
+      .replace(/\.-\./g, ' - ')  // Replace ".-." with " - "
+      .replace(/\./g, ' ')       // Replace all remaining dots with spaces
+      .replace(/\s+/g, ' ')      // Normalize multiple spaces to single space
+      .trim();                   // Remove leading/trailing spaces
+    
+    // Now encode while preserving certain characters
+    return encodeURIComponent(sanitized)
+      .replace(/%20/g, '.')      // Replace encoded spaces with dots
+      .replace(/%5B/g, '[')      // Keep square brackets
+      .replace(/%5D/g, ']');     // Keep square brackets
   };
 
   // Function to process video through backend
@@ -563,10 +535,20 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
   };
 
   const handleSubtitleSelect = (subtitleId) => {
-    setSelectedSubtitle(subtitleId);
-    setShowSubtitleMenu(false);
-    showControlsWithTimeout();
+    const videoElement = playerRef.current?.getInternalPlayer();
+    if (videoElement) {
+      const tracks = Array.from(videoElement.textTracks);
+      tracks.forEach(track => {
+        track.mode = track.kind === 'subtitles' 
+          ? (track.id === subtitleId ? 'showing' : 'disabled')
+          : 'disabled';
+      });
+      setSelectedSubtitle(subtitleId);
+      setShowSubtitleMenu(false);
+      showControlsWithTimeout();
+    }
   };
+
   // Handle fullscreen
   useEffect(() => {
     const handler = () => {
@@ -602,23 +584,40 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
 
   // Add an onReady handler to ReactPlayer
   const handlePlayerReady = () => {
-    // Check if the video element is available and metadata is loaded
     const videoElement = playerRef.current?.getInternalPlayer();
     if (videoElement) {
-      if (videoElement.readyState >= 1) {
-        setVideoMetadataLoaded(true);
-        setIsPlayerReady(true);
-        setIsBuffering(false);
-      } else {
-        // Add metadata loading listener if metadata isn't loaded yet
-        const handleLoadedMetadata = () => {
+      const updateSubtitles = () => {
+        const textTracks = Array.from(videoElement.textTracks).filter(t => t.kind === 'subtitles');
+        const newSubtitles = textTracks.map((track, index) => ({
+          id: index,
+          label: track.label || track.language || `Subtitle ${index + 1}`,
+          language: track.language,
+          mode: track.mode
+        }));
+
+        setSubtitles(newSubtitles);
+        const defaultTrack = textTracks.find(t => t.mode === 'showing') || textTracks[0];
+        setSelectedSubtitle(defaultTrack ? defaultTrack.id : null);
+        setSubtitlesLoaded(true);
+      };
+
+      const checkReady = () => {
+        if (videoElement.readyState >= 1) {
+          updateSubtitles();
           setVideoMetadataLoaded(true);
           setIsPlayerReady(true);
           setIsBuffering(false);
-          videoElement.removeEventListener('loadedmetadata', handleLoadedMetadata);
-        };
-        videoElement.addEventListener('loadedmetadata', handleLoadedMetadata);
-      }
+        } else {
+          videoElement.addEventListener('loadedmetadata', () => {
+            updateSubtitles();
+            setVideoMetadataLoaded(true);
+            setIsPlayerReady(true);
+            setIsBuffering(false);
+          });
+        }
+      };
+
+      checkReady();
     }
   };
 
@@ -656,28 +655,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
     }
   };
 
-  const playerConfig = {
-    file: {
-      attributes: {
-        controlsList: 'nodownload',
-        crossOrigin: 'anonymous'
-      },
-      tracks: subtitles.map(subtitle => ({
-        kind: 'subtitles',
-        src: subtitle.src,
-        srcLang: subtitle.language,
-        label: subtitle.label,
-        default: subtitle.id === selectedSubtitle
-      })),
-      forceVideo: true,
-      hlsOptions: {
-        maxBufferSize: 80 * 1024 * 1024,
-        maxBufferLength: 200,
-        startPosition: -1,
-        debug: false
-      }
-    }
-  };
+ 
 
   const SubtitleMenu = () => (
     <div className="absolute bottom-20 right-4 bg-black/90 rounded-lg p-2 text-white z-50">
@@ -700,6 +678,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
       </div>
     </div>
   );
+
 
   const handleVideoClick = (e) => {
     // Prevent click from triggering if user was dragging/seeking
@@ -814,16 +793,16 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
 
 {processingStatus === 'ready' && streamingUrl && (
           <>
-            {!hasStarted && (
-              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                <button
-                  onClick={handlePlayPause}
-                  className="text-white text-4xl hover:scale-110 transition-transform"
-                >
-                  <FaPlay />
-                </button>
-              </div>
-            )}
+            {(!playing || !hasStarted) && (
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
+                  <button
+                    onClick={handlePlayPause}
+                    className="text-white text-4xl hover:scale-110 transition-transform"
+                  >
+                    <FaPlay />
+                  </button>
+                </div>
+              )}
             <div 
               className={`video-wrapper ${isFullscreen ? 'w-full h-full' : 'w-full h-full'}`}
               style={{
@@ -839,6 +818,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
                 url={streamingUrl}
                 playing={playing}
                 volume={volume}
+                muted={false}
                 width="100%"
                 height="100%"
                 style={{
@@ -866,16 +846,18 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
                     attributes: {
                       controlsList: 'nodownload',
                       crossOrigin: 'anonymous',
+                      muted: false,
                       style: {
                         width: '100%',
                         height: '100%',
-                        objectFit: 'contain'
+                        objectFit: 'contain',
+                        backgroundColor: 'black' // Added black background here
                       }
                     },
                     tracks: subtitles.map(subtitle => ({
                       kind: 'subtitles',
                       src: subtitle.src,
-                      srcLang: subtitle.language,
+                      srcLang: subtitle.srcLang,
                       label: subtitle.label,
                       default: subtitle.id === selectedSubtitle
                     })),
@@ -949,7 +931,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
                 {formatTime(currentTime)} / {formatTime(duration)}
               </div>
             </div>
-            {subtitles.length > 0 && (
+            {/* {subtitles.length > 0 && (
             <button
               onClick={handleSubtitleToggle}
               className="text-white hover:text-gray-300 transition"
@@ -958,7 +940,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
               <FaClosedCaptioning size={20} />
             </button>
           )}
-{showSubtitleMenu && <SubtitleMenu />}
+{showSubtitleMenu && <SubtitleMenu />} */}
 
             <div className="flex items-center space-x-4">
             <span className='max-md:hidden'>
