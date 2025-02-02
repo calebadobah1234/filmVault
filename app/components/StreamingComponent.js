@@ -550,9 +550,8 @@ const EnhancedStreamingComponent = ({ sources }) => {
     setShowControls(true);
     if (controlsTimeout) clearTimeout(controlsTimeout);
     
-    // Always hide controls after timeout, even in fullscreen
     setControlsTimeout(setTimeout(hideControls, 3000));
-  }, [controlsTimeout]);
+  }, [controlsTimeout, hideControls]);
 
 
   const handlePlayerReady = () => {
@@ -673,12 +672,12 @@ const EnhancedStreamingComponent = ({ sources }) => {
   return (
     <div
       ref={containerRef}
-      className="bg-black rounded-xl overflow-hidden shadow-xl relative group" // Changed bg-gray-800 to bg-black
+      className="bg-black rounded-xl overflow-hidden shadow-xl relative group"
       onMouseMove={showControlsWithTimeout}
       onMouseLeave={() => !isFullscreen && hideControls()}
     >
-      <div className={`relative flex items-center justify-center bg-black ${isFullscreen ? 'h-screen w-screen' : 'aspect-video'}`}> // Added bg-black here too
-    
+      <div className={`relative flex items-center justify-center bg-black ${isFullscreen ? 'h-screen w-screen' : 'aspect-video'}`}>
+        {/* Processing status: blocked */}
         {processingStatus === 'blocked' && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80">
             <div className="text-white text-lg text-center p-4">
@@ -687,7 +686,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
           </div>
         )}
   
-      
+        {/* Processing status: downloading */}
         {processingStatus === 'downloading' && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80">
             <FaSpinner className="animate-spin text-white text-4xl mb-4" />
@@ -695,7 +694,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
           </div>
         )}
   
- 
+        {/* Video player */}
         {processingStatus === 'ready' && streamingUrl && (
           <>
             {(!playing || !hasStarted) && (
@@ -710,6 +709,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
                 </button>
               </div>
             )}
+            {/* Video wrapper */}
             <div 
               className={`video-wrapper ${isFullscreen ? 'w-full h-full' : 'w-full h-full'}`}
               style={{
@@ -718,7 +718,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 transition: 'transform 0.3s ease',
-                backgroundColor: 'black' 
+                backgroundColor: 'black'
               }}
             >
               <ReactPlayer
@@ -737,7 +737,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  backgroundColor: 'black' 
+                  backgroundColor: 'black'
                 }}
                 className={`react-player ${isFullscreen ? 'fullscreen' : ''}`}
                 onProgress={handleProgress}
@@ -755,7 +755,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
                     attributes: {
                       controlsList: 'nodownload',
                       crossOrigin: 'anonymous',
-                      muted:false,
+                      muted: false,
                       style: {
                         width: '100%',
                         height: '100%',
