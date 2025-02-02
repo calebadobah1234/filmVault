@@ -7,9 +7,9 @@ import { FaRotate } from 'react-icons/fa6';
 import screenfull from 'screenfull';
 
 const EnhancedSeriesStreamingComponent = ({ seasons }) => {
-  // Existing state from movie component
+
   const [playing, setPlaying] = useState(false);
-  const [volume, setVolume] = useState(0.8);
+  const [volume, setVolume] = useState(1);
   const [played, setPlayed] = useState(0);
   const [seeking, setSeeking] = useState(false);
   const [duration, setDuration] = useState(0);
@@ -32,7 +32,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
   const [subtitlesLoaded, setSubtitlesLoaded] = useState(false);
   const [videoMetadataLoaded, setVideoMetadataLoaded] = useState(false);
 
-  // New state for series
+
   const [selectedSeason, setSelectedSeason] = useState('1');
   const [selectedEpisode, setSelectedEpisode] = useState('1');
   const [selectedQuality, setSelectedQuality] = useState('');
@@ -44,23 +44,23 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
   const containerRef = useRef(null);
   const bufferingTimeoutRef = useRef(null);
 
-  // Initialize seasons and episodes
+
   useEffect(() => {
     if (seasons && seasons.length > 0) {
       const initialSeason = seasons[0];
       setSelectedSeason(initialSeason.seasonNumber.toString());
 
-      // Get qualities from both folder structure and filenames
+     
       const qualities = new Set();
 
       initialSeason.resolutions.forEach(res => {
-        // Check folder structure qualities
+      
         const folderQuality = res.resolution.match(/(\d+)[pP]/)?.[1];
         if (folderQuality) {
           qualities.add(parseInt(folderQuality));
         }
 
-        // Check filename qualities
+     
         res.episodes.forEach(episode => {
           const filenameQuality = detectQualityFromUrl(episode.downloadLink);
           if (filenameQuality) {
@@ -76,7 +76,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
         setSelectedQuality(sortedQualities[0].toString());
       }
 
-      // Set initial episodes
+    
       if (initialSeason.resolutions.length > 0) {
         const initialEpisodes = initialSeason.resolutions[0].episodes;
         setEpisodes(initialEpisodes);
@@ -90,7 +90,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
   const detectEpisodeFromUrl = (filename) => {
     if (!filename) return null;
   
-    // Pattern 1: Look for episode number after a dash followed by numbers (e.g., "- 01" or "-01")
+    
     const dashPattern = /[-\s](\d{1,3})[\.\s\]]/;
     const dashMatch = filename.match(dashPattern);
     if (dashMatch) {
@@ -98,7 +98,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
       if (num > 0 && num < 1000) return num;
     }
   
-    // Pattern 2: Look for ExXX or EXX pattern
+  
     const ePattern = /[Ee](\d{1,3})/i;
     const eMatch = filename.match(ePattern);
     if (eMatch) {
@@ -106,7 +106,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
       if (num > 0 && num < 1000) return num;
     }
   
-    // Pattern 3: Look for episode numbers in brackets [XX]
+   
     const bracketPattern = /\[(\d{1,3})\]/;
     const bracketMatch = filename.match(bracketPattern);
     if (bracketMatch) {
@@ -114,7 +114,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
       if (num > 0 && num < 1000) return num;
     }
   
-    // Pattern 4: Look for SXXEXX pattern
+   
     const sPattern = /S\d{1,2}E(\d{1,3})/i;
     const sMatch = filename.match(sPattern);
     if (sMatch) {
@@ -296,27 +296,21 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
 
   
 
-  const extractVideoIdentifier = (url) => {
-    const parts = url.split('/');
-    const filename = parts[parts.length - 1];
-    return filename.split('.')[0]; // Remove extension
-  };
-
   const extractSubtitles = async (videoUrl) => {
     try {
       const subtitleTracks = [];
-      // Generate tracks for indices 2 to 36 as per ffprobe output
+      
       for (let trackIndex = 2; trackIndex <= 36; trackIndex++) {
         subtitleTracks.push({
           id: trackIndex,
           label: `Subtitle ${trackIndex - 1}`,
-          src: `${videoUrl}#${trackIndex}`, // Add track index to URL to force unique sources
+          src: `${videoUrl}#${trackIndex}`, 
           srcLang: 'en',
           kind: 'subtitles'
         });
       }
       setSubtitles(subtitleTracks);
-      setSelectedSubtitle(2); // Default to first subtitle track
+      setSelectedSubtitle(2); 
       setSubtitlesLoaded(true);
     } catch (error) {
       console.error('Error generating subtitle tracks:', error);
@@ -360,7 +354,6 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
       }
     } catch (error) {
       console.error('Failed to change orientation:', error);
-      // Fallback to CSS transform if orientation lock fails
       handleFallbackRotation();
     }
   };
@@ -395,7 +388,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
   };
 
 
-  // Function to check if file exists in Wasabi using a range request
+ 
   const checkFileExists = async (filename) => {
     const url = `https://filmvault.b-cdn.net/${filename}`;
     console.log('Checking file existence for:', url);
@@ -413,7 +406,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
     } catch (corsError) {
       console.log('CORS request failed, trying alternative check');
 
-      // Fallback to checking with regular GET request
+     
       try {
         const response = await fetch(url, {
           method: 'GET',
@@ -537,22 +530,16 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
   const handleSubtitleSelect = (subtitleId) => {
     const videoElement = playerRef.current?.getInternalPlayer();
     if (videoElement) {
-      // First, disable all tracks
-      Array.from(videoElement.textTracks).forEach(track => {
-        track.mode = 'disabled';
+      const tracks = Array.from(videoElement.textTracks);
+      tracks.forEach(track => {
+        track.mode = track.kind === 'subtitles' 
+          ? (track.id === subtitleId ? 'showing' : 'disabled')
+          : 'disabled';
       });
-
-      // Then enable the selected track if one is selected
-      if (subtitleId !== null) {
-        const targetTrack = videoElement.textTracks[subtitleId - 2];
-        if (targetTrack) {
-          targetTrack.mode = 'showing';
-        }
-      }
+      setSelectedSubtitle(subtitleId);
+      setShowSubtitleMenu(false);
+      showControlsWithTimeout();
     }
-    setSelectedSubtitle(subtitleId);
-    setShowSubtitleMenu(false);
-    showControlsWithTimeout();
   };
 
   // Handle fullscreen
@@ -592,34 +579,38 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
   const handlePlayerReady = () => {
     const videoElement = playerRef.current?.getInternalPlayer();
     if (videoElement) {
-      const enableTrack = () => {
-        // First disable all tracks
-        Array.from(videoElement.textTracks).forEach(track => {
-          track.mode = 'disabled';
-        });
+      const updateSubtitles = () => {
+        const textTracks = Array.from(videoElement.textTracks).filter(t => t.kind === 'subtitles');
+        const newSubtitles = textTracks.map((track, index) => ({
+          id: index,
+          label: track.label || track.language || `Subtitle ${index + 1}`,
+          language: track.language,
+          mode: track.mode
+        }));
 
-        // Then enable the selected track if one is selected
-        if (selectedSubtitle !== null) {
-          const targetTrack = videoElement.textTracks[selectedSubtitle - 2];
-          if (targetTrack) {
-            targetTrack.mode = 'showing';
-          }
-        }
+        setSubtitles(newSubtitles);
+        const defaultTrack = textTracks.find(t => t.mode === 'showing') || textTracks[0];
+        setSelectedSubtitle(defaultTrack ? defaultTrack.id : null);
+        setSubtitlesLoaded(true);
       };
 
-      if (videoElement.readyState >= 1) {
-        enableTrack();
-        setVideoMetadataLoaded(true);
-        setIsPlayerReady(true);
-        setIsBuffering(false);
-      } else {
-        videoElement.addEventListener('loadedmetadata', () => {
-          enableTrack();
+      const checkReady = () => {
+        if (videoElement.readyState >= 1) {
+          updateSubtitles();
           setVideoMetadataLoaded(true);
           setIsPlayerReady(true);
           setIsBuffering(false);
-        });
-      }
+        } else {
+          videoElement.addEventListener('loadedmetadata', () => {
+            updateSubtitles();
+            setVideoMetadataLoaded(true);
+            setIsPlayerReady(true);
+            setIsBuffering(false);
+          });
+        }
+      };
+
+      checkReady();
     }
   };
 
@@ -643,13 +634,11 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
         clearTimeout(bufferingTimeoutRef.current);
       }
 
-      // Check if playback is actually progressing
+     
       if (state.playedSeconds !== lastPlayedTime) {
         setIsBuffering(false);
         setLastPlayedTime(state.playedSeconds);
       } else if (playing && isPlayerReady) {
-        // If playback time hasn't changed but video should be playing,
-        // wait a short delay before showing buffer indicator
         bufferingTimeoutRef.current = setTimeout(() => {
           setIsBuffering(true);
         }, 500);
@@ -657,28 +646,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
     }
   };
 
-  const playerConfig = {
-    file: {
-      attributes: {
-        controlsList: 'nodownload',
-        crossOrigin: 'anonymous'
-      },
-      tracks: subtitles.map(subtitle => ({
-        kind: 'subtitles',
-        src: subtitle.src,
-        srcLang: subtitle.srcLang,
-        label: subtitle.label,
-        default: subtitle.id === selectedSubtitle
-      })),
-      forceVideo: true,
-      hlsOptions: {
-        maxBufferSize: 80 * 1024 * 1024,
-        maxBufferLength: 200,
-        startPosition: -1,
-        debug: false
-      }
-    }
-  };
+ 
 
   const SubtitleMenu = () => (
     <div className="absolute bottom-20 right-4 bg-black/90 rounded-lg p-2 text-white z-50">
@@ -702,11 +670,12 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
     </div>
   );
 
+
   const handleVideoClick = (e) => {
-    // Prevent click from triggering if user was dragging/seeking
+    
     if (seeking) return;
     
-    // Don't trigger if click was on a control element
+    
     if (controlsRef.current && controlsRef.current.contains(e.target)) return;
     
     handlePlayPause();
@@ -771,7 +740,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
 
   return (
     <div className="space-y-4">
-      {/* Season and Episode Selection */}
+     
       <div className="flex flex-wrap gap-4 mb-4 mt-5">
         <select
           value={selectedSeason}
@@ -798,7 +767,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
         </select>
       </div>
 
-      {/* Video Player Container */}
+     
       <div
         ref={containerRef}
         className="bg-gray-900 rounded-xl overflow-hidden shadow-xl relative group w-full"
@@ -815,16 +784,16 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
 
 {processingStatus === 'ready' && streamingUrl && (
           <>
-            {!hasStarted && (
-              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                <button
-                  onClick={handlePlayPause}
-                  className="text-white text-4xl hover:scale-110 transition-transform"
-                >
-                  <FaPlay />
-                </button>
-              </div>
-            )}
+            {(!playing || !hasStarted) && (
+                <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
+                  <button
+                    onClick={handlePlayPause}
+                    className="text-white text-4xl hover:scale-110 transition-transform"
+                  >
+                    <FaPlay />
+                  </button>
+                </div>
+              )}
             <div 
               className={`video-wrapper ${isFullscreen ? 'w-full h-full' : 'w-full h-full'}`}
               style={{
@@ -840,6 +809,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
                 url={streamingUrl}
                 playing={playing}
                 volume={volume}
+                muted={false}
                 width="100%"
                 height="100%"
                 style={{
@@ -867,10 +837,12 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
                     attributes: {
                       controlsList: 'nodownload',
                       crossOrigin: 'anonymous',
+                      muted: false,
                       style: {
                         width: '100%',
                         height: '100%',
-                        objectFit: 'contain'
+                        objectFit: 'contain',
+                        backgroundColor: 'black' 
                       }
                     },
                     tracks: subtitles.map(subtitle => ({
@@ -950,7 +922,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
                 {formatTime(currentTime)} / {formatTime(duration)}
               </div>
             </div>
-            {subtitles.length > 0 && (
+            {/* {subtitles.length > 0 && (
             <button
               onClick={handleSubtitleToggle}
               className="text-white hover:text-gray-300 transition"
@@ -959,7 +931,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
               <FaClosedCaptioning size={20} />
             </button>
           )}
-{showSubtitleMenu && <SubtitleMenu />}
+{showSubtitleMenu && <SubtitleMenu />} */}
 
             <div className="flex items-center space-x-4">
             <span className='max-md:hidden'>

@@ -276,14 +276,14 @@ const EnhancedStreamingComponent = ({ sources }) => {
   const sanitizeFilename = (filename) => {
     console.log('Original filename:', filename);
     
-    // Check if the filename already contains encoded brackets
+   
     const hasEncodedBrackets = filename.includes('%5B') || filename.includes('%5D');
     
-    // First decode only if there are no encoded brackets
+
     const decodedFilename = hasEncodedBrackets ? filename : decodeURIComponent(filename);
     console.log('Decoded filename:', decodedFilename);
     
-    // Remove any existing URL encoding (except for brackets if they're already encoded)
+
     const cleanFilename = hasEncodedBrackets ? 
       decodedFilename : 
       decodedFilename
@@ -292,8 +292,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
         .replace(/%20/g, ' ');
     console.log('Cleaned filename:', cleanFilename);
     
-    // If brackets are already encoded, keep them as is
-    // If not, encode them as %5B and %5D
+  
     const encodedFilename = hasEncodedBrackets ?
       cleanFilename :
       cleanFilename
@@ -301,7 +300,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
         .replace(/\]/g, '%5D')
         .replace(/ /g, '.');
     
-    // Encode the rest of the string, but preserve our encoded brackets
+    
     const finalEncodedFilename = encodedFilename
       .replace(/[^A-Za-z0-9%._-]/g, char => encodeURIComponent(char));
     
@@ -310,7 +309,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
     return finalEncodedFilename;
   };
 
-  // Function to process video through backend
+
   const processVideo = async (url, signal) => {
     try {
       console.log('Processing video with URL:', url);
@@ -370,7 +369,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
       
       console.log('Download API URL:', apiUrl);
   
-      // Initiate download
+      
       fetch(apiUrl, {
         method: 'GET',
         headers: {
@@ -385,7 +384,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
         console.error('Download initiation error:', error);
       });
   
-      // File checking loop
+      
       const checkInterval = 5000;
       const maxAttempts = Math.floor(240000 / checkInterval);
       let attempts = 0;
@@ -466,7 +465,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
     }
   };
 
-  // Initialize qualities on component mount
+ 
   useEffect(() => {
     if (sources && sources.length > 0) {
       const availableQualities = Array.from(new Set(
@@ -487,11 +486,10 @@ const EnhancedStreamingComponent = ({ sources }) => {
     }
   }, [sources]);
 
-  // Process video when quality is selected
+ 
   useEffect(() => {
     const processSelectedQuality = async () => {
       if (selectedQuality && sources?.length > 0) {
-        // Cancel any existing requests before starting new ones
         cancelActiveRequest();
 
         const source = sources.find(s => {
@@ -523,7 +521,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
     processSelectedQuality();
   }, [selectedQuality, sources]);
 
-  // Handle fullscreen
+  
   useEffect(() => {
     const handler = () => {
       setIsFullscreen(screenfull.isFullscreen);
@@ -540,9 +538,9 @@ const EnhancedStreamingComponent = ({ sources }) => {
     };
   }, []);
 
-  // Controls visibility
+ 
   const hideControls = useCallback(() => {
-    // Only hide controls if we're not seeking or buffering
+   
     if (!seeking && !isBuffering) {
       setShowControls(false);
     }
@@ -556,9 +554,9 @@ const EnhancedStreamingComponent = ({ sources }) => {
     setControlsTimeout(setTimeout(hideControls, 3000));
   }, [controlsTimeout]);
 
-  // Add an onReady handler to ReactPlayer
+
   const handlePlayerReady = () => {
-    // Check if the video element is available and metadata is loaded
+   
     const videoElement = playerRef.current?.getInternalPlayer();
     if (videoElement) {
       if (videoElement.readyState >= 1) {
@@ -566,7 +564,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
         setIsPlayerReady(true);
         setIsBuffering(false);
       } else {
-        // Add metadata loading listener if metadata isn't loaded yet
+      
         const handleLoadedMetadata = () => {
           setVideoMetadataLoaded(true);
           setIsPlayerReady(true);
@@ -588,24 +586,23 @@ const EnhancedStreamingComponent = ({ sources }) => {
   const handleBufferEnd = () => {
     setIsBuffering(false);
   };
-  // Player event handlers
+
   const handleProgress = (state) => {
     if (!seeking) {
       setPlayed(state.played);
       setCurrentTime(state.playedSeconds);
       
-      // Clear any existing buffering timeout
+     
       if (bufferingTimeoutRef.current) {
         clearTimeout(bufferingTimeoutRef.current);
       }
 
-      // Check if playback is actually progressing
+  
       if (state.playedSeconds !== lastPlayedTime) {
         setIsBuffering(false);
         setLastPlayedTime(state.playedSeconds);
       } else if (playing && isPlayerReady) {
-        // If playback time hasn't changed but video should be playing,
-        // wait a short delay before showing buffer indicator
+       
         bufferingTimeoutRef.current = setTimeout(() => {
           setIsBuffering(true);
         }, 500);
@@ -681,8 +678,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
       onMouseLeave={() => !isFullscreen && hideControls()}
     >
       <div className={`relative flex items-center justify-center bg-black ${isFullscreen ? 'h-screen w-screen' : 'aspect-video'}`}> // Added bg-black here too
-        {/* Rest of the component remains exactly the same */}
-        {/* Blocked status display */}
+    
         {processingStatus === 'blocked' && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80">
             <div className="text-white text-lg text-center p-4">
@@ -691,7 +687,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
           </div>
         )}
   
-        {/* Downloading status display */}
+      
         {processingStatus === 'downloading' && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80">
             <FaSpinner className="animate-spin text-white text-4xl mb-4" />
@@ -699,7 +695,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
           </div>
         )}
   
-        {/* Ready status display */}
+ 
         {processingStatus === 'ready' && streamingUrl && (
           <>
             {(!playing || !hasStarted) && (
@@ -722,7 +718,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 transition: 'transform 0.3s ease',
-                backgroundColor: 'black' // Added black background here
+                backgroundColor: 'black' 
               }}
             >
               <ReactPlayer
@@ -741,7 +737,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  backgroundColor: 'black' // Added black background here
+                  backgroundColor: 'black' 
                 }}
                 className={`react-player ${isFullscreen ? 'fullscreen' : ''}`}
                 onProgress={handleProgress}
@@ -764,7 +760,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
                         width: '100%',
                         height: '100%',
                         objectFit: 'contain',
-                        backgroundColor: 'black' // Added black background here
+                        backgroundColor: 'black'
                       }
                     },
                     forceVideo: true,
@@ -801,7 +797,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
           </div>
         )}
   
-        {/* Error status display */}
+       
         {processingStatus === 'error' && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 p-4">
             <div className="text-red-500 mb-4 text-center">
@@ -817,7 +813,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
           </div>
         )}
   
-        {/* Controls */}
+  
         <div
           ref={controlsRef}
           className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 transition-opacity duration-300 ${

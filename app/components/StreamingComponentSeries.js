@@ -7,7 +7,7 @@ import { FaRotate } from 'react-icons/fa6';
 import screenfull from 'screenfull';
 
 const EnhancedSeriesStreamingComponent = ({ seasons }) => {
-  // Existing state from movie component
+
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
   const [played, setPlayed] = useState(0);
@@ -32,7 +32,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
   const [subtitlesLoaded, setSubtitlesLoaded] = useState(false);
   const [videoMetadataLoaded, setVideoMetadataLoaded] = useState(false);
 
-  // New state for series
+
   const [selectedSeason, setSelectedSeason] = useState('1');
   const [selectedEpisode, setSelectedEpisode] = useState('1');
   const [selectedQuality, setSelectedQuality] = useState('');
@@ -44,23 +44,23 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
   const containerRef = useRef(null);
   const bufferingTimeoutRef = useRef(null);
 
-  // Initialize seasons and episodes
+
   useEffect(() => {
     if (seasons && seasons.length > 0) {
       const initialSeason = seasons[0];
       setSelectedSeason(initialSeason.seasonNumber.toString());
 
-      // Get qualities from both folder structure and filenames
+     
       const qualities = new Set();
 
       initialSeason.resolutions.forEach(res => {
-        // Check folder structure qualities
+      
         const folderQuality = res.resolution.match(/(\d+)[pP]/)?.[1];
         if (folderQuality) {
           qualities.add(parseInt(folderQuality));
         }
 
-        // Check filename qualities
+     
         res.episodes.forEach(episode => {
           const filenameQuality = detectQualityFromUrl(episode.downloadLink);
           if (filenameQuality) {
@@ -76,7 +76,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
         setSelectedQuality(sortedQualities[0].toString());
       }
 
-      // Set initial episodes
+    
       if (initialSeason.resolutions.length > 0) {
         const initialEpisodes = initialSeason.resolutions[0].episodes;
         setEpisodes(initialEpisodes);
@@ -90,7 +90,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
   const detectEpisodeFromUrl = (filename) => {
     if (!filename) return null;
   
-    // Pattern 1: Look for episode number after a dash followed by numbers (e.g., "- 01" or "-01")
+    
     const dashPattern = /[-\s](\d{1,3})[\.\s\]]/;
     const dashMatch = filename.match(dashPattern);
     if (dashMatch) {
@@ -98,7 +98,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
       if (num > 0 && num < 1000) return num;
     }
   
-    // Pattern 2: Look for ExXX or EXX pattern
+  
     const ePattern = /[Ee](\d{1,3})/i;
     const eMatch = filename.match(ePattern);
     if (eMatch) {
@@ -106,7 +106,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
       if (num > 0 && num < 1000) return num;
     }
   
-    // Pattern 3: Look for episode numbers in brackets [XX]
+   
     const bracketPattern = /\[(\d{1,3})\]/;
     const bracketMatch = filename.match(bracketPattern);
     if (bracketMatch) {
@@ -114,7 +114,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
       if (num > 0 && num < 1000) return num;
     }
   
-    // Pattern 4: Look for SXXEXX pattern
+   
     const sPattern = /S\d{1,2}E(\d{1,3})/i;
     const sMatch = filename.match(sPattern);
     if (sMatch) {
@@ -296,27 +296,21 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
 
   
 
-  const extractVideoIdentifier = (url) => {
-    const parts = url.split('/');
-    const filename = parts[parts.length - 1];
-    return filename.split('.')[0]; // Remove extension
-  };
-
   const extractSubtitles = async (videoUrl) => {
     try {
       const subtitleTracks = [];
-      // Generate tracks for indices 2 to 36 as per ffprobe output
+      
       for (let trackIndex = 2; trackIndex <= 36; trackIndex++) {
         subtitleTracks.push({
           id: trackIndex,
           label: `Subtitle ${trackIndex - 1}`,
-          src: `${videoUrl}#${trackIndex}`, // Add track index to URL to force unique sources
+          src: `${videoUrl}#${trackIndex}`, 
           srcLang: 'en',
           kind: 'subtitles'
         });
       }
       setSubtitles(subtitleTracks);
-      setSelectedSubtitle(2); // Default to first subtitle track
+      setSelectedSubtitle(2); 
       setSubtitlesLoaded(true);
     } catch (error) {
       console.error('Error generating subtitle tracks:', error);
@@ -360,7 +354,6 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
       }
     } catch (error) {
       console.error('Failed to change orientation:', error);
-      // Fallback to CSS transform if orientation lock fails
       handleFallbackRotation();
     }
   };
@@ -395,7 +388,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
   };
 
 
-  // Function to check if file exists in Wasabi using a range request
+ 
   const checkFileExists = async (filename) => {
     const url = `https://filmvault.b-cdn.net/${filename}`;
     console.log('Checking file existence for:', url);
@@ -413,7 +406,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
     } catch (corsError) {
       console.log('CORS request failed, trying alternative check');
 
-      // Fallback to checking with regular GET request
+     
       try {
         const response = await fetch(url, {
           method: 'GET',
@@ -641,13 +634,11 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
         clearTimeout(bufferingTimeoutRef.current);
       }
 
-      // Check if playback is actually progressing
+     
       if (state.playedSeconds !== lastPlayedTime) {
         setIsBuffering(false);
         setLastPlayedTime(state.playedSeconds);
       } else if (playing && isPlayerReady) {
-        // If playback time hasn't changed but video should be playing,
-        // wait a short delay before showing buffer indicator
         bufferingTimeoutRef.current = setTimeout(() => {
           setIsBuffering(true);
         }, 500);
@@ -681,10 +672,10 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
 
 
   const handleVideoClick = (e) => {
-    // Prevent click from triggering if user was dragging/seeking
+    
     if (seeking) return;
     
-    // Don't trigger if click was on a control element
+    
     if (controlsRef.current && controlsRef.current.contains(e.target)) return;
     
     handlePlayPause();
@@ -749,7 +740,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
 
   return (
     <div className="space-y-4">
-      {/* Season and Episode Selection */}
+     
       <div className="flex flex-wrap gap-4 mb-4 mt-5">
         <select
           value={selectedSeason}
@@ -776,7 +767,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
         </select>
       </div>
 
-      {/* Video Player Container */}
+     
       <div
         ref={containerRef}
         className="bg-gray-900 rounded-xl overflow-hidden shadow-xl relative group w-full"
@@ -851,7 +842,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
                         width: '100%',
                         height: '100%',
                         objectFit: 'contain',
-                        backgroundColor: 'black' // Added black background here
+                        backgroundColor: 'black' 
                       }
                     },
                     tracks: subtitles.map(subtitle => ({
@@ -931,16 +922,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
                 {formatTime(currentTime)} / {formatTime(duration)}
               </div>
             </div>
-            {/* {subtitles.length > 0 && (
-            <button
-              onClick={handleSubtitleToggle}
-              className="text-white hover:text-gray-300 transition"
-              title="Subtitles"
-            >
-              <FaClosedCaptioning size={20} />
-            </button>
-          )}
-{showSubtitleMenu && <SubtitleMenu />} */}
+          
 
             <div className="flex items-center space-x-4">
             <span className='max-md:hidden'>
