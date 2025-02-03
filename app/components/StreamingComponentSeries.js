@@ -868,10 +868,9 @@ const handlePlayerReady = () => {
       forceVideo: true,
       forceAudio: true, // Force audio
       hlsOptions: {
-        maxBufferSize: 80 * 1024 * 1024,
+        maxBufferSize: 200 * 1024 * 1024,
         maxBufferLength: 200,
         startPosition: -1,
-        debug: isAndroid, // Enable debug for Android
         backBufferLength: 300,
         liveSyncDurationCount: 10,
         maxMaxBufferLength: 600,
