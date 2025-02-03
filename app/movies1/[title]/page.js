@@ -28,7 +28,7 @@ export async function generateMetadata({ params }) {
     : data.title;
 
   return {
-    title: `${titleWithYear} free HD download | FilmVault.xyz`,
+    title: `watch and download ${titleWithYear} full movie | FilmVault.xyz`,
     description: `Watch and download ${titleWithYear} for free in HD quality. ${
       data.description ? data.description.slice(0, 300) : ""
     }`,

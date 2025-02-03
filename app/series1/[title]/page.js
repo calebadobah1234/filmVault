@@ -56,9 +56,9 @@ export async function generateMetadata({ params }) {
   const data1 = await res.json();
   const data = data1[0];
   return {
-    title: `${data.title} ${
+    title: `watch and download ${data.title} ${
       data.year ? data.year : ""
-    } free HD download | FilmVault.xyz`,
+    }| FilmVault.xyz`,
     description: `Watch and download ${data.title} (${
       data.year
     }) for free in HD quality. ${data.description.slice(0, 300)}`,
