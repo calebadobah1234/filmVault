@@ -399,7 +399,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
 
  
   const checkFileExists = async (filename) => {
-    const url = `https://filmvault.b-cdn.net/${filename}`;
+    const url = `https://filmvault2.b-cdn.net/${filename}`;
     console.log('Checking file existence for:', url);
 
     try {
@@ -470,7 +470,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
   
       if (initialFileCheck) {
         console.log("File already exists in Bunny CDN");
-        const cdnUrl = `https://filmvault.b-cdn.net/${sanitizedFilename}`;
+        const cdnUrl = `https://filmvault2.b-cdn.net/${sanitizedFilename}`;
         setStreamingUrl(cdnUrl);
         setProcessingStatus('ready');
         await extractSubtitles(cdnUrl);
@@ -507,7 +507,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
         
         if (fileExists) {
           console.log("File found in CDN!");
-          const cdnUrl = `https://filmvault.b-cdn.net/${sanitizedFilename}`;
+          const cdnUrl = `https://filmvault2.b-cdn.net/${sanitizedFilename}`;
           setStreamingUrl(cdnUrl);
           setProcessingStatus('ready');
           return;
