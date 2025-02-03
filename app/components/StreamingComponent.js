@@ -215,7 +215,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
   // Function to check if file exists in Wasabi using a range request
   const checkFileExists = async (filename, signal) => {
     const encodedFilename = sanitizeFilename(filename);
-    const url = `https://filmvault.b-cdn.net/${encodedFilename}`;
+    const url = `https://filmvault2.b-cdn.net/${encodedFilename}`;
     
     console.log('Checking existence with URL:', url);
     console.log('URL components:', {
@@ -347,7 +347,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
         console.log('Initial file check result:', initialFileCheck);
         
         if (initialFileCheck) {
-          const cdnUrl = `https://filmvault.b-cdn.net/${sanitizedFilename}`;
+          const cdnUrl = `https://filmvault2.b-cdn.net/${sanitizedFilename}`;
           console.log('File found, setting CDN URL:', cdnUrl);
           setStreamingUrl(cdnUrl);
           setProcessingStatus('ready');
@@ -397,7 +397,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
             console.log(`File check result for attempt ${attempts + 1}:`, fileExists);
             
             if (fileExists) {
-              const cdnUrl = `https://filmvault.b-cdn.net/${sanitizedFilename}`;
+              const cdnUrl = `https://filmvault2.b-cdn.net/${sanitizedFilename}`;
               console.log('File found, setting final CDN URL:', cdnUrl);
               setStreamingUrl(cdnUrl);
               setProcessingStatus('ready');

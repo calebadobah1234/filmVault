@@ -30,6 +30,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
   const [selectedSubtitle, setSelectedSubtitle] = useState(null);
   const [showSubtitleMenu, setShowSubtitleMenu] = useState(false);
   const [subtitlesLoaded, setSubtitlesLoaded] = useState(false);
+  const [isAndroid, setIsAndroid] = useState(false);
   const [videoMetadataLoaded, setVideoMetadataLoaded] = useState(false);
 
 
@@ -44,6 +45,14 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
   const containerRef = useRef(null);
   const bufferingTimeoutRef = useRef(null);
 
+
+  useEffect(() => {
+    const checkAndroid = () => {
+      const userAgent = window.navigator.userAgent.toLowerCase();
+      setIsAndroid(/android/.test(userAgent));
+    };
+    checkAndroid();
+  }, []);
 
   useEffect(() => {
     if (seasons && seasons.length > 0) {
@@ -576,10 +585,62 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
   }, [controlsTimeout]);
 
   // Add an onReady handler to ReactPlayer
-  const handlePlayerReady = () => {
-    const videoElement = playerRef.current?.getInternalPlayer();
-    if (videoElement) {
-      const updateSubtitles = () => {
+  // Update the handlePlayerReady function to include better audio handling
+const handlePlayerReady = () => {
+  const videoElement = playerRef.current?.getInternalPlayer();
+  if (videoElement) {
+    // Initialize audio settings
+    const initializeAudio = () => {
+      try {
+        // Force unmute and set volume
+        videoElement.muted = false;
+        videoElement.volume = 1;
+
+        // Enable audio output
+        if (videoElement.audioTracks && videoElement.audioTracks.length > 0) {
+          videoElement.audioTracks[0].enabled = true;
+        }
+
+        // Create and resume AudioContext for Android
+        if (isAndroid && window.AudioContext || window.webkitAudioContext) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          const audioContext = new AudioContext();
+          
+          if (audioContext.state === 'suspended') {
+            audioContext.resume().catch(error => {
+              console.warn('AudioContext resume error:', error);
+            });
+          }
+
+          // Create media element source if it doesn't exist
+          if (!videoElement.mediaElementSource) {
+            try {
+              const source = audioContext.createMediaElementSource(videoElement);
+              source.connect(audioContext.destination);
+              videoElement.mediaElementSource = source;
+            } catch (error) {
+              console.warn('MediaElementSource creation error:', error);
+            }
+          }
+        }
+
+        // Remove the initialization listener after successful setup
+        document.removeEventListener('touchstart', initializeAudio);
+        document.removeEventListener('click', initializeAudio);
+      } catch (error) {
+        console.error('Audio initialization error:', error);
+      }
+    };
+
+    // Add initialization listeners for user interaction
+    if (isAndroid) {
+      document.addEventListener('touchstart', initializeAudio, { once: true });
+      document.addEventListener('click', initializeAudio, { once: true });
+    }
+
+    // Handle subtitle tracks
+    const updateSubtitles = () => {
+      try {
         const textTracks = Array.from(videoElement.textTracks).filter(t => t.kind === 'subtitles');
         const newSubtitles = textTracks.map((track, index) => ({
           id: index,
@@ -589,30 +650,75 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
         }));
 
         setSubtitles(newSubtitles);
+        
+        // Find and set default subtitle track
         const defaultTrack = textTracks.find(t => t.mode === 'showing') || textTracks[0];
         setSelectedSubtitle(defaultTrack ? defaultTrack.id : null);
         setSubtitlesLoaded(true);
-      };
+      } catch (error) {
+        console.error('Subtitle initialization error:', error);
+        setSubtitlesLoaded(true); // Set to true even on error to prevent loading state
+      }
+    };
 
-      const checkReady = () => {
-        if (videoElement.readyState >= 1) {
+    // Check video element readiness
+    const checkReady = () => {
+      if (videoElement.readyState >= 1) {
+        updateSubtitles();
+        setVideoMetadataLoaded(true);
+        setIsPlayerReady(true);
+        setIsBuffering(false);
+
+        // Initial play attempt for Android
+        if (isAndroid && playing) {
+          videoElement.play().catch(error => {
+            console.warn('Initial play attempt error:', error);
+            // Show play button or user interaction prompt if needed
+            setPlaying(false);
+          });
+        }
+      } else {
+        // Add metadata listener if not ready
+        const handleMetadata = () => {
           updateSubtitles();
           setVideoMetadataLoaded(true);
           setIsPlayerReady(true);
           setIsBuffering(false);
-        } else {
-          videoElement.addEventListener('loadedmetadata', () => {
-            updateSubtitles();
-            setVideoMetadataLoaded(true);
-            setIsPlayerReady(true);
-            setIsBuffering(false);
-          });
-        }
-      };
+          videoElement.removeEventListener('loadedmetadata', handleMetadata);
+        };
+        
+        videoElement.addEventListener('loadedmetadata', handleMetadata);
+      }
+    };
 
-      checkReady();
+    // Add error handling
+    const handleVideoError = (error) => {
+      console.error('Video element error:', error);
+      setIsPlayerReady(false);
+      setVideoMetadataLoaded(false);
+      setIsBuffering(false);
+    };
+
+    videoElement.addEventListener('error', handleVideoError);
+
+    // Monitor audio track changes
+    if (videoElement.audioTracks) {
+      videoElement.audioTracks.addEventListener('change', () => {
+        console.log('Audio tracks changed:', videoElement.audioTracks);
+      });
     }
-  };
+
+    // Start ready state check
+    checkReady();
+
+    // Cleanup function
+    return () => {
+      videoElement.removeEventListener('error', handleVideoError);
+      document.removeEventListener('touchstart', initializeAudio);
+      document.removeEventListener('click', initializeAudio);
+    };
+  }
+};
 
   const handleBuffer = () => {
     if (isPlayerReady && videoMetadataLoaded) {
@@ -738,6 +844,63 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
     return hh ? `${hh}:${mm}:${ss}` : `${mm}:${ss}`;
   };
 
+  const getPlayerConfig = () => ({
+    file: {
+      attributes: {
+        controlsList: 'nodownload',
+        crossOrigin: 'anonymous',
+        muted: false,
+        playsInline: true, // Add playsInline
+        style: {
+          width: '100%',
+          height: '100%',
+          objectFit: 'contain',
+          backgroundColor: 'black'
+        }
+      },
+      tracks: subtitles.map(subtitle => ({
+        kind: 'subtitles',
+        src: subtitle.src,
+        srcLang: subtitle.srcLang,
+        label: subtitle.label,
+        default: subtitle.id === selectedSubtitle
+      })),
+      forceVideo: true,
+      forceAudio: true, // Force audio
+      hlsOptions: {
+        maxBufferSize: 200 * 1024 * 1024,
+        maxBufferLength: 200,
+        startPosition: -1,
+        backBufferLength: 300,
+        liveSyncDurationCount: 10,
+        maxMaxBufferLength: 600,
+        maxLoadingDelay: 4,
+        manifestLoadingTimeOut: 20000,
+        manifestLoadingMaxRetry: 5,
+        fragLoadingTimeOut: 30000,
+        fragLoadingMaxRetry: 5,
+        levelLoadingTimeOut: 20000,
+        levelLoadingMaxRetry: 5,
+        abrEwmaDefaultEstimate: 5000000,
+        abrBandWidthFactor: 0.95,
+        abrBandWidthUpFactor: 0.7,
+        abrMaxWithRealBitrate: true,
+        enableWorker: true, // Enable web worker
+        lowLatencyMode: false, // Disable low latency mode
+        progressive: true, // Enable progressive download
+        xhrSetup: (xhr, url) => {
+          xhr.withCredentials = false; // Disable credentials
+        },
+        // Add specific audio configurations for Android
+        audioStreamController: {
+          bufferSize: 8 * 1024 * 1024, // Increase audio buffer size
+          maxBufferSize: 16 * 1024 * 1024,
+          maxBufferLength: 300
+        }
+      }
+    }
+  });
+
   return (
     <div className="space-y-4">
      
@@ -805,77 +968,35 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
               }}
             >
               <ReactPlayer
-                ref={playerRef}
-                url={streamingUrl}
-                playing={playing}
-                volume={volume}
-                muted={false}
-                width="100%"
-                height="100%"
-                style={{
-                  maxWidth: '100%',
-                  maxHeight: '100%',
-                  margin: 'auto',
-                  objectFit: 'contain',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-                className={`react-player ${isFullscreen ? 'fullscreen' : ''}`}
-                onProgress={handleProgress}
-                onClick={handleVideoClick}
-                onDuration={setDuration}
-                onBuffer={handleBuffer}
-                onBufferEnd={handleBufferEnd}
-                onReady={handlePlayerReady}
-                onError={(err) => {
-                  console.error('ReactPlayer error:', err);
-                  handleError();
-                }}
-                config={{
-                  file: {
-                    attributes: {
-                      controlsList: 'nodownload',
-                      crossOrigin: 'anonymous',
-                      muted: false,
-                      style: {
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'contain',
-                        backgroundColor: 'black' 
-                      }
-                    },
-                    tracks: subtitles.map(subtitle => ({
-                      kind: 'subtitles',
-                      src: subtitle.src,
-                      srcLang: subtitle.srcLang,
-                      label: subtitle.label,
-                      default: subtitle.id === selectedSubtitle
-                    })),
-                    forceVideo: true,
-                    hlsOptions: {
-                      maxBufferSize: 80 * 1024 * 1024,
-                      maxBufferLength: 200,
-                      startPosition: -1,
-                      debug: true,
-                      backBufferLength: 300,
-                      liveSyncDurationCount: 10,
-                      maxMaxBufferLength: 600,
-                      maxLoadingDelay: 4,
-                      manifestLoadingTimeOut: 20000,
-                      manifestLoadingMaxRetry: 5,
-                      fragLoadingTimeOut: 30000,
-                      fragLoadingMaxRetry: 5,
-                      levelLoadingTimeOut: 20000,
-                      levelLoadingMaxRetry: 5,
-                      abrEwmaDefaultEstimate: 5000000,
-                      abrBandWidthFactor: 0.95,
-                      abrBandWidthUpFactor: 0.7,
-                      abrMaxWithRealBitrate: true,
-                    }
-                  }
-                }}
-              />
+        ref={playerRef}
+        url={streamingUrl}
+        playing={playing}
+        volume={volume}
+        muted={false}
+        width="100%"
+        height="100%"
+        style={{
+          maxWidth: '100%',
+          maxHeight: '100%',
+          margin: 'auto',
+          objectFit: 'contain',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+        className={`react-player ${isFullscreen ? 'fullscreen' : ''}`}
+        onProgress={handleProgress}
+        onClick={handleVideoClick}
+        onDuration={setDuration}
+        onBuffer={handleBuffer}
+        onBufferEnd={handleBufferEnd}
+        onReady={handlePlayerReady}
+        onError={(err) => {
+          console.error('ReactPlayer error:', err);
+          handleError();
+        }}
+        config={getPlayerConfig()}
+      />
             </div>
           </>
         )}
@@ -922,16 +1043,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
                 {formatTime(currentTime)} / {formatTime(duration)}
               </div>
             </div>
-            {/* {subtitles.length > 0 && (
-            <button
-              onClick={handleSubtitleToggle}
-              className="text-white hover:text-gray-300 transition"
-              title="Subtitles"
-            >
-              <FaClosedCaptioning size={20} />
-            </button>
-          )}
-{showSubtitleMenu && <SubtitleMenu />} */}
+          
 
             <div className="flex items-center space-x-4">
             <span className='max-md:hidden'>
