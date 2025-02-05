@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import ReactPlayer from 'react-player';
-import { FaPlay, FaPause, FaVolumeUp, FaExpand, FaSpinner } from 'react-icons/fa';
+import { FaPlay, FaPause, FaVolumeUp, FaExpand, FaSpinner,FaClosedCaptioning,FaVolumeMute,FaForward, FaBackward } from 'react-icons/fa';
 import screenfull from 'screenfull';
 import { FaRotate } from 'react-icons/fa6';
+import { Forward, Rewind } from 'lucide-react';
 
-const EnhancedStreamingComponent = ({ sources }) => {
+const EnhancedStreamingComponent = ({ sources,movieTitle }) => {
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
   const [played, setPlayed] = useState(0);
@@ -37,6 +38,14 @@ const EnhancedStreamingComponent = ({ sources }) => {
   const processingTimeoutRef = useRef(null);
   const activeRequestRef = useRef(null);
   const [videoMetadataLoaded, setVideoMetadataLoaded] = useState(false);
+  const [subtitleUrl, setSubtitleUrl] = useState(null);
+  const [originalFilename, setOriginalFilename] = useState('');
+  const [isSubtitleLoading, setIsSubtitleLoading] = useState(false);
+  const [subtitleTracks, setSubtitleTracks] = useState([]);
+  const subtitleTrackRef = useRef(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const [subtitlesEnabled, setSubtitlesEnabled] = useState(true);
+  const [prevVolume, setPrevVolume] = useState(1);
   
 
   
@@ -51,6 +60,8 @@ const EnhancedStreamingComponent = ({ sources }) => {
     return match ? parseInt(match[1]) : 0;
   };
 
+  
+
   const handleRotate = async () => {
     if (isFullscreen && isMobile) {
       try {
@@ -60,6 +71,51 @@ const EnhancedStreamingComponent = ({ sources }) => {
         console.error('Orientation change failed:', error);
         handleFallbackRotation();
       }
+    }
+  };
+
+  const toggleSubtitles = () => {
+    const videoElement = playerRef.current?.getInternalPlayer();
+    if (videoElement && videoElement.textTracks.length > 0) {
+      const track = videoElement.textTracks[0];
+      if (track) {
+        track.mode = subtitlesEnabled ? 'hidden' : 'showing';
+        setSubtitlesEnabled(!subtitlesEnabled);
+      }
+    }
+  };
+
+
+  const handleForward = () => {
+    const player = playerRef.current;
+    if (player) {
+      const newTime = Math.min(currentTime + 10, duration);
+      player.seekTo(newTime);
+      showControlsWithTimeout();
+    }
+  };
+
+  const handleBackward = () => {
+    const player = playerRef.current;
+    if (player) {
+      const newTime = Math.max(currentTime - 10, 0);
+      player.seekTo(newTime);
+      showControlsWithTimeout();
+    }
+  };
+
+  // Add mute toggle function
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
+    if (!isMuted) {
+      // Store the current volume before muting
+      setVolume(prevVolume => {
+        setPrevVolume(prevVolume);
+        return 0;
+      });
+    } else {
+      // Restore the previous volume when unmuting
+      setVolume(prevVolume || 1);
     }
   };
 
@@ -76,6 +132,129 @@ const EnhancedStreamingComponent = ({ sources }) => {
       }
     };
   }, []);
+
+  useEffect(() => {
+    const fetchSubtitle = async () => {
+      console.log('=== Starting subtitle fetch process ===');
+      console.log('Movie Title:', movieTitle);
+      console.log('Original Filename:', originalFilename);
+  
+      if (!movieTitle || !originalFilename) {
+        console.log('❌ Missing required data:', { movieTitle, originalFilename });
+        return;
+      }
+  
+      setIsSubtitleLoading(true);
+      console.log('🔄 Set subtitle loading state to true');
+  
+      try {
+        // First, check if subtitle exists in Wasabi/CDN
+        const subtitleFilename = `${originalFilename}.srt`;
+        const cdnSubtitleUrl = `https://fvsubtitles.b-cdn.net/${encodeURIComponent(subtitleFilename.replace('.srt',""))}.vtt`;
+        
+        console.log('🔍 Checking for existing subtitle at CDN URL:', cdnSubtitleUrl);
+        
+        // Try to verify if subtitle exists
+        const checkResponse = await fetch(cdnSubtitleUrl, { 
+          method: 'HEAD'
+        });
+        
+        console.log('CDN Check Response Status:', checkResponse.status);
+        
+        if (checkResponse.ok) {
+          console.log('✅ Subtitle found in CDN, using existing file');
+          setSubtitleUrl(cdnSubtitleUrl);
+          setSubtitleTracks([{
+            kind: 'subtitles',
+            src: cdnSubtitleUrl,
+            srcLang: 'en',
+            label: 'English',
+            type: 'text/vtt'
+          }]);
+          return;
+        }
+  
+        console.log('❌ Subtitle not found in CDN, initiating download process');
+        
+        // If subtitle doesn't exist, proceed with download
+        const encodedMovie = encodeURIComponent(movieTitle);
+        const encodedFilename = encodeURIComponent(originalFilename);
+        const downloadUrl = `https://api4.mp3vault.xyz/nodejs/download-subtitle?movie=${encodedMovie}&type=movie&filename=${encodedFilename}`;
+        
+        console.log('📡 Making subtitle download request to:', downloadUrl);
+  
+        const downloadResponse = await fetch(downloadUrl);
+        console.log('Download Response Status:', downloadResponse.status);
+  
+        if (!downloadResponse.ok) {
+          throw new Error(`Subtitle download failed with status: ${downloadResponse.status}`);
+        }
+  
+        const responseData = await downloadResponse.json();
+        console.log('Download Response Data:', responseData);
+  
+        // Wait for processing
+        console.log('⏳ Waiting for subtitle processing...');
+        await new Promise(resolve => setTimeout(resolve, 3000));
+  
+        // Check again for the file in CDN after processing
+        const finalCheckResponse = await fetch(cdnSubtitleUrl, { 
+          method: 'HEAD'
+        });
+        
+        if (finalCheckResponse.ok) {
+          console.log('✅ Subtitle now available in CDN');
+          setSubtitleUrl(cdnSubtitleUrl);
+          setSubtitleTracks([{
+            kind: 'subtitles',
+            src: cdnSubtitleUrl,
+            srcLang: 'en',
+            label: 'English',
+            type: 'text/vtt'
+          }]);
+        } else {
+          console.log('❌ Subtitle still not available in CDN after processing');
+          if (responseData && responseData.s3Path) {
+            const wasabiUrl = cdnSubtitleUrl.replace('.srt',"");
+            console.log('Using Wasabi URL:', wasabiUrl);
+            setSubtitleUrl(wasabiUrl);
+            setSubtitleTracks([{
+              kind: 'subtitles',
+              src: wasabiUrl,
+              srcLang: 'en',
+              label: 'English',
+              type: 'text/vtt'
+            }]);
+          } else {
+            throw new Error('No subtitle data available');
+          }
+        }
+  
+      } catch (error) {
+        console.error('🚫 Error in subtitle process:', error);
+        console.error('Error details:', {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        });
+        setSubtitleUrl(null);
+        setSubtitleTracks([]);
+      } finally {
+        console.log('⏹️ Subtitle process completed');
+        setIsSubtitleLoading(false);
+      }
+    };
+  
+    fetchSubtitle();
+  }, [movieTitle, originalFilename]);
+
+  useEffect(() => {
+    console.log('Current subtitle tracks:', subtitleTracks);
+  }, [subtitleTracks]);
+
+  useEffect(() => {
+    console.log('Current subtitle URL:', subtitleUrl);
+  }, [subtitleUrl]);
 
   useEffect(() => {
     if (!isFullscreen) {
@@ -118,15 +297,6 @@ const EnhancedStreamingComponent = ({ sources }) => {
     };
   }, []);
 
-  const videoContainerStyle = {
-    position: 'relative',
-    width: '100%',
-    height: '100%',
-    transition: 'transform 0.3s ease',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center'
-  };
 
   const handleSeekTouchMove = (e) => {
     const input = e.target;
@@ -326,7 +496,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
       }
   
       const originalFilename = url.split('/').pop() || 'video';
-      console.log('Extracted original filename:', originalFilename);
+      setOriginalFilename(originalFilename); 
       
       const sanitizedFilename = sanitizeFilename(originalFilename);
       console.log('Sanitized filename:', sanitizedFilename);
@@ -553,17 +723,107 @@ const EnhancedStreamingComponent = ({ sources }) => {
     setControlsTimeout(setTimeout(hideControls, 3000));
   }, [controlsTimeout, hideControls]);
 
+  useEffect(() => {
+    const videoElement = playerRef.current?.getInternalPlayer();
+    if (videoElement && subtitleTracks.length > 0) {
+      // Remove existing tracks
+      const existingTracks = videoElement.getElementsByTagName('track');
+      Array.from(existingTracks).forEach(track => track.remove());
+
+      // Add new track
+      const track = document.createElement('track');
+      track.kind = 'subtitles';
+      track.label = 'English';
+      track.srclang = 'en';
+      track.src = subtitleTracks[0].src;
+      track.default = true;
+
+      videoElement.appendChild(track);
+
+      // Force track mode to showing
+      setTimeout(() => {
+        const textTrack = videoElement.textTracks[0];
+        if (textTrack) {
+          textTrack.mode = 'showing';
+        }
+      }, 100);
+    }
+  }, [subtitleTracks]);
+
+
 
   const handlePlayerReady = () => {
-   
     const videoElement = playerRef.current?.getInternalPlayer();
     if (videoElement) {
+      // Add custom styles for subtitles
+      const style = document.createElement('style');
+      style.textContent = `
+        video::cue {
+          bottom: 50px !important;
+          position: relative !important;
+          background-color: transparent;
+          color: white;
+          text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.8);
+          font-size: 1.2em;
+          font-family: Arial, sans-serif;
+          line-height: 1.4;
+          white-space: pre-line;
+          margin-bottom: 10px;
+        }
+        .react-player video::-webkit-media-text-track-container {
+          bottom: 50px !important;
+          position: relative !important;
+        }
+        .react-player video::-webkit-media-text-track-background {
+          background-color: transparent !important;
+        }
+        .react-player video::-webkit-media-text-track-display {
+          bottom: 50px !important;
+          position: relative !important;
+        }
+      `;
+      document.head.appendChild(style);
+
+      // Remove existing tracks
+      while (videoElement.textTracks.length > 0) {
+        const track = videoElement.getElementsByTagName('track')[0];
+        if (track) {
+          track.remove();
+        }
+      }
+
+      // Add new track if we have subtitles
+      if (subtitleTracks.length > 0) {
+        const track = document.createElement('track');
+        track.kind = 'subtitles';
+        track.label = 'English';
+        track.srclang = 'en';
+        track.src = subtitleTracks[0].src;
+        track.default = true;
+        
+        videoElement.appendChild(track);
+        
+        // Force track mode to showing
+        setTimeout(() => {
+          const textTrack = videoElement.textTracks[0];
+          if (textTrack) {
+            textTrack.mode = 'showing';
+          }
+        }, 100);
+      }
+
+      videoElement.textTracks.addEventListener('addtrack', (e) => {
+        console.log('Track added:', e.track);
+        if (e.track) {
+          e.track.mode = 'showing';
+        }
+      });
+
       if (videoElement.readyState >= 1) {
         setVideoMetadataLoaded(true);
         setIsPlayerReady(true);
         setIsBuffering(false);
       } else {
-      
         const handleLoadedMetadata = () => {
           setVideoMetadataLoaded(true);
           setIsPlayerReady(true);
@@ -639,6 +899,18 @@ const EnhancedStreamingComponent = ({ sources }) => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  useEffect(() => {
+    return () => {
+      const videoElement = playerRef.current?.getInternalPlayer();
+      if (videoElement) {
+        const tracks = videoElement.getElementsByTagName('track');
+        Array.from(tracks).forEach(track => track.remove());
+      }
+    };
+  }, []);
+
+  
+
   const handleVolumeChange = (e) => {
     setVolume(parseFloat(e.target.value));
     showControlsWithTimeout();
@@ -698,17 +970,70 @@ const EnhancedStreamingComponent = ({ sources }) => {
         {processingStatus === 'ready' && streamingUrl && (
           <>
             {(!playing || !hasStarted) && (
-              <div 
-                className="absolute inset-0 bg-black/50 flex items-center justify-center cursor-pointer z-10"
-                onClick={handlePlayPause}
-              >
+          <div 
+            className="absolute inset-0 bg-black/50 flex items-center justify-center cursor-pointer z-10"
+            onClick={handlePlayPause}
+          >
+            <div className="flex items-center justify-center space-x-8">
+              {isMobile && isFullscreen && (
                 <button
-                  className="text-white text-4xl hover:scale-110 transition-transform"
-                >
-                  <FaPlay />
-                </button>
-              </div>
-            )}
+                onClick={handleBackward}
+                className="text-white/75 hover:text-white hover:scale-110 transition-transform bg-black/30 rounded-full p-4 flex items-center"
+                aria-label="Backward 10 seconds"
+              >
+                <FaBackward className="mr-1" /> +10s
+              </button>
+              )}
+              
+              <button
+                className="text-white hover:scale-110 transition-transform"
+              >
+                <FaPlay size={48} />
+              </button>
+
+              {isMobile && isFullscreen && (
+                <button
+                onClick={handleForward}
+                className="text-white/75 hover:text-white hover:scale-110 transition-transform bg-black/30 rounded-full p-4 flex items-center"
+                aria-label="Forward 10 seconds"
+              >
+                +10s <FaForward className="ml-1" />
+              </button>
+              )}
+            </div>
+          </div>
+        )}
+  
+            {/* Center controls while playing */}
+            {playing && showControls && isMobile && isFullscreen && (
+          <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+            <div className="flex items-center justify-center space-x-8 pointer-events-auto">
+            <button
+  onClick={handleBackward}
+  className="text-white/75 hover:text-white hover:scale-110 transition-transform bg-black/30 rounded-full p-4 flex items-center"
+  aria-label="Backward 10 seconds"
+>
+  <FaBackward className="mr-1" /> +10s
+</button>
+
+              <button
+                onClick={handlePlayPause}
+                className="text-white/75 hover:text-white hover:scale-110 transition-transform bg-black/30 rounded-full p-4"
+              >
+                <FaPause size={32} />
+              </button>
+
+              <button
+  onClick={handleForward}
+  className="text-white/75 hover:text-white hover:scale-110 transition-transform bg-black/30 rounded-full p-4 flex items-center"
+  aria-label="Forward 10 seconds"
+>
+  +10s <FaForward className="ml-1" />
+</button>
+            </div>
+          </div>
+        )}
+  
             {/* Video wrapper */}
             <div 
               className={`video-wrapper ${isFullscreen ? 'w-full h-full' : 'w-full h-full'}`}
@@ -726,7 +1051,7 @@ const EnhancedStreamingComponent = ({ sources }) => {
                 url={streamingUrl}
                 playing={playing}
                 volume={volume}
-                muted={false}
+                muted={isMuted}
                 width="100%"
                 height="100%"
                 style={{
@@ -789,14 +1114,19 @@ const EnhancedStreamingComponent = ({ sources }) => {
             </div>
           </>
         )}
-
+  
+        {isSubtitleLoading && (
+          <div className="absolute bottom-20 left-4 text-white text-sm bg-black/50 px-2 py-1 rounded">
+            Loading subtitles...
+          </div>
+        )}
+  
         {(isBuffering || (processingStatus === 'ready' && !videoMetadataLoaded)) && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/50">
             <FaSpinner className="animate-spin text-white text-4xl" />
           </div>
         )}
   
-       
         {processingStatus === 'error' && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 p-4">
             <div className="text-red-500 mb-4 text-center">
@@ -811,7 +1141,6 @@ const EnhancedStreamingComponent = ({ sources }) => {
             </button>
           </div>
         )}
-  
   
         <div
           ref={controlsRef}
@@ -845,12 +1174,41 @@ const EnhancedStreamingComponent = ({ sources }) => {
                 {playing ? <FaPause size={20} /> : <FaPlay size={20} />}
               </button>
   
+              <button
+                onClick={toggleMute}
+                className="text-white hover:text-gray-300 transition"
+              >
+                {isMuted ? <FaVolumeMute size={20} /> : <FaVolumeUp size={20} />}
+              </button>
+  
+              {(!isMuted && !isMobile) && (
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step="any"
+                  value={volume}
+                  onChange={handleVolumeChange}
+                  className="w-20 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer"
+                />
+              )}
+  
               <div className="text-gray-400 text-sm">
                 {formatTime(currentTime)} / {formatTime(duration)}
               </div>
             </div>
   
             <div className="flex items-center space-x-4">
+              <button
+                onClick={toggleSubtitles}
+                className={`text-white hover:text-gray-300 transition ${
+                  subtitlesEnabled ? 'text-blue-400' : 'text-white'
+                }`}
+                title={subtitlesEnabled ? 'Disable subtitles' : 'Enable subtitles'}
+              >
+                <FaClosedCaptioning size={20} />
+              </button>
+  
               <select
                 value={selectedQuality}
                 onChange={(e) => setSelectedQuality(e.target.value)}

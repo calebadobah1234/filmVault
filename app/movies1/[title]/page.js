@@ -278,6 +278,7 @@ const page = async ({ params }) => {
   <h2 className="text-2xl font-bold text-gray-800 mb-4">Stream Now</h2>
   <ClientOnly>
     <StreamingComponent 
+    movieTitle={data.title}
       sources={data.episodesData.filter(item => 
         !["buy-subscription", "Duble", "Dubbed"].some(term => 
           item.downloadLink.includes(term)
