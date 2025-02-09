@@ -2,11 +2,11 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import ReactPlayer from 'react-player';
-import { FaPlay, FaPause, FaVolumeUp, FaExpand, FaSpinner,FaClosedCaptioning } from 'react-icons/fa';
+import { FaPlay, FaPause, FaVolumeUp, FaExpand, FaSpinner, FaClosedCaptioning, FaVolumeMute, FaForward, FaBackward, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { FaRotate } from 'react-icons/fa6';
 import screenfull from 'screenfull';
 
-const EnhancedSeriesStreamingComponent = ({ seasons }) => {
+const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
 
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
@@ -39,12 +39,34 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
   const [selectedQuality, setSelectedQuality] = useState('');
   const [availableQualities, setAvailableQualities] = useState([]);
   const [episodes, setEpisodes] = useState([]);
+  const [subtitleUrl, setSubtitleUrl] = useState(null);
+  const [originalFilename, setOriginalFilename] = useState('');
+  const [isSubtitleLoading, setIsSubtitleLoading] = useState(false);
+  const [subtitleTracks, setSubtitleTracks] = useState([]);
+  const subtitleTrackRef = useRef(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const [subtitlesEnabled, setSubtitlesEnabled] = useState(true);
+  const [prevVolume, setPrevVolume] = useState(1);
+  const [currentSubtitleIndex, setCurrentSubtitleIndex] = useState(0);
+
 
   const playerRef = useRef(null);
   const controlsRef = useRef(null);
   const containerRef = useRef(null);
   const bufferingTimeoutRef = useRef(null);
 
+  const cleanSeriesTitle = (title) => {
+    return title
+      .replace(/\s*\(\d{4}\)\s*/gi, '') // Remove year in parentheses
+      .replace(/\s*S\d{1,2}(-S\d{1,2})?\s*$/gi, '') // Remove season range at end
+      .trim();
+  };
+
+
+  const handleVolumeChange = (e) => {
+    setVolume(parseFloat(e.target.value));
+    showControlsWithTimeout();
+  };
 
   useEffect(() => {
     const checkAndroid = () => {
@@ -59,17 +81,17 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
       const initialSeason = seasons[0];
       setSelectedSeason(initialSeason.seasonNumber.toString());
 
-     
+
       const qualities = new Set();
 
       initialSeason.resolutions.forEach(res => {
-      
+
         const folderQuality = res.resolution.match(/(\d+)[pP]/)?.[1];
         if (folderQuality) {
           qualities.add(parseInt(folderQuality));
         }
 
-     
+
         res.episodes.forEach(episode => {
           const filenameQuality = detectQualityFromUrl(episode.downloadLink);
           if (filenameQuality) {
@@ -85,7 +107,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
         setSelectedQuality(sortedQualities[0].toString());
       }
 
-    
+
       if (initialSeason.resolutions.length > 0) {
         const initialEpisodes = initialSeason.resolutions[0].episodes;
         setEpisodes(initialEpisodes);
@@ -96,73 +118,284 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
     }
   }, [seasons]);
 
+  const toggleSubtitles = () => {
+    setSubtitlesEnabled(!subtitlesEnabled);
+  };
+
+  const handleForward = () => {
+    const player = playerRef.current;
+    if (player) {
+      const newTime = Math.min(currentTime + 10, duration);
+      player.seekTo(newTime);
+      showControlsWithTimeout();
+    }
+  };
+
+  const handleBackward = () => {
+    const player = playerRef.current;
+    if (player) {
+      const newTime = Math.max(currentTime - 10, 0);
+      player.seekTo(newTime);
+      showControlsWithTimeout();
+    }
+  };
+
+  // Add mute toggle function
+  const toggleMute = () => {
+    setIsMuted(!isMuted);
+    if (!isMuted) {
+      // Store the current volume before muting
+      setVolume(prevVolume => {
+        setPrevVolume(prevVolume);
+        return 0;
+      });
+    } else {
+      // Restore the previous volume when unmuting
+      setVolume(prevVolume || 1);
+    }
+  };
+
+  useEffect(() => {
+    const fetchSubtitle = async () => {
+      console.log('=== Starting series subtitle fetch ===');
+      if (!movieTitle || !originalFilename) return;
+
+      // Reset subtitles when starting a new fetch
+      setSubtitleTracks([]);
+      setSubtitleUrl(null);
+      setSubtitlesEnabled(true);
+      setCurrentSubtitleIndex(0);
+
+      const cleanedTitle = cleanSeriesTitle(movieTitle);
+      setIsSubtitleLoading(true);
+
+      try {
+        // First, check if the original subtitle exists in CDN
+        const originalSubtitleFilename = `${originalFilename}.vtt`;
+        const cdnSubtitleUrl = `https://fvsubtitles.b-cdn.net/${encodeURIComponent(originalSubtitleFilename)}`;
+
+        // Try to verify if the original subtitle exists
+        const checkResponse = await fetch(cdnSubtitleUrl, { method: 'HEAD' });
+
+        if (checkResponse.ok) {
+          setSubtitleUrl(cdnSubtitleUrl);
+          setSubtitleTracks([{
+            kind: 'subtitles',
+            src: cdnSubtitleUrl,
+            srcLang: 'en',
+            label: 'English',
+            type: 'text/vtt'
+          }]);
+        } else {
+          // If the original subtitle doesn't exist, proceed with download
+          const encodedMovie = encodeURIComponent(cleanedTitle);
+          const encodedFilename = encodeURIComponent(originalFilename);
+          const downloadUrl = `https://subtitles-jfir.onrender.com/nodejs/download-subtitle-series?movie=${encodedMovie}&type=tv&filename=${encodedFilename}&season=${selectedSeason}`;
+
+          await fetch(downloadUrl);
+
+          // Wait for processing
+          await new Promise(resolve => setTimeout(resolve, 3000));
+
+          // Check again for the file in CDN after processing
+          const finalCheckResponse = await fetch(cdnSubtitleUrl, { method: 'HEAD' });
+
+          if (finalCheckResponse.ok) {
+            setSubtitleUrl(cdnSubtitleUrl);
+            setSubtitleTracks([{
+              kind: 'subtitles',
+              src: cdnSubtitleUrl,
+              srcLang: 'en',
+              label: 'English',
+              type: 'text/vtt'
+            }]);
+          }
+        }
+
+
+        // Check for additional subtitle versions (v2, v3, etc.)
+        const additionalTracks = [];
+        let version = 2;
+        let versionExists = true;
+
+        while (versionExists && version <= 10) { // Limit to 10 versions
+          const versionedFilename = `v${version}_${originalFilename}.vtt`;
+          const versionedUrl = `https://fvsubtitles.b-cdn.net/${encodeURIComponent(versionedFilename)}`;
+
+          try {
+            const checkResponse = await fetch(versionedUrl, { method: 'HEAD' });
+            if (checkResponse.ok) {
+              additionalTracks.push({
+                kind: 'subtitles',
+                src: versionedUrl,
+                srcLang: 'en',
+                label: `English v${version}`,
+                type: 'text/vtt'
+              });
+              version++;
+            } else {
+              versionExists = false;
+            }
+          } catch (error) {
+            console.error(`🚫 Error checking version ${version} subtitle:`, error);
+            versionExists = false;
+          }
+        }
+
+        if (additionalTracks.length > 0) {
+          setSubtitleTracks(prev => [...prev, ...additionalTracks]);
+        }
+
+
+      } catch (error) {
+        console.error('Subtitle error:', error);
+        setSubtitleTracks([]);
+      } finally {
+        setIsSubtitleLoading(false);
+      }
+    };
+
+    fetchSubtitle();
+  }, [movieTitle, originalFilename, selectedSeason, selectedEpisode]);
+
+
+  useEffect(() => {
+    if (playerRef.current) {
+      const videoElement = playerRef.current.getInternalPlayer();
+      if (videoElement) {
+        // Remove existing tracks
+        while (videoElement.textTracks.length > 0) {
+          const track = videoElement.getElementsByTagName('track')[0];
+          if (track) {
+            track.remove();
+          }
+        }
+
+        // Add new track if we have subtitles
+        if (subtitleTracks.length > 0) {
+          const currentTrack = subtitleTracks[currentSubtitleIndex];
+          if (currentTrack) {
+            const track = document.createElement('track');
+            track.kind = currentTrack.kind;
+            track.label = currentTrack.label;
+            track.srclang = currentTrack.srcLang;
+            track.src = currentTrack.src;
+            track.default = true;
+
+            videoElement.appendChild(track);
+
+            // Force track mode to showing
+            setTimeout(() => {
+              const textTrack = videoElement.textTracks[0];
+              if (textTrack) {
+                textTrack.mode = subtitlesEnabled ? 'showing' : 'hidden';
+              }
+            }, 100);
+          }
+        }
+      }
+    }
+  }, [subtitleTracks, currentSubtitleIndex, subtitlesEnabled]);
+
+  useEffect(() => {
+    if (!isFullscreen) {
+      if (screen.orientation && screen.orientation.unlock) {
+        screen.orientation.unlock();
+      }
+      setScreenOrientation('portrait');
+
+      if (containerRef.current) {
+        const videoWrapper = containerRef.current.querySelector('.video-wrapper');
+        if (videoWrapper) {
+          videoWrapper.style.transform = 'none';
+          videoWrapper.style.width = '100%';
+          videoWrapper.style.height = '100%';
+          videoWrapper.style.position = 'relative';
+          videoWrapper.style.top = 'auto';
+          videoWrapper.style.left = 'auto';
+        }
+      }
+    }
+  }, [isFullscreen]);
+
+
   const detectEpisodeFromUrl = (filename) => {
     if (!filename) return null;
-  
-    
-    const dashPattern = /[-\s](\d{1,3})[\.\s\]]/;
-    const dashMatch = filename.match(dashPattern);
-    if (dashMatch) {
-      const num = parseInt(dashMatch[1]);
-      if (num > 0 && num < 1000) return num;
-    }
-  
-  
-    const ePattern = /[Ee](\d{1,3})/i;
-    const eMatch = filename.match(ePattern);
-    if (eMatch) {
-      const num = parseInt(eMatch[1]);
-      if (num > 0 && num < 1000) return num;
-    }
-  
-   
-    const bracketPattern = /\[(\d{1,3})\]/;
-    const bracketMatch = filename.match(bracketPattern);
-    if (bracketMatch) {
-      const num = parseInt(bracketMatch[1]);
-      if (num > 0 && num < 1000) return num;
-    }
-  
-   
+
+    // First check if it has the form S01E01
     const sPattern = /S\d{1,2}E(\d{1,3})/i;
     const sMatch = filename.match(sPattern);
     if (sMatch) {
       const num = parseInt(sMatch[1]);
       if (num > 0 && num < 1000) return num;
     }
-  
+
+    // Then check for dashPattern
+    const dashPattern = /[-\s](\d{1,3})[\.\s\]]/;
+    const dashMatch = filename.match(dashPattern);
+    if (dashMatch) {
+      const num = parseInt(dashMatch[1]);
+      if (num > 0 && num < 1000) return num;
+    }
+
+    // Check for ePattern
+    const ePattern = /[Ee](\d{1,3})/i;
+    const eMatch = filename.match(ePattern);
+    if (eMatch) {
+      const num = parseInt(eMatch[1]);
+      if (num > 0 && num < 1000) return num;
+    }
+
+    // Lastly check for bracketPattern
+    const bracketPattern = /\[(\d{1,3})\]/;
+    const bracketMatch = filename.match(bracketPattern);
+    if (bracketMatch) {
+      const num = parseInt(bracketMatch[1]);
+      if (num > 0 && num < 1000) return num;
+    }
+
     return null;
   };
-
   useEffect(() => {
     const updateEpisodes = () => {
       console.log('Updating episodes for season:', selectedSeason, 'quality:', selectedQuality);
       if (!selectedSeason || !seasons) return;
 
+      // Reset subtitle state when season changes
+      setSubtitleTracks([]);
+      setSubtitleUrl(null);
+      setSubtitlesEnabled(true);
+      setCurrentSubtitleIndex(0);
+
       const season = seasons.find(s => s.seasonNumber.toString() === selectedSeason);
       if (!season) return;
 
       const collectedEpisodes = [];
+      let hasExplicitEpisodeNumbers = false;
 
       // First pass: Collect episodes matching selected quality
       season.resolutions.forEach(resolution => {
         resolution.episodes.forEach(episode => {
           const quality = detectQualityFromUrl(episode.downloadLink);
           console.log(`Episode ${episode.downloadLink} quality: ${quality}`);
-          
+
           if (quality === selectedQuality) {
             const filename = episode.downloadLink.split('/').pop();
-            const detectedEpisode = detectEpisodeFromUrl(filename);
-            
-            const processedEpisode = {
-              ...episode,
-              // Preserve existing episodeNumber if available
-              episodeNumber: episode.episodeNumber ?? detectedEpisode ?? (collectedEpisodes.length + 1)
-            };
 
-            // Check for duplicates
-            if (!collectedEpisodes.some(e => e.episodeNumber === processedEpisode.episodeNumber)) {
-              collectedEpisodes.push(processedEpisode);
+            // Check if episodeNumber is explicitly provided
+            if (episode.episodeNumber) {
+              hasExplicitEpisodeNumbers = true;
+              collectedEpisodes.push({...episode});
+            } else {
+              // Try to detect episode from filename if episodeNumber is not provided
+              const detectedEpisode = detectEpisodeFromUrl(filename);
+
+              if (detectedEpisode) {
+                 collectedEpisodes.push({...episode, episodeNumber: detectedEpisode});
+              } else {
+                // If the episode is not set, then set it later with index
+                collectedEpisodes.push({...episode});
+              }
             }
           }
         });
@@ -173,43 +406,61 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
         console.log('No quality matches, falling back to all episodes');
         season.resolutions.forEach(resolution => {
           resolution.episodes.forEach(episode => {
-            const processedEpisode = {
-              ...episode,
-              episodeNumber: episode.episodeNumber ?? (collectedEpisodes.length + 1)
-            };
-            collectedEpisodes.push(processedEpisode);
+            collectedEpisodes.push({...episode});
           });
+        });
+      }
+
+      // If no explicit episode numbers were provided, assign them sequentially based on order
+      if (!hasExplicitEpisodeNumbers) {
+        collectedEpisodes.forEach((episode, index) => {
+          if (!episode.episodeNumber) {
+            const filename = episode.downloadLink.split('/').pop();
+            const detectedEpisode = detectEpisodeFromUrl(filename);
+            episode.episodeNumber = detectedEpisode ?? (index + 1);
+          }
         });
       }
 
       // Sort and update episodes
       collectedEpisodes.sort((a, b) => a.episodeNumber - b.episodeNumber);
-      console.log('Processed episodes:', collectedEpisodes);
-      setEpisodes(collectedEpisodes);
+
+      // Remove duplicates based on episodeNumber
+      const uniqueEpisodes = [];
+      const seenEpisodeNumbers = new Set();
+      for (const episode of collectedEpisodes) {
+        if (!seenEpisodeNumbers.has(episode.episodeNumber)) {
+          uniqueEpisodes.push(episode);
+          seenEpisodeNumbers.add(episode.episodeNumber);
+        }
+      }
+
+      console.log('Processed episodes:', uniqueEpisodes);
+      setEpisodes(uniqueEpisodes);
 
       // Update selected episode if needed
-      if (collectedEpisodes.length > 0 && !collectedEpisodes.some(e => e.episodeNumber.toString() === selectedEpisode)) {
-        const newEpisode = collectedEpisodes[0].episodeNumber.toString();
+      if (uniqueEpisodes.length > 0 && !uniqueEpisodes.some(e => e.episodeNumber.toString() === selectedEpisode)) {
+        const newEpisode = uniqueEpisodes[0].episodeNumber.toString();
         console.log(`Updating selected episode to ${newEpisode}`);
         setSelectedEpisode(newEpisode);
       }
     };
 
     updateEpisodes();
-  }, [selectedSeason, selectedQuality, seasons]);
+  }, [selectedSeason, selectedQuality, seasons, selectedEpisode]);
 
 
   // Process video when quality, season, or episode changes
   useEffect(() => {
     const processSelectedContent = async () => {
-      console.log('Processing content - Season:', selectedSeason, 
-        'Episode:', selectedEpisode, 
+      console.log('Processing content - Season:', selectedSeason,
+        'Episode:', selectedEpisode,
         'Quality:', selectedQuality,
         'Episodes count:', episodes.length);
 
       if (!selectedEpisode || !episodes.length) return;
 
-      const targetEpisode = episodes.find(e => 
+      const targetEpisode = episodes.find(e =>
         e.episodeNumber?.toString() === selectedEpisode
       );
 
@@ -263,27 +514,6 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
   };
 
   useEffect(() => {
-    if (!isFullscreen) {
-      if (screen.orientation && screen.orientation.unlock) {
-        screen.orientation.unlock();
-      }
-      setScreenOrientation('portrait');
-
-      if (containerRef.current) {
-        const videoWrapper = containerRef.current.querySelector('.video-wrapper');
-        if (videoWrapper) {
-          videoWrapper.style.transform = 'none';
-          videoWrapper.style.width = '100%';
-          videoWrapper.style.height = '100%';
-          videoWrapper.style.position = 'relative';
-          videoWrapper.style.top = 'auto';
-          videoWrapper.style.left = 'auto';
-        }
-      }
-    }
-  }, [isFullscreen]);
-
-  useEffect(() => {
     const handleOrientationChange = () => {
       if (screen.orientation) {
         setScreenOrientation(screen.orientation.type.includes('landscape') ? 'landscape' : 'portrait');
@@ -302,30 +532,6 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
       }
     };
   }, []);
-
-  
-
-  const extractSubtitles = async (videoUrl) => {
-    try {
-      const subtitleTracks = [];
-      
-      for (let trackIndex = 2; trackIndex <= 36; trackIndex++) {
-        subtitleTracks.push({
-          id: trackIndex,
-          label: `Subtitle ${trackIndex - 1}`,
-          src: `${videoUrl}#${trackIndex}`, 
-          srcLang: 'en',
-          kind: 'subtitles'
-        });
-      }
-      setSubtitles(subtitleTracks);
-      setSelectedSubtitle(2); 
-      setSubtitlesLoaded(true);
-    } catch (error) {
-      console.error('Error generating subtitle tracks:', error);
-      setSubtitlesLoaded(true);
-    }
-  };
 
 
   const handleSeekTouchMove = (e) => {
@@ -397,7 +603,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
   };
 
 
- 
+
   const checkFileExists = async (filename) => {
     const url = `https://filmvault2.b-cdn.net/${filename}`;
     console.log('Checking file existence for:', url);
@@ -415,7 +621,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
     } catch (corsError) {
       console.log('CORS request failed, trying alternative check');
 
-     
+
       try {
         const response = await fetch(url, {
           method: 'GET',
@@ -436,14 +642,14 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
   const sanitizeFilename = (filename) => {
     // First decode any existing encoded characters to avoid double encoding
     const decodedFilename = decodeURIComponent(filename);
-    
+
     // Replace specific patterns before general encoding
     let sanitized = decodedFilename
       .replace(/\.-\./g, ' - ')  // Replace ".-." with " - "
       .replace(/\./g, ' ')       // Replace all remaining dots with spaces
       .replace(/\s+/g, ' ')      // Normalize multiple spaces to single space
       .trim();                   // Remove leading/trailing spaces
-    
+
     // Now encode while preserving certain characters
     return encodeURIComponent(sanitized)
       .replace(/%20/g, '.')      // Replace encoded spaces with dots
@@ -451,75 +657,59 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
       .replace(/%5D/g, ']');     // Keep square brackets
   };
 
+  useEffect(() => {
+    setSubtitleTracks([]);
+    setSubtitleUrl(null);
+    setCurrentSubtitleIndex(0);
+  }, [selectedEpisode]);
+
   // Function to process video through backend
   const processVideo = async (url) => {
     try {
+      const cleanedTitle = cleanSeriesTitle(movieTitle);
       console.log("Starting video processing for URL:", url);
       setProcessingStatus('checking');
       setStreamingUrl(null);
-  
-      if (!url) {
-        throw new Error('No URL provided for processing');
-      }
-  
+
+      if (!url) throw new Error('No URL provided for processing');
+
       const originalFilename = url.split('/').pop() || 'video';
+      setOriginalFilename(originalFilename);
+
       const sanitizedFilename = sanitizeFilename(originalFilename);
-  
-      // First check if file exists
+
+      // File existence check
       const initialFileCheck = await checkFileExists(sanitizedFilename);
-  
       if (initialFileCheck) {
-        console.log("File already exists in Bunny CDN");
         const cdnUrl = `https://filmvault2.b-cdn.net/${sanitizedFilename}`;
         setStreamingUrl(cdnUrl);
         setProcessingStatus('ready');
-        await extractSubtitles(cdnUrl);
         return;
       }
-  
-      console.log("File not found in CDN, initiating download");
+
       setProcessingStatus('downloading');
-  
-      // Initiate download without waiting for completion
       const encodedUrl = encodeURIComponent(url);
       const encodedFilename = encodeURIComponent(originalFilename);
-      const apiUrl = `https://api4.mp3vault.xyz/download?url=${encodedUrl}&filename=${encodedFilename}`;
-  
-      // Fire and forget download request
-      fetch(apiUrl, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-        }
-      }).catch(error => {
-        console.error('Download initiation error:', error);
-        // Continue checking anyway as the download might have started
-      });
-  
-      // Start checking for file existence
-      const maxRetries = 24; // 4 minutes (24 tries * 10 seconds)
+
+      // Use cleaned title in API call
+      const apiUrl = `https://api4.mp3vault.xyz/download?url=${encodedUrl}&filename=${encodedFilename}&movie=${encodeURIComponent(cleanedTitle)}`;
+
+      await fetch(apiUrl, { method: 'GET', headers: { 'Accept': 'application/json' } , mode: 'no-cors'});
+
+      // Retry logic with cleaned title
       let retryCount = 0;
-  
-      while (retryCount < maxRetries) {
-        console.log(`Checking for file existence, attempt ${retryCount + 1}/${maxRetries}`);
-        
+      while (retryCount < 24) {
         const fileExists = await checkFileExists(sanitizedFilename);
-        
         if (fileExists) {
-          console.log("File found in CDN!");
-          const cdnUrl = `https://filmvault2.b-cdn.net/${sanitizedFilename}`;
-          setStreamingUrl(cdnUrl);
+          setStreamingUrl(`https://filmvault2.b-cdn.net/${sanitizedFilename}`);
           setProcessingStatus('ready');
           return;
         }
-  
-        // Wait 10 seconds before next check
         await new Promise(resolve => setTimeout(resolve, 10000));
         retryCount++;
       }
-  
-      throw new Error('File not available after maximum retries (4 minutes timeout)');
-  
+
+      throw new Error('File not available after maximum retries');
     } catch (error) {
       console.error('Video processing error:', error);
       setProcessingStatus('error');
@@ -527,29 +717,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
     }
   };
 
-  // Initialize qualities on component mount
 
-  // Process video when quality is selected
-
-  const handleSubtitleToggle = () => {
-    setShowSubtitleMenu(!showSubtitleMenu);
-    showControlsWithTimeout();
-  };
-
-  const handleSubtitleSelect = (subtitleId) => {
-    const videoElement = playerRef.current?.getInternalPlayer();
-    if (videoElement) {
-      const tracks = Array.from(videoElement.textTracks);
-      tracks.forEach(track => {
-        track.mode = track.kind === 'subtitles' 
-          ? (track.id === subtitleId ? 'showing' : 'disabled')
-          : 'disabled';
-      });
-      setSelectedSubtitle(subtitleId);
-      setShowSubtitleMenu(false);
-      showControlsWithTimeout();
-    }
-  };
 
   // Handle fullscreen
   useEffect(() => {
@@ -579,146 +747,98 @@ const EnhancedSeriesStreamingComponent = ({ seasons }) => {
   const showControlsWithTimeout = useCallback(() => {
     setShowControls(true);
     if (controlsTimeout) clearTimeout(controlsTimeout);
-    
+
     // Always hide controls after timeout, even in fullscreen
     setControlsTimeout(setTimeout(hideControls, 3000));
   }, [controlsTimeout]);
 
   // Add an onReady handler to ReactPlayer
   // Update the handlePlayerReady function to include better audio handling
-const handlePlayerReady = () => {
-  const videoElement = playerRef.current?.getInternalPlayer();
-  if (videoElement) {
-    // Initialize audio settings
-    const initializeAudio = () => {
-      try {
-        // Force unmute and set volume
-        videoElement.muted = false;
-        videoElement.volume = 1;
-
-        // Enable audio output
-        if (videoElement.audioTracks && videoElement.audioTracks.length > 0) {
-          videoElement.audioTracks[0].enabled = true;
+  const handlePlayerReady = () => {
+    const videoElement = playerRef.current?.getInternalPlayer();
+    if (videoElement) {
+      // Add custom styles for subtitles
+      const style = document.createElement('style');
+      style.textContent = `
+        video::cue {
+          bottom: 50px !important;
+          position: relative !important;
+          background-color: transparent;
+          color: white;
+          text-shadow: 2px 2px 2px rgba(0, 0, 0, 0.8);
+          font-size: 1.2em;
+          font-family: Arial, sans-serif;
+          line-height: 1.4;
+          white-space: pre-line;
+          margin-bottom: 10px;
         }
+        .react-player video::-webkit-media-text-track-container {
+          bottom: 50px !important;
+          position: relative !important;
+        }
+        .react-player video::-webkit-media-text-track-background {
+          background-color: transparent !important;
+        }
+        .react-player video::-webkit-media-text-track-display {
+          bottom: 50px !important;
+          position: relative !important;
+        }
+      `;
+      document.head.appendChild(style);
 
-        // Create and resume AudioContext for Android
-        if (isAndroid && window.AudioContext || window.webkitAudioContext) {
-          const AudioContext = window.AudioContext || window.webkitAudioContext;
-          const audioContext = new AudioContext();
-          
-          if (audioContext.state === 'suspended') {
-            audioContext.resume().catch(error => {
-              console.warn('AudioContext resume error:', error);
-            });
-          }
+      // Remove existing tracks
+      while (videoElement.textTracks.length > 0) {
+        const track = videoElement.getElementsByTagName('track')[0];
+        if (track) {
+          track.remove();
+        }
+      }
 
-          // Create media element source if it doesn't exist
-          if (!videoElement.mediaElementSource) {
-            try {
-              const source = audioContext.createMediaElementSource(videoElement);
-              source.connect(audioContext.destination);
-              videoElement.mediaElementSource = source;
-            } catch (error) {
-              console.warn('MediaElementSource creation error:', error);
+      // Add new track if we have subtitles
+      if (subtitleTracks.length > 0) {
+        const currentTrack = subtitleTracks[currentSubtitleIndex];
+        if (currentTrack) {
+          const track = document.createElement('track');
+          track.kind = currentTrack.kind;
+          track.label = currentTrack.label;
+          track.srclang = currentTrack.srcLang;
+          track.src = currentTrack.src;
+          track.default = true;
+
+          videoElement.appendChild(track);
+
+          // Force track mode to showing
+          setTimeout(() => {
+            const textTrack = videoElement.textTracks[0];
+            if (textTrack) {
+              textTrack.mode = subtitlesEnabled ? 'showing' : 'hidden';
             }
-          }
+          }, 100);
         }
-
-        // Remove the initialization listener after successful setup
-        document.removeEventListener('touchstart', initializeAudio);
-        document.removeEventListener('click', initializeAudio);
-      } catch (error) {
-        console.error('Audio initialization error:', error);
       }
-    };
 
-    // Add initialization listeners for user interaction
-    if (isAndroid) {
-      document.addEventListener('touchstart', initializeAudio, { once: true });
-      document.addEventListener('click', initializeAudio, { once: true });
-    }
+      videoElement.textTracks.addEventListener('addtrack', (e) => {
+        console.log('Track added:', e.track);
+        if (e.track) {
+          e.track.mode = 'showing';
+        }
+      });
 
-    // Handle subtitle tracks
-    const updateSubtitles = () => {
-      try {
-        const textTracks = Array.from(videoElement.textTracks).filter(t => t.kind === 'subtitles');
-        const newSubtitles = textTracks.map((track, index) => ({
-          id: index,
-          label: track.label || track.language || `Subtitle ${index + 1}`,
-          language: track.language,
-          mode: track.mode
-        }));
-
-        setSubtitles(newSubtitles);
-        
-        // Find and set default subtitle track
-        const defaultTrack = textTracks.find(t => t.mode === 'showing') || textTracks[0];
-        setSelectedSubtitle(defaultTrack ? defaultTrack.id : null);
-        setSubtitlesLoaded(true);
-      } catch (error) {
-        console.error('Subtitle initialization error:', error);
-        setSubtitlesLoaded(true); // Set to true even on error to prevent loading state
-      }
-    };
-
-    // Check video element readiness
-    const checkReady = () => {
       if (videoElement.readyState >= 1) {
-        updateSubtitles();
         setVideoMetadataLoaded(true);
         setIsPlayerReady(true);
         setIsBuffering(false);
-
-        // Initial play attempt for Android
-        if (isAndroid && playing) {
-          videoElement.play().catch(error => {
-            console.warn('Initial play attempt error:', error);
-            // Show play button or user interaction prompt if needed
-            setPlaying(false);
-          });
-        }
       } else {
-        // Add metadata listener if not ready
-        const handleMetadata = () => {
-          updateSubtitles();
+        const handleLoadedMetadata = () => {
           setVideoMetadataLoaded(true);
           setIsPlayerReady(true);
           setIsBuffering(false);
-          videoElement.removeEventListener('loadedmetadata', handleMetadata);
+          videoElement.removeEventListener('loadedmetadata', handleLoadedMetadata);
         };
-        
-        videoElement.addEventListener('loadedmetadata', handleMetadata);
+        videoElement.addEventListener('loadedmetadata', handleLoadedMetadata);
       }
-    };
-
-    // Add error handling
-    const handleVideoError = (error) => {
-      console.error('Video element error:', error);
-      setIsPlayerReady(false);
-      setVideoMetadataLoaded(false);
-      setIsBuffering(false);
-    };
-
-    videoElement.addEventListener('error', handleVideoError);
-
-    // Monitor audio track changes
-    if (videoElement.audioTracks) {
-      videoElement.audioTracks.addEventListener('change', () => {
-        console.log('Audio tracks changed:', videoElement.audioTracks);
-      });
     }
-
-    // Start ready state check
-    checkReady();
-
-    // Cleanup function
-    return () => {
-      videoElement.removeEventListener('error', handleVideoError);
-      document.removeEventListener('touchstart', initializeAudio);
-      document.removeEventListener('click', initializeAudio);
-    };
-  }
-};
+  };
 
   const handleBuffer = () => {
     if (isPlayerReady && videoMetadataLoaded) {
@@ -740,7 +860,7 @@ const handlePlayerReady = () => {
         clearTimeout(bufferingTimeoutRef.current);
       }
 
-     
+
       if (state.playedSeconds !== lastPlayedTime) {
         setIsBuffering(false);
         setLastPlayedTime(state.playedSeconds);
@@ -752,38 +872,15 @@ const handlePlayerReady = () => {
     }
   };
 
- 
-
-  const SubtitleMenu = () => (
-    <div className="absolute bottom-20 right-4 bg-black/90 rounded-lg p-2 text-white z-50">
-      <div className="flex flex-col space-y-2">
-        <button
-          onClick={() => handleSubtitleSelect(null)}
-          className={`px-4 py-2 hover:bg-gray-700 rounded ${selectedSubtitle === null ? 'bg-blue-600' : ''}`}
-        >
-          Off
-        </button>
-        {subtitles.map(subtitle => (
-          <button
-            key={subtitle.id}
-            onClick={() => handleSubtitleSelect(subtitle.id)}
-            className={`px-4 py-2 hover:bg-gray-700 rounded ${selectedSubtitle === subtitle.id ? 'bg-blue-600' : ''}`}
-          >
-            {subtitle.label}
-          </button>
-        ))}
-      </div>
-    </div>
-  );
 
 
   const handleVideoClick = (e) => {
-    
+
     if (seeking) return;
-    
-    
+
+
     if (controlsRef.current && controlsRef.current.contains(e.target)) return;
-    
+
     handlePlayPause();
   };
 
@@ -817,7 +914,7 @@ const handlePlayerReady = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
- 
+
 
   const handleSeekMouseDown = () => setSeeking(true);
 
@@ -844,66 +941,9 @@ const handlePlayerReady = () => {
     return hh ? `${hh}:${mm}:${ss}` : `${mm}:${ss}`;
   };
 
-  const getPlayerConfig = () => ({
-    file: {
-      attributes: {
-        controlsList: 'nodownload',
-        crossOrigin: 'anonymous',
-        muted: false,
-        playsInline: true, // Add playsInline
-        style: {
-          width: '100%',
-          height: '100%',
-          objectFit: 'contain',
-          backgroundColor: 'black'
-        }
-      },
-      tracks: subtitles.map(subtitle => ({
-        kind: 'subtitles',
-        src: subtitle.src,
-        srcLang: subtitle.srcLang,
-        label: subtitle.label,
-        default: subtitle.id === selectedSubtitle
-      })),
-      forceVideo: true,
-      forceAudio: true, // Force audio
-      hlsOptions: {
-        maxBufferSize: 200 * 1024 * 1024,
-        maxBufferLength: 200,
-        startPosition: -1,
-        backBufferLength: 300,
-        liveSyncDurationCount: 10,
-        maxMaxBufferLength: 600,
-        maxLoadingDelay: 4,
-        manifestLoadingTimeOut: 20000,
-        manifestLoadingMaxRetry: 5,
-        fragLoadingTimeOut: 30000,
-        fragLoadingMaxRetry: 5,
-        levelLoadingTimeOut: 20000,
-        levelLoadingMaxRetry: 5,
-        abrEwmaDefaultEstimate: 5000000,
-        abrBandWidthFactor: 0.95,
-        abrBandWidthUpFactor: 0.7,
-        abrMaxWithRealBitrate: true,
-        enableWorker: true, // Enable web worker
-        lowLatencyMode: false, // Disable low latency mode
-        progressive: true, // Enable progressive download
-        xhrSetup: (xhr, url) => {
-          xhr.withCredentials = false; // Disable credentials
-        },
-        // Add specific audio configurations for Android
-        audioStreamController: {
-          bufferSize: 8 * 1024 * 1024, // Increase audio buffer size
-          maxBufferSize: 16 * 1024 * 1024,
-          maxBufferLength: 300
-        }
-      }
-    }
-  });
 
   return (
     <div className="space-y-4">
-     
       <div className="flex flex-wrap gap-4 mb-4 mt-5">
         <select
           value={selectedSeason}
@@ -911,7 +951,7 @@ const handlePlayerReady = () => {
           className="bg-gray-700 text-white px-4 py-2 rounded-md"
         >
           {seasons.map(season => (
-            <option key={season.seasonNumber} value={season.seasonNumber}>
+            <option key={`season-select-top-${season.seasonNumber}`} value={season.seasonNumber}>
               Season {season.seasonNumber}
             </option>
           ))}
@@ -923,14 +963,13 @@ const handlePlayerReady = () => {
           className="bg-gray-700 text-white px-4 py-2 rounded-md"
         >
           {episodes.map(episode => (
-            <option key={episode.episodeNumber} value={episode.episodeNumber}>
+            <option key={`episode-select-top-${episode.episodeNumber}-${selectedSeason}`} value={episode.episodeNumber}>
               Episode {episode.episodeNumber}
             </option>
           ))}
         </select>
       </div>
 
-     
       <div
         ref={containerRef}
         className="bg-gray-900 rounded-xl overflow-hidden shadow-xl relative group w-full"
@@ -945,9 +984,9 @@ const handlePlayerReady = () => {
             </div>
           )}
 
-{processingStatus === 'ready' && streamingUrl && (
-          <>
-            {(!playing || !hasStarted) && (
+          {processingStatus === 'ready' && streamingUrl && (
+            <>
+              {(!playing || !hasStarted) && (
                 <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
                   <button
                     onClick={handlePlayPause}
@@ -957,61 +996,135 @@ const handlePlayerReady = () => {
                   </button>
                 </div>
               )}
-            <div 
-              className={`video-wrapper ${isFullscreen ? 'w-full h-full' : 'w-full h-full'}`}
-              style={{
-                position: 'relative',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'transform 0.3s ease'
-              }}
-            >
-              <ReactPlayer
-        ref={playerRef}
-        url={streamingUrl}
-        playing={playing}
-        volume={volume}
-        muted={false}
-        width="100%"
-        height="100%"
-        style={{
-          maxWidth: '100%',
-          maxHeight: '100%',
-          margin: 'auto',
-          objectFit: 'contain',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center'
-        }}
-        className={`react-player ${isFullscreen ? 'fullscreen' : ''}`}
-        onProgress={handleProgress}
-        onClick={handleVideoClick}
-        onDuration={setDuration}
-        onBuffer={handleBuffer}
-        onBufferEnd={handleBufferEnd}
-        onReady={handlePlayerReady}
-        onError={(err) => {
-          console.error('ReactPlayer error:', err);
-          handleError();
-        }}
-        config={getPlayerConfig()}
-      />
-            </div>
-          </>
-        )}
 
-{(isBuffering || (processingStatus === 'ready' && !videoMetadataLoaded)) && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-            <FaSpinner className="animate-spin text-white text-4xl" />
-          </div>
-        )}
+              {playing && showControls && isMobile && (
+                <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                  <div className="flex items-center justify-center space-x-8 pointer-events-auto">
+                    <button
+                      onClick={handleBackward}
+                      className="text-white/75 hover:text-white hover:scale-110 transition-transform bg-black/30 rounded-full p-4 flex items-center"
+                      aria-label="Backward 10 seconds"
+                    >
+                      <FaBackward className="mr-1" /> -10s
+                    </button>
+
+                    <button
+                      onClick={handlePlayPause}
+                      className="text-white/75 hover:text-white hover:scale-110 transition-transform bg-black/30 rounded-full p-4"
+                    >
+                      <FaPause size={32} />
+                    </button>
+
+                    <button
+                      onClick={handleForward}
+                      className="text-white/75 hover:text-white hover:scale-110 transition-transform bg-black/30 rounded-full p-4 flex items-center"
+                      aria-label="Forward 10 seconds"
+                    >
+                      +10s <FaForward className="ml-1" />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div
+                className={`video-wrapper ${isFullscreen ? 'w-full h-full' : 'w-full h-full'}`}
+                style={{
+                  position: 'relative',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'transform 0.3s ease',
+                  backgroundColor: 'black'
+                }}
+              >
+                <ReactPlayer
+                  ref={playerRef}
+                  url={streamingUrl}
+                  key={`player-${selectedSeason}-${selectedEpisode}`}
+                  playing={playing}
+                  volume={volume}
+                  muted={isMuted}
+                  width="100%"
+                  height="100%"
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '100%',
+                    margin: 'auto',
+                    objectFit: 'contain',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: 'black'
+                  }}
+                  className={`react-player ${isFullscreen ? 'fullscreen' : ''}`}
+                  onProgress={handleProgress}
+                  onClick={handleVideoClick}
+                  onDuration={setDuration}
+                  onBuffer={handleBuffer}
+                  onBufferEnd={handleBufferEnd}
+                  onReady={handlePlayerReady}
+                  onError={(err) => {
+                    console.error('ReactPlayer error:', err);
+                    handleError();
+                  }}
+                  config={{
+                    file: {
+                      attributes: {
+                        controlsList: 'nodownload',
+                        crossOrigin: 'anonymous',
+                        muted: false,
+                        style: {
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'contain',
+                          backgroundColor: 'black'
+                        }
+                      },
+                      forceVideo: true,
+                      hlsOptions: {
+                        maxBufferSize: 200 * 1024 * 1024,
+                        maxBufferLength: 200,
+                        startPosition: -1,
+                        backBufferLength: 300,
+                        liveSyncDurationCount: 10,
+                        maxMaxBufferLength: 600,
+                        maxLoadingDelay: 4,
+                        manifestLoadingTimeOut: 20000,
+                        manifestLoadingMaxRetry: 5,
+                        fragLoadingTimeOut: 30000,
+                        fragLoadingMaxRetry: 5,
+                        levelLoadingTimeOut: 20000,
+                        levelLoadingMaxRetry: 5,
+                        abrEwmaDefaultEstimate: 5000000,
+                        abrBandWidthFactor: 0.95,
+                        abrBandWidthUpFactor: 0.7,
+                        abrMaxWithRealBitrate: true,
+                      }
+                    }
+                  }}
+                />
+              </div>
+            </>
+          )}
+
+          {isSubtitleLoading && (
+            <div className="absolute bottom-20 left-4 text-white text-sm bg-black/50 px-2 py-1 rounded">
+              Loading subtitles...
+            </div>
+          )}
+
+          {(isBuffering || (processingStatus === 'ready' && !videoMetadataLoaded)) && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+              <FaSpinner className="animate-spin text-white text-4xl" />
+            </div>
+          )}
         </div>
-        {/* Player Controls */}
+
         <div
           ref={controlsRef}
-          className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0'
-            }`}
+          className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 transition-opacity duration-300 ${
+            showControls ? 'opacity-100' : 'opacity-0'
+          }`}
         >
           <div className="flex items-center space-x-2 mb-4">
             <input
@@ -1039,49 +1152,103 @@ const handlePlayerReady = () => {
                 {playing ? <FaPause size={20} /> : <FaPlay size={20} />}
               </button>
 
+              <button
+                onClick={toggleMute}
+                className="text-white hover:text-gray-300 transition"
+              >
+                {isMuted ? <FaVolumeMute size={20} /> : <FaVolumeUp size={20} />}
+              </button>
+
+              {(!isMuted && !isMobile) && (
+                <input
+                  type="range"
+                  min={0}
+                  max={1}
+                  step="any"
+                  value={volume}
+                  onChange={handleVolumeChange}
+                  className="w-20 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer"
+                />
+              )}
+
               <div className="text-gray-400 text-sm">
                 {formatTime(currentTime)} / {formatTime(duration)}
               </div>
             </div>
-          
 
             <div className="flex items-center space-x-4">
-            <span className='max-md:hidden'>
-              <select
-                value={selectedSeason}
-                onChange={(e) => setSelectedSeason(e.target.value)}
-                className="bg-gray-700 text-white px-4 py-2 rounded-md mr-1"
-              >
-                {seasons.map(season => (
-                  <option key={season.seasonNumber} value={season.seasonNumber}>
-                    Season {season.seasonNumber}
-                  </option>
-                ))}
-              </select>
+              <div className="flex items-center space-x-2">
+                {subtitleTracks.length > 1 && (
+                  <button
+                    onClick={() => setCurrentSubtitleIndex(prev => Math.max(prev - 1, 0))}
+                    disabled={currentSubtitleIndex === 0}
+                    className="text-white hover:text-gray-300 disabled:opacity-50 transition"
+                    aria-label="Previous subtitle version"
+                  >
+                    <FaChevronLeft size={16} />
+                  </button>
+                )}
 
-              <select
-                value={selectedEpisode}
-                onChange={(e) => setSelectedEpisode(e.target.value)}
-                className="bg-gray-700 text-white px-4 py-2 rounded-md mr-1 "
-              >
-                {episodes.map(episode => (
-                  <option key={episode.episodeNumber} value={episode.episodeNumber}>
-                    Episode {episode.episodeNumber}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={selectedQuality}
-                onChange={(e) => setSelectedQuality(e.target.value)}
-                className="bg-gray-700 text-white px-4 py-2 rounded-md"
-              >
-                {availableQualities.map(quality => (
-                  <option key={quality} value={quality}>
-                    {quality}p
-                  </option>
-                ))}
-              </select>
+                <button
+                  onClick={toggleSubtitles}
+                  className={`text-white hover:text-gray-300 transition ${
+                    subtitlesEnabled ? 'text-blue-400' : 'text-white'
+                  }`}
+                  title={subtitlesEnabled ? 'Disable subtitles' : 'Enable subtitles'}
+                >
+                  <FaClosedCaptioning size={20} />
+                </button>
+
+                {subtitleTracks.length > 1 && (
+                  <button
+                    onClick={() => setCurrentSubtitleIndex(prev => Math.min(prev + 1, subtitleTracks.length - 1))}
+                    disabled={currentSubtitleIndex === subtitleTracks.length - 1}
+                    className="text-white hover:text-gray-300 disabled:opacity-50 transition"
+                    aria-label="Next subtitle version"
+                  >
+                    <FaChevronRight size={16} />
+                  </button>
+                )}
+              </div>
+
+              <span className='max-md:hidden'>
+                <select
+                  value={selectedSeason}
+                  onChange={(e) => setSelectedSeason(e.target.value)}
+                  className="bg-gray-700 text-white px-4 py-2 rounded-md mr-1"
+                >
+                  {seasons.map(season => (
+                    <option key={`season-select-control-${season.seasonNumber}`} value={season.seasonNumber}>
+                      Season {season.seasonNumber}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={selectedEpisode}
+                  onChange={(e) => setSelectedEpisode(e.target.value)}
+                  className="bg-gray-700 text-white px-4 py-2 rounded-md mr-1"
+                >
+                  {episodes.map(episode => (
+                    <option key={`episode-select-control-${episode.episodeNumber}-${selectedSeason}`} value={episode.episodeNumber}>
+                      Episode {episode.episodeNumber}
+                    </option>
+                  ))}
+                </select>
+
+                <select
+                  value={selectedQuality}
+                  onChange={(e) => setSelectedQuality(e.target.value)}
+                  className="bg-gray-700 text-white px-4 py-2 rounded-md"
+                >
+                  {availableQualities.map(quality => (
+                    <option key={`quality-select-control-${quality}`} value={quality}>
+                      {quality}p
+                    </option>
+                  ))}
+                </select>
               </span>
+
               {isMobile && isFullscreen && (
                 <button
                   onClick={handleRotate}

@@ -225,7 +225,7 @@ const page = async ({ params }) => {
           </div>
         </div>
 
-        <EnhancedSeriesStreamingComponent seasons={normalizedSeasons} />
+        <EnhancedSeriesStreamingComponent seasons={normalizedSeasons} movieTitle={data.title} />
 
         <div className="mt-12 text-center">
           <div className="flex flex-col flex-wrap justify-center mt-6 gap-4">

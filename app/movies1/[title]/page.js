@@ -284,6 +284,12 @@ const page = async ({ params }) => {
           item.downloadLink.includes(term)
         )
       )}
+
+      sources2={data.episodesData2?.filter(item => 
+        !["buy-subscription", "Duble", "Dubbed"].some(term => 
+          item.downloadLink.includes(term)
+        )
+      )}
     />
   </ClientOnly>
 </div>
