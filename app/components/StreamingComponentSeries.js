@@ -663,7 +663,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
 
 
   const checkFileExists = async (filename) => {
-    const url = `https://filmvault2.b-cdn.net/${filename}`;
+    const url = `https://filmvault3.b-cdn.net/${filename}`;
     console.log('Checking file existence for:', url);
 
     try {
@@ -739,7 +739,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
       // File existence check
       const initialFileCheck = await checkFileExists(sanitizedFilename);
       if (initialFileCheck) {
-        const cdnUrl = `https://filmvault2.b-cdn.net/${sanitizedFilename}`;
+        const cdnUrl = `https://filmvault3.b-cdn.net/${sanitizedFilename}`;
         setStreamingUrl(cdnUrl);
         setProcessingStatus('ready');
         return;
@@ -759,7 +759,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
       while (retryCount < 24) {
         const fileExists = await checkFileExists(sanitizedFilename);
         if (fileExists) {
-          setStreamingUrl(`https://filmvault2.b-cdn.net/${sanitizedFilename}`);
+          setStreamingUrl(`https://filmvault3.b-cdn.net/${sanitizedFilename}`);
           setProcessingStatus('ready');
           return;
         }

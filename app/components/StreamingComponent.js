@@ -7,7 +7,8 @@ import screenfull from 'screenfull';
 import { FaRotate } from 'react-icons/fa6';
 
 
-const EnhancedStreamingComponent = ({ sources,movieTitle,sources2 }) => {
+const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource }) => {
+  console.log(mainSource)
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
   const [played, setPlayed] = useState(0);
@@ -428,7 +429,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2 }) => {
   // Function to check if file exists in Wasabi using a range request
   const checkFileExists = async (filename, signal) => {
     const encodedFilename = sanitizeFilename(filename);
-    const url = `https://filmvault2.b-cdn.net/${encodedFilename}`;
+    const url = `https://filmvault3.b-cdn.net/${encodedFilename}`;
 
     console.log('Checking existence with URL:', url);
     console.log('URL components:', {
@@ -560,7 +561,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2 }) => {
         console.log('Initial file check result:', initialFileCheck);
 
         if (initialFileCheck) {
-          const cdnUrl = `https://filmvault2.b-cdn.net/${sanitizedFilename}`;
+          const cdnUrl = `https://filmvault3.b-cdn.net/${sanitizedFilename}`;
           console.log('File found, setting CDN URL:', cdnUrl);
           setStreamingUrl(cdnUrl);
           setProcessingStatus('ready');
@@ -610,7 +611,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2 }) => {
             console.log(`File check result for attempt ${attempts + 1}:`, fileExists);
 
             if (fileExists) {
-              const cdnUrl = `https://filmvault2.b-cdn.net/${sanitizedFilename}`;
+              const cdnUrl = `https://filmvault3.b-cdn.net/${sanitizedFilename}`;
               console.log('File found, setting final CDN URL:', cdnUrl);
               setStreamingUrl(cdnUrl);
               setProcessingStatus('ready');
@@ -689,6 +690,13 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2 }) => {
 
   useEffect(() => {
     const availableQualitiesSet = new Set();
+    
+    // Add "Auto" as the first option if mainSource exists
+    if (mainSource) {
+      availableQualitiesSet.add('auto');
+    }
+    
+    // Add other qualities from sources
     const qualitiesFromSources1 = sources?.map(source => {
       const resolution = getResolutionNumber(source.quality);
       return resolution ? resolution.toString() : null;
@@ -701,19 +709,24 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2 }) => {
     }).filter(Boolean) || [];
     qualitiesFromSources2.forEach(q => availableQualitiesSet.add(q));
 
-    const availableQualities = Array.from(availableQualitiesSet).sort((a, b) => parseInt(a) - parseInt(b));
+    const availableQualities = Array.from(availableQualitiesSet).sort((a, b) => {
+      if (a === 'auto') return -1;
+      if (b === 'auto') return 1;
+      return parseInt(a) - parseInt(b);
+    });
 
     console.log("Available qualities:", availableQualities);
     setQualities(availableQualities);
 
+    // Set initial quality to 'auto' if mainSource exists, otherwise first available quality
     if (availableQualities.length > 0) {
-      const initialQuality = availableQualities[0];
+      const initialQuality = mainSource ? 'auto' : availableQualities[0];
       console.log("Setting initial quality:", initialQuality);
       setSelectedQuality(initialQuality);
     } else {
-      setSelectedQuality(''); // Reset selected quality if no sources
+      setSelectedQuality('');
     }
-  }, [sources, sources2]);
+  }, [sources, sources2, mainSource]);
 
 
   useEffect(() => {
@@ -721,17 +734,28 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2 }) => {
       if (selectedQuality) {
         cancelActiveRequest();
 
+        // If 'auto' is selected and mainSource exists, use mainSource
+        if (selectedQuality === 'auto' && mainSource) {
+          try {
+            await processVideo(mainSource, activeRequestRef.current?.signal);
+          } catch (error) {
+            if (error.message !== 'Request aborted') {
+              console.error('Error processing video:', error);
+            }
+          }
+          return;
+        }
+
+        // Otherwise, proceed with regular quality selection
         let selectedSource = null;
         let sourceType = 'sources';
 
-        // Try to find in sources first
         selectedSource = sources?.find(s => {
           const resolution = getResolutionNumber(s.quality);
           return resolution.toString() === selectedQuality;
         });
 
         if (!selectedSource) {
-          // If not found in sources, try sources2
           selectedSource = sources2?.find(s => {
             const resolution = getResolutionNumber(s.quality);
             return resolution.toString() === selectedQuality;
@@ -746,7 +770,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2 }) => {
             return;
           }
 
-          setCurrentSourcesType(sourceType); // Set the current source type
+          setCurrentSourcesType(sourceType);
 
           const controller = new AbortController();
           activeRequestRef.current = controller;
@@ -759,7 +783,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2 }) => {
             }
           }
         } else {
-          setStreamingUrl(null); // No source found for selected quality, clear streaming URL
+          setStreamingUrl(null);
           setProcessingStatus('error');
           setErrorMessage('No source available for selected quality.');
         }
@@ -767,7 +791,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2 }) => {
     };
 
     processSelectedQuality();
-  }, [selectedQuality, sources, sources2]);
+  }, [selectedQuality, sources, sources2, mainSource]);
 
 
   useEffect(() => {
@@ -1349,17 +1373,17 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2 }) => {
   )}
 </div>
 
-              <select
-                value={selectedQuality}
-                onChange={(e) => setSelectedQuality(e.target.value)}
-                className="bg-gray-700 text-white px-3 py-1 rounded-md"
-              >
-                {qualities.map(quality => (
-                  <option key={quality} value={quality}>
-                    {quality}p
-                  </option>
-                ))}
-              </select>
+<select
+      value={selectedQuality}
+      onChange={(e) => setSelectedQuality(e.target.value)}
+      className="bg-gray-700 text-white px-3 py-1 rounded-md"
+    >
+      {qualities.map(quality => (
+        <option key={quality} value={quality}>
+          {quality === 'auto' ? 'Auto' : `${quality}p`}
+        </option>
+      ))}
+    </select>
 
               {isMobile && isFullscreen && (
                 <button
