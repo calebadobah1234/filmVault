@@ -198,7 +198,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
       try {
         // First, check if the original subtitle exists in CDN
         const originalSubtitleFilename = `${originalFilename}.vtt`;
-        const cdnSubtitleUrl = `https://fvsubtitles.b-cdn.net/${encodeURIComponent(originalSubtitleFilename)}`;
+        const cdnSubtitleUrl = `https://filmvaultsub.b-cdn.net/${encodeURIComponent(originalSubtitleFilename)}`;
 
         // Try to verify if the original subtitle exists
         const checkResponse = await fetch(cdnSubtitleUrl, { method: 'HEAD' });
@@ -246,7 +246,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
 
         while (versionExists && version <= 10) { // Limit to 10 versions
           const versionedFilename = `v${version}_${originalFilename}.vtt`;
-          const versionedUrl = `https://fvsubtitles.b-cdn.net/${encodeURIComponent(versionedFilename)}`;
+          const versionedUrl = `https://filmvaultsub.b-cdn.net/${encodeURIComponent(versionedFilename)}`;
 
           try {
             const checkResponse = await fetch(versionedUrl, { method: 'HEAD' });

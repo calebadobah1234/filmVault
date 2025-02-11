@@ -156,6 +156,21 @@ const page = async ({ params }) => {
     data.title
   );
 
+  const fetchActualUrl = async (url) => {
+    console.log('urlling', url)
+    const actualUrl = await fetch(`https://api5.mp3vault.xyz/getDownloadUrl?url=${url}`)
+    const data = await actualUrl.json()
+    console.log('urllang', data.downloadUrl)
+    return data.downloadUrl
+  }
+
+let awalink = ""
+  if (data.downloadPageUrl){
+    awalink = await fetchActualUrl(data.downloadPageUrl)
+    console.log(`urltang ${awalink}`)
+  } 
+  
+
   return (
     <>
       <JsonLd
@@ -291,7 +306,7 @@ const page = async ({ params }) => {
         )
       )}
 
-      mainSource={data.actualDownloadUrl}
+      mainSource={awalink}
     />
   </ClientOnly>
 </div>
@@ -300,9 +315,10 @@ const page = async ({ params }) => {
   <h2 className="text-2xl font-bold text-gray-800">Download Links</h2>
   <div className="flex flex-wrap justify-center mt-6 gap-4">
     {/* Main download link if actualDownloadUrl exists */}
-    {data.actualDownloadUrl && (
+    {data.
+downloadPageUrl && (
       <a
-        href={data.actualDownloadUrl}
+        href={awalink}
         download={`${data.title}.mp4`}
         className="max-md:min-w-[100%] bg-gray-800 text-white py-4 px-8 rounded-lg shadow-lg hover:bg-gray-700 transition duration-200"
       >

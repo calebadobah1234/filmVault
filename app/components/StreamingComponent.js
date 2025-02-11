@@ -5,10 +5,10 @@ import ReactPlayer from 'react-player';
 import { FaPlay, FaPause, FaVolumeUp, FaExpand, FaSpinner,FaClosedCaptioning,FaVolumeMute,FaForward, FaBackward,FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import screenfull from 'screenfull';
 import { FaRotate } from 'react-icons/fa6';
+import { act } from 'react';
 
 
 const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource }) => {
-  console.log(mainSource)
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
   const [played, setPlayed] = useState(0);
@@ -156,7 +156,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource }) 
       try {
         // First, check if the original subtitle exists in Wasabi/CDN
         const originalSubtitleFilename = `${originalFilename}.vtt`;
-        const cdnSubtitleUrl = `https://fvsubtitles.b-cdn.net/${encodeURIComponent(originalSubtitleFilename)}`;
+        const cdnSubtitleUrl = `https://filmvaultsub.b-cdn.net/${encodeURIComponent(originalSubtitleFilename)}`;
 
         console.log('🔍 Checking for original subtitle at CDN URL:', cdnSubtitleUrl);
 
@@ -729,6 +729,8 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource }) 
   }, [sources, sources2, mainSource]);
 
 
+
+
   useEffect(() => {
     const processSelectedQuality = async () => {
       if (selectedQuality) {
@@ -737,6 +739,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource }) 
         // If 'auto' is selected and mainSource exists, use mainSource
         if (selectedQuality === 'auto' && mainSource) {
           try {
+            
             await processVideo(mainSource, activeRequestRef.current?.signal);
           } catch (error) {
             if (error.message !== 'Request aborted') {
