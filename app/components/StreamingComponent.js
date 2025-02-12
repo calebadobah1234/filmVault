@@ -58,6 +58,19 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource }) 
   const controlsRef = useRef(null);
   const containerRef = useRef(null);
 
+  const fetchActualUrl = async (url) => {
+    console.log('Fetching actual URL for:', url);
+    try {
+      const actualUrl = await fetch(`https://api5.mp3vault.xyz/getDownloadUrl?url=${url}`);
+      const data = await actualUrl.json();
+      console.log('Received actual URL:', data.downloadUrl);
+      return data.downloadUrl;
+    } catch (error) {
+      console.error('Error fetching actual URL:', error);
+      return null;
+    }
+  };
+
   // Function to extract resolution number from quality string
   const getResolutionNumber = (quality) => {
     if (!quality) return 0;
@@ -531,35 +544,35 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource }) 
         base: url.split('?')[0],
         query: url.split('?')[1] || 'none'
       });
-
+  
       setProcessingStatus('checking');
       setErrorMessage('');
-
+  
       if (!url) {
         throw new Error('No URL provided for processing');
       }
-
+  
       const originalFilename = url.split('/').pop() || 'video';
       setOriginalFilename(originalFilename);
-
+  
       const sanitizedFilename = sanitizeFilename(originalFilename);
       console.log('Sanitized filename:', sanitizedFilename);
-
+  
       if (processingTimeoutRef.current) {
         clearTimeout(processingTimeoutRef.current);
       }
-
+  
       processingTimeoutRef.current = setTimeout(() => {
         setProcessingStatus('error');
         setErrorMessage('Processing timed out. Please try again.');
       }, 240000);
-
+  
       // Initial file check with detailed logging
       try {
         console.log('Performing initial file check...');
         const initialFileCheck = await checkFileExists(originalFilename, signal);
         console.log('Initial file check result:', initialFileCheck);
-
+  
         if (initialFileCheck) {
           const cdnUrl = `https://filmvault3.b-cdn.net/${sanitizedFilename}`;
           console.log('File found, setting CDN URL:', cdnUrl);
@@ -567,87 +580,118 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource }) 
           setProcessingStatus('ready');
           return;
         }
+  
+        // If auto quality is selected and file not found, try alternative URL
+        if (selectedQuality === 'auto' && mainSource) {
+          console.log('Auto quality selected and file not found, fetching alternative URL');
+          try {
+            const alternativeUrl = await fetchActualUrl(mainSource);
+            
+            if (alternativeUrl) {
+              console.log('Retrieved alternative URL:', alternativeUrl);
+              const altFilename = alternativeUrl.split('/').pop() || 'video';
+              const altSanitizedFilename = sanitizeFilename(altFilename);
+              
+              // Check if alternative file exists in CDN
+              const altFileExists = await checkFileExists(altFilename, signal);
+              if (altFileExists) {
+                const altCdnUrl = `https://filmvault3.b-cdn.net/${altSanitizedFilename}`;
+                console.log('Alternative file found in CDN:', altCdnUrl);
+                setStreamingUrl(altCdnUrl);
+                setProcessingStatus('ready');
+                return;
+              }
+  
+              // If alternative file doesn't exist, initiate download
+              url = alternativeUrl; // Use alternative URL for further processing
+              console.log('Using alternative URL for processing:', url);
+            }
+          } catch (altError) {
+            console.error('Error fetching alternative URL:', altError);
+            // Continue with original URL if alternative fetch fails
+          }
+        }
+  
+        console.log('Initiating download process...');
+        setProcessingStatus('downloading');
+  
+        const encodedUrl = encodeURIComponent(url);
+        const encodedFilename = encodeURIComponent(originalFilename);
+        const apiUrl = `https://api4.mp3vault.xyz/download?url=${encodedUrl}&filename=${encodedFilename}`;
+  
+        console.log('Download API URL:', apiUrl);
+  
+        // Initiate download
+        fetch(apiUrl, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+          },
+        }).then(response => {
+          console.log('Download initiation response:', response.status);
+          return response.json();
+        }).then(data => {
+          console.log('Download initiation data:', data);
+        }).catch(error => {
+          console.error('Download initiation error:', error);
+        });
+  
+        const checkInterval = 5000;
+        const maxAttempts = Math.floor(240000 / checkInterval);
+        let attempts = 0;
+  
+        const checkForFile = async () => {
+          while (attempts < maxAttempts) {
+            try {
+              console.log(`File check attempt ${attempts + 1}/${maxAttempts}`);
+              const fileExists = await checkFileExists(originalFilename, signal);
+              console.log(`File check result for attempt ${attempts + 1}:`, fileExists);
+  
+              if (fileExists) {
+                const cdnUrl = `https://filmvault3.b-cdn.net/${sanitizedFilename}`;
+                console.log('File found, setting final CDN URL:', cdnUrl);
+                setStreamingUrl(cdnUrl);
+                setProcessingStatus('ready');
+                setRetryCount(0);
+                setIsRetrying(false);
+                return true;
+              }
+            } catch (error) {
+              console.error(`Error in check attempt ${attempts + 1}:`, error);
+              if (error.message === 'Request aborted') {
+                throw error;
+              }
+            }
+  
+            attempts++;
+            if (attempts < maxAttempts) {
+              await new Promise(resolve => setTimeout(resolve, checkInterval));
+            }
+          }
+          return false;
+        };
+  
+        const fileFound = await checkForFile();
+        if (!fileFound) {
+          throw new Error('Content is taking longer than usual to prepare');
+        }
+  
       } catch (cdnError) {
         console.error('Initial CDN check error:', cdnError);
         if (cdnError.message === 'Request aborted') {
           throw cdnError;
         }
       }
-
-      console.log('Initiating download process...');
-      setProcessingStatus('downloading');
-
-      const encodedUrl = encodeURIComponent(url);
-      const encodedFilename = encodeURIComponent(originalFilename);
-      const apiUrl = `https://api4.mp3vault.xyz/download?url=${encodedUrl}&filename=${encodedFilename}`;
-
-      console.log('Download API URL:', apiUrl);
-
-
-      fetch(apiUrl, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-        },
-      }).then(response => {
-        console.log('Download initiation response:', response.status);
-        return response.json();
-      }).then(data => {
-        console.log('Download initiation data:', data);
-      }).catch(error => {
-        console.error('Download initiation error:', error);
-      });
-
-
-      const checkInterval = 5000;
-      const maxAttempts = Math.floor(240000 / checkInterval);
-      let attempts = 0;
-
-      const checkForFile = async () => {
-        while (attempts < maxAttempts) {
-          try {
-            console.log(`File check attempt ${attempts + 1}/${maxAttempts}`);
-            const fileExists = await checkFileExists(originalFilename, signal);
-            console.log(`File check result for attempt ${attempts + 1}:`, fileExists);
-
-            if (fileExists) {
-              const cdnUrl = `https://filmvault3.b-cdn.net/${sanitizedFilename}`;
-              console.log('File found, setting final CDN URL:', cdnUrl);
-              setStreamingUrl(cdnUrl);
-              setProcessingStatus('ready');
-              setRetryCount(0);
-              setIsRetrying(false);
-              return true;
-            }
-          } catch (error) {
-            console.error(`Error in check attempt ${attempts + 1}:`, error);
-            if (error.message === 'Request aborted') {
-              throw error;
-            }
-          }
-
-          attempts++;
-          if (attempts < maxAttempts) {
-            await new Promise(resolve => setTimeout(resolve, checkInterval));
-          }
-        }
-        return false;
-      };
-
-      const fileFound = await checkForFile();
-      if (!fileFound) {
-        throw new Error('Content is taking longer than usual to prepare');
-      }
-
+  
     } catch (error) {
       console.error('Final error in processVideo:', error);
       if (error.message === 'Request aborted') {
         return;
       }
-
+  
       setProcessingStatus('error');
       setErrorMessage(error.message || 'Failed to process video');
-
+  
       if (retryCount < maxRetries) {
         setIsRetrying(true);
         await new Promise(resolve => setTimeout(resolve, retryDelay));
