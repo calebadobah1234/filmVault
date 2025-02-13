@@ -8,7 +8,8 @@ import { FaRotate } from 'react-icons/fa6';
 import { act } from 'react';
 
 
-const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource }) => {
+const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,naijaRocks }) => {
+ 
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
   const [played, setPlayed] = useState(0);
@@ -70,6 +71,21 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource }) 
       return null;
     }
   };
+
+  const fetchActualUrlNaija = async (url) => {
+    console.log('Fetching actual URL for:', url);
+    try {
+      const actualUrl = await fetch(`https://api5.mp3vault.xyz/getNaijaDownloadUrl?url=${url}`);
+      const data = await actualUrl.json();
+      console.log('Received actual URL:', data.downloadUrl);
+      return data.downloadUrl;
+    } catch (error) {
+      console.error('Error fetching actual URL:', error);
+      return null;
+    }
+  };
+
+  
 
   // Function to extract resolution number from quality string
   const getResolutionNumber = (quality) => {
@@ -601,6 +617,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource }) 
                 setProcessingStatus('ready');
                 return;
               }
+
   
               // If alternative file doesn't exist, initiate download
               url = alternativeUrl; // Use alternative URL for further processing
@@ -610,7 +627,36 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource }) 
             console.error('Error fetching alternative URL:', altError);
             // Continue with original URL if alternative fetch fails
           }
+        }  else if (naijaRocks && selectedQuality === 'auto' && !mainSource) {
+          console.log('Auto quality selected and file not found, fetching naija URL');
+          try {
+            const naijaUrl = await fetchActualUrlNaija(naijaRocks);
+            
+            if (naijaUrl) {
+              console.log('Retrieved naija URL:', naijaUrl);
+              const naijaFilename = naijaUrl.split('/').pop() || 'video';
+              const naijaSanitizedFilename = sanitizeFilename(naijaFilename);
+              
+              // Check if naija file exists in CDN
+              const naijaFileExists = await checkFileExists(naijaFilename, signal);
+              if (naijaFileExists) {
+                const naijaCdnUrl = `https://filmvault3.b-cdn.net/${naijaSanitizedFilename}`;
+                console.log('Naija file found in CDN:', naijaCdnUrl);
+                setStreamingUrl(naijaCdnUrl);
+                setProcessingStatus('ready');
+                return;
+              }
+
+              // If naija file doesn't exist, use naija URL for further processing
+              url = naijaUrl;
+              console.log('Using naija URL for processing:', url);
+            }
+          } catch (naijaError) {
+            console.error('Error fetching naija URL:', naijaError);
+            // Continue with original URL if naija fetch fails
+          }
         }
+      
   
         console.log('Initiating download process...');
         setProcessingStatus('downloading');
@@ -735,8 +781,8 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource }) 
   useEffect(() => {
     const availableQualitiesSet = new Set();
     
-    // Add "Auto" as the first option if mainSource exists
-    if (mainSource) {
+    // Add "Auto" as the first option if mainSource or naijaRocks exists
+    if (mainSource || naijaRocks) {
       availableQualitiesSet.add('auto');
     }
     
@@ -762,15 +808,15 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource }) 
     console.log("Available qualities:", availableQualities);
     setQualities(availableQualities);
 
-    // Set initial quality to 'auto' if mainSource exists, otherwise first available quality
+    // Set initial quality to 'auto' if mainSource or naijaRocks exists, otherwise first available quality
     if (availableQualities.length > 0) {
-      const initialQuality = mainSource ? 'auto' : availableQualities[0];
+      const initialQuality = (mainSource || naijaRocks) ? 'auto' : availableQualities[0];
       console.log("Setting initial quality:", initialQuality);
       setSelectedQuality(initialQuality);
     } else {
       setSelectedQuality('');
     }
-  }, [sources, sources2, mainSource]);
+  }, [sources, sources2, mainSource, naijaRocks]);
 
 
 
@@ -780,17 +826,30 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource }) 
       if (selectedQuality) {
         cancelActiveRequest();
 
-        // If 'auto' is selected and mainSource exists, use mainSource
-        if (selectedQuality === 'auto' && mainSource) {
-          try {
-            
-            await processVideo(mainSource, activeRequestRef.current?.signal);
-          } catch (error) {
-            if (error.message !== 'Request aborted') {
-              console.error('Error processing video:', error);
+        // Handle auto quality selection
+        if (selectedQuality === 'auto') {
+          if (mainSource) {
+            try {
+              await processVideo(mainSource, activeRequestRef.current?.signal);
+            } catch (error) {
+              if (error.message !== 'Request aborted') {
+                console.error('Error processing video:', error);
+              }
             }
+            return;
+          } else if (naijaRocks) {
+            try {
+              const naijaUrl = await fetchActualUrlNaija(naijaRocks);
+              if (naijaUrl) {
+                await processVideo(naijaUrl, activeRequestRef.current?.signal);
+              }
+            } catch (error) {
+              if (error.message !== 'Request aborted') {
+                console.error('Error processing naija video:', error);
+              }
+            }
+            return;
           }
-          return;
         }
 
         // Otherwise, proceed with regular quality selection
@@ -838,7 +897,8 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource }) 
     };
 
     processSelectedQuality();
-  }, [selectedQuality, sources, sources2, mainSource]);
+  }, [selectedQuality, sources, sources2, mainSource, naijaRocks]);
+
 
 
   useEffect(() => {

@@ -295,6 +295,7 @@ const page = async ({ params }) => {
       )}
 
       mainSource={data.downloadPageUrl}
+      naijaRocks={data.downloadLinksNaija?.[0]?.url}
     />
   </ClientOnly>
 </div>
