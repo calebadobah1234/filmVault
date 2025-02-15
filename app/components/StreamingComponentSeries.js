@@ -92,7 +92,47 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle,seasons2 }) => {
     checkAndroid();
   }, []);
 
+  const detectSeasonFromUrl = (filename) => {
+    if (!filename) return null;
+    
+    // First check for SXX pattern (e.g., S01, s02)
+    const sPattern = /S(\d{1,2})/i;
+    const sMatch = filename.match(sPattern);
+    if (sMatch) return parseInt(sMatch[1]);
+  
+    // Check for season in SXXEXX format
+    const seasonFromEpisode = filename.match(/S(\d{1,2})E\d{1,3}/i);
+    if (seasonFromEpisode) return parseInt(seasonFromEpisode[1]);
+  
+    // Check for -sXX- pattern with dashes
+    const dashPattern = /-s(\d{1,2})-/i;
+    const dashMatch = filename.match(dashPattern);
+    if (dashMatch) return parseInt(dashMatch[1]);
+  
+    return null;
+  };
+
   useEffect(() => {
+
+    if ((!seasons || seasons.length === 0) && seasons2?.length > 0) {
+      const initialSeason = seasons2[0];
+      setSelectedSeason(initialSeason.seasonNumber.toString());
+      setAvailableQualities(['smooth']);
+      setSelectedQuality('smooth');
+      
+      if (initialSeason.episodes) {
+        const processedEpisodes = initialSeason.episodes.map(episode => ({
+          ...episode,
+          episodeNumber: detectEpisodeFromUrl(episode.downloadLink) || episode.episodeNumber
+        }));
+        setEpisodes(processedEpisodes);
+        if (processedEpisodes.length > 0) {
+          setSelectedEpisode(processedEpisodes[0].episodeNumber?.toString());
+        }
+      }
+      return;
+    }
+
     if (seasons && seasons.length > 0) {
       const initialSeason = seasons[0];
       setSelectedSeason(initialSeason.seasonNumber.toString());
@@ -379,39 +419,26 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle,seasons2 }) => {
 
   const detectEpisodeFromUrl = (filename) => {
     if (!filename) return null;
-
-    // First check if it has the form S01E01
+  
+    // First check for SXXEXX pattern (case insensitive)
     const sPattern = /S\d{1,2}E(\d{1,3})/i;
     const sMatch = filename.match(sPattern);
-    if (sMatch) {
-      const num = parseInt(sMatch[1]);
-      if (num > 0 && num < 1000) return num;
-    }
-
-    // Then check for dashPattern
-    const dashPattern = /[-\s](\d{1,3})[\.\s\]]/;
+    if (sMatch) return parseInt(sMatch[1]);
+  
+    // Then check for -sXXeXX- pattern with dashes
+    const dashPattern = /-s\d{1,2}e(\d{1,3})-/i;
     const dashMatch = filename.match(dashPattern);
-    if (dashMatch) {
-      const num = parseInt(dashMatch[1]);
-      if (num > 0 && num < 1000) return num;
-    }
-
-    // Check for ePattern
+    if (dashMatch) return parseInt(dashMatch[1]);
+  
+    // Existing detection patterns remain unchanged
     const ePattern = /[Ee](\d{1,3})/i;
     const eMatch = filename.match(ePattern);
-    if (eMatch) {
-      const num = parseInt(eMatch[1]);
-      if (num > 0 && num < 1000) return num;
-    }
-
-    // Lastly check for bracketPattern
+    if (eMatch) return parseInt(eMatch[1]);
+  
     const bracketPattern = /\[(\d{1,3})\]/;
     const bracketMatch = filename.match(bracketPattern);
-    if (bracketMatch) {
-      const num = parseInt(bracketMatch[1]);
-      if (num > 0 && num < 1000) return num;
-    }
-
+    if (bracketMatch) return parseInt(bracketMatch[1]);
+  
     return null;
   };
   
@@ -1119,17 +1146,17 @@ const processVideo = async (url) => {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-4 mb-4 mt-5">
-        <select
-          value={selectedSeason}
-          onChange={(e) => setSelectedSeason(e.target.value)}
-          className="bg-gray-700 text-white px-4 py-2 rounded-md"
-        >
-          {seasons.map(season => (
-            <option key={`season-select-top-${season.seasonNumber}`} value={season.seasonNumber}>
-              Season {season.seasonNumber}
-            </option>
-          ))}
-        </select>
+      <select
+  value={selectedSeason}
+  onChange={(e) => setSelectedSeason(e.target.value)}
+  className="bg-gray-700 text-white px-4 py-2 rounded-md"
+>
+  {(seasons?.length ? seasons : seasons2 || []).map(season => (
+    <option key={`season-select-top-${season.seasonNumber}`} value={season.seasonNumber}>
+      Season {season.seasonNumber}
+    </option>
+  ))}
+</select>
 
         <select
           value={selectedEpisode}
@@ -1423,17 +1450,17 @@ const processVideo = async (url) => {
               </div>
 
               <span className='max-md:hidden'>
-                <select
-                  value={selectedSeason}
-                  onChange={(e) => setSelectedSeason(e.target.value)}
-                  className="bg-gray-700 text-white px-4 py-2 rounded-md mr-1"
-                >
-                  {seasons.map(season => (
-                    <option key={`season-select-control-${season.seasonNumber}`} value={season.seasonNumber}>
-                      Season {season.seasonNumber}
-                    </option>
-                  ))}
-                </select>
+              <select
+  value={selectedSeason}
+  onChange={(e) => setSelectedSeason(e.target.value)}
+  className="bg-gray-700 text-white px-4 py-2 rounded-md mr-1"
+>
+  {(seasons?.length ? seasons : seasons2 || []).map(season => (
+    <option key={`season-select-control-${season.seasonNumber}`} value={season.seasonNumber}>
+      Season {season.seasonNumber}
+    </option>
+  ))}
+</select>
 
                 <select
                   value={selectedEpisode}
