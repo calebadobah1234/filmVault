@@ -169,7 +169,7 @@ const page = async ({ params }) => {
           description: data.description,
           datePublished: data.year
             ? data.year
-            : data.movieInfo.yearOfPublication,
+            : data.movieInfo?.yearOfPublication,
           image: data.imageUrl ? data.imageUrl : data.img,
           aggregateRating: {
             "@type": "AggregateRating",
@@ -304,16 +304,15 @@ const page = async ({ params }) => {
   <h2 className="text-2xl font-bold text-gray-800">Download Links</h2>
   <div className="flex flex-wrap justify-center mt-6 gap-4">
     {/* Main download link if actualDownloadUrl exists */}
-    {/* {data.
-downloadPageUrl && (
+    {(data.downloadPageUrl || data.downloadLinksNaija) && (
       <a
-        href={'xxx'}
+        href={data.downloadPageUrl?data.downloadPageUrl:data.downloadLinksNaija[0].url}
         download={`${data.title}.mp4`}
         className="max-md:min-w-[100%] bg-gray-800 text-white py-4 px-8 rounded-lg shadow-lg hover:bg-gray-700 transition duration-200"
       >
-        Download {data.title} | {data.fileSize}
+        Download {data.title}  {data.fileSize?`| ${data.fileSize}`:""}
       </a>
-    )} */}
+    )}
     
     {/* Episode download links */}
     {data.episodesData.map((item, index) => {
@@ -321,6 +320,7 @@ downloadPageUrl && (
       const isValidLink = !blockedTerms.some((term) =>
         item.downloadLink.includes(term)
       );
+      console.log(`itama:${item}`);
 
       return (
         isValidLink && (

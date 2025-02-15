@@ -1,9 +1,9 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-
 import { FaAngleRight } from "react-icons/fa";
 import ImageWithFallback from "./ImageWithFallback";
+
 const sanitizeTitle = (title) => {
   return title?.replace(/[^a-zA-Z0-9]/g, "_") + ".jpg";
 };
@@ -13,6 +13,33 @@ const LatestItems = (props) => {
     ? props.data.slice(0, 12)
     : props.data?.slice(0, props.itemsToShow ? props.itemsToShow : 12);
   const className = props.title && props.title.replace(/\s/g, "");
+
+  // Default fallback image URL
+  const fallbackImageUrl = "https://th.bing.com/th/id/OIP.vemXta-UoBudoiVJZZgKZgHaHa?rs=1&pid=ImgDetMain";
+
+  const getImagePath = (item) => {
+    if (item.type === "aioMovie" || 
+        item.type === "aioAnime" || 
+        item.type === "aioKdrama" || 
+        item.type === "moviePovie" || 
+        item.type === "series") {
+      return item.imageUrl || fallbackImageUrl;
+    }
+    
+    if (item.imageUrl && item.imageUrl.includes("m.media-amazon")) {
+      return item.imageUrl;
+    }
+    
+    if (item.img && item.img.includes("avamovie")) {
+      return `/images1/${sanitizeTitle(item.title)}`;
+    }
+    
+    if (item.img) {
+      return item.img;
+    }
+    
+    return fallbackImageUrl;
+  };
 
   return (
     <>
@@ -34,9 +61,7 @@ const LatestItems = (props) => {
               style={{ transform: "translateY(5px)" }}
             />
           </Link>
-        ) : (
-          <></>
-        )}
+        ) : null}
       </div>
 
       <div className="relative flex max-w-[90%] mx-auto max-md:max-w-[95%]">
@@ -48,75 +73,53 @@ const LatestItems = (props) => {
           } overflow-x-auto no-scrollbar items-center ${className} max-md:flex-wrap max-md:justify-center md:max-lg:grid md:grid-cols-3 lg:grid-cols-4 md:max-lg:gap-10`}
         >
           {data.map((item) => {
-            let imdb = item.imdb;
-            const sanitizedTitle = sanitizeTitle(item.title);
-            console.log("/images1/" + sanitizedTitle);
-            const localImagePath = `${
-              item.type == "aioMovie" ||
-              item.type == "aioAnime" ||
-              item.type == "aioKdrama" ||
-              item.type == "moviePovie" ||
-              item.type == "series" ||
-              (item.imageUrl && item.imageUrl.includes("m.media-amazon"))
-                ? item.imageUrl
-                : item.img && item.img.includes("avamovie")
-                ? `/images1/${sanitizedTitle}`
-                : item.img
-            }`;
+            const imagePath = getImagePath(item);
+            
             return (
               <div
                 key={item._id}
                 className="aspect-[9/16] max-w-[200px] group flex-none h-[380px] relative md:mr-5 mr-1 cursor-pointer overflow-hidden transition-transform duration-300 ease-in-out hover:scale-105 w-[180px] max-md:w-[calc(50%-0.5rem)]"
               >
-                <div className="relative w-full ">
-                  {" "}
-                  {/* Aspect ratio wrapper */}
+                <div className="relative w-full">
                   <Link
                     href={
                       props.series ||
-                      item.type == "aioMovie" ||
-                      item.type == "moviePovie" ||
-                      item.type == "series" ||(item.seasons && item.type!=="aioAnime")
+                      item.type === "aioMovie" ||
+                      item.type === "moviePovie" ||
+                      item.type === "series" ||(item.seasons && item.type!=="aioAnime")
                         ? `/series1/${item.title}`
-                        : props.anime || item.type == "aioAnime"
+                        : props.anime || item.type === "aioAnime"
                         ? `/anime1/${item.title}`
-                        : props.kdrama || item.type == "aioKdrama"
+                        : props.kdrama || item.type === "aioKdrama"
                         ? `/kdrama1/${item.title}`
                         : `/movies1/${item.title}`
                     }
                   >
-                    {item.img || item.imageUrl ? (
-                      <ImageWithFallback
-                        src={
-                          localImagePath == "N/A" ||
-                          localImagePath == "undefined"
-                            ? "/"
-                            : localImagePath
-                        }
-                        alt={item.title}
-                        className="rounded-md transition duration-500 ease-in-out transform group-hover:brightness-75 relative w-full h-full object-cover aspect-[2/3]"
-                        width={180}
-                        height={250}
-                        placeholder="blur"
-                        blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8/+F9PQAI8wNPvd7POQAAAABJRU5ErkJggg=="
-                      />
-                    ) : (
-                      <></>
-                    )}
+                    <ImageWithFallback
+                      src={imagePath}
+                      alt={item.title || "Movie poster"}
+                      className="rounded-md transition duration-500 ease-in-out transform group-hover:brightness-75 relative w-full h-full object-cover aspect-[2/3]"
+                      width={180}
+                      height={250}
+                      placeholder="blur"
+                      blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8/+F9PQAI8wNPvd7POQAAAABJRU5ErkJggg=="
+                    />
                   </Link>
                 </div>
+
                 <div className="absolute top-4 left-0 bg-blue-300 group-hover:text-white rounded-sm ml-3 px-2 py-1 text-xs text-white transition-all duration-300 ease-in-out transform group-hover:translate-y-1">
                   {props.series ||
-                  item.type == "aioMovie" ||
-                  item.type == "moviePovie" ||
-                  item.type == "series"
+                  item.type === "aioMovie" ||
+                  item.type === "moviePovie" ||
+                  item.type === "series"
                     ? "Series"
-                    : props.anime || item.type == "aioAnime"
+                    : props.anime || item.type === "aioAnime"
                     ? "Anime"
-                    : props.kdrama || item.type == "aioKdrama"
+                    : props.kdrama || item.type === "aioKdrama"
                     ? "K Series"
                     : "Movie"}
                 </div>
+
                 <div
                   className={`absolute left-0 bottom-8 ${
                     props.relatedContent
@@ -127,7 +130,7 @@ const LatestItems = (props) => {
                   {item?.categories?.[0] && <p>{item.categories[0]}</p>}
                 </div>
 
-                {item.imdbRating || imdb ? (
+                {(item.imdbRating || item.imdb) && (
                   <div
                     className={`absolute right-0 bottom-8 text-red-500 ${
                       props.relatedContent
@@ -136,12 +139,10 @@ const LatestItems = (props) => {
                     } rounded-sm mr-3 bg-yellow-500 px-2 py-1 text-xs group-hover:text-white group-hover:bg-red-500 transition-all duration-300 ease-in-out transform group-hover:translate-y-1`}
                   >
                     <p>
-                      {item.imdbRating ? item.imdbRating : imdb}
+                      {item.imdbRating || item.imdb}
                       /10
                     </p>
                   </div>
-                ) : (
-                  <></>
                 )}
 
                 <div className="absolute text-black font-sans font-bold antialiased text-sm transition-colors duration-300 ease-in-out group-hover:text-green-400 w-full">
@@ -149,13 +150,13 @@ const LatestItems = (props) => {
                     <Link
                       href={
                         props.series ||
-                        item.type == "aioMovie" ||
-                        item.type == "moviePovie" ||
-                        item.type == "series"
+                        item.type === "aioMovie" ||
+                        item.type === "moviePovie" ||
+                        item.type === "series"
                           ? `/series1/${item.title}`
-                          : props.anime || item.type == "aioAnime"
+                          : props.anime || item.type === "aioAnime"
                           ? `/anime1/${item.title}`
-                          : props.kdrama || item.type == "aioKdrama"
+                          : props.kdrama || item.type === "aioKdrama"
                           ? `/kdrama1/${item.title}`
                           : `/movies1/${item.title}`
                       }
@@ -168,10 +169,9 @@ const LatestItems = (props) => {
             );
           })}
         </div>
-        <span className={`${props.hide ? "hidden" : "inline"}`}>
-          {/* <ScrollHorizontal className={className} /> */}
-        </span>
+        <span className={`${props.hide ? "hidden" : "inline"}`}></span>
       </div>
+      
       {props.showMoreCategory && (
         <div className="relative flex justify-center mb-10">
           <Link

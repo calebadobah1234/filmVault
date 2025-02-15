@@ -9,7 +9,7 @@ import { act } from 'react';
 
 
 const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,naijaRocks }) => {
- 
+
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
   const [played, setPlayed] = useState(0);
@@ -53,6 +53,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
   const [showSubtitleTooltip, setShowSubtitleTooltip] = useState(false);
   const [subtitleChangeMessage, setSubtitleChangeMessage] = useState('');
   const [showSubtitleChangeMessage, setShowSubtitleChangeMessage] = useState(false);
+  const [isAndroid, setIsAndroid] = useState(false); // New state to detect Android
 
 
   const playerRef = useRef(null);
@@ -85,7 +86,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
     }
   };
 
-  
+
 
   // Function to extract resolution number from quality string
   const getResolutionNumber = (quality) => {
@@ -519,13 +520,14 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
   const sanitizeFilename = (filename) => {
     console.log('Original filename:', filename);
 
+    // Split off any query parameters, including download_token
+    let cleanedFilename = filename.split('?')[0];
+    console.log('Filename without query params:', cleanedFilename);
 
-    const hasEncodedBrackets = filename.includes('%5B') || filename.includes('%5D');
+    const hasEncodedBrackets = cleanedFilename.includes('%5B') || cleanedFilename.includes('%5D');
 
-
-    const decodedFilename = hasEncodedBrackets ? filename : decodeURIComponent(filename);
+    const decodedFilename = hasEncodedBrackets ? cleanedFilename : decodeURIComponent(cleanedFilename);
     console.log('Decoded filename:', decodedFilename);
-
 
     const cleanFilename = hasEncodedBrackets ?
       decodedFilename :
@@ -535,14 +537,12 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
         .replace(/%20/g, ' ');
     console.log('Cleaned filename:', cleanFilename);
 
-
     const encodedFilename = hasEncodedBrackets ?
       cleanFilename :
       cleanFilename
         .replace(/\[/g, '%5B')
         .replace(/\]/g, '%5D')
         .replace(/ /g, '.');
-
 
     const finalEncodedFilename = encodedFilename
       .replace(/[^A-Za-z0-9%._-]/g, char => encodeURIComponent(char));
@@ -560,35 +560,35 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
         base: url.split('?')[0],
         query: url.split('?')[1] || 'none'
       });
-  
+
       setProcessingStatus('checking');
       setErrorMessage('');
-  
+
       if (!url) {
         throw new Error('No URL provided for processing');
       }
-  
+
       const originalFilename = url.split('/').pop() || 'video';
       setOriginalFilename(originalFilename);
-  
+
       const sanitizedFilename = sanitizeFilename(originalFilename);
       console.log('Sanitized filename:', sanitizedFilename);
-  
+
       if (processingTimeoutRef.current) {
         clearTimeout(processingTimeoutRef.current);
       }
-  
+
       processingTimeoutRef.current = setTimeout(() => {
         setProcessingStatus('error');
         setErrorMessage('Processing timed out. Please try again.');
       }, 240000);
-  
+
       // Initial file check with detailed logging
       try {
         console.log('Performing initial file check...');
         const initialFileCheck = await checkFileExists(originalFilename, signal);
         console.log('Initial file check result:', initialFileCheck);
-  
+
         if (initialFileCheck) {
           const cdnUrl = `https://filmvault3.b-cdn.net/${sanitizedFilename}`;
           console.log('File found, setting CDN URL:', cdnUrl);
@@ -596,18 +596,18 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
           setProcessingStatus('ready');
           return;
         }
-  
+
         // If auto quality is selected and file not found, try alternative URL
         if (selectedQuality === 'auto' && mainSource) {
           console.log('Auto quality selected and file not found, fetching alternative URL');
           try {
             const alternativeUrl = await fetchActualUrl(mainSource);
-            
+
             if (alternativeUrl) {
               console.log('Retrieved alternative URL:', alternativeUrl);
               const altFilename = alternativeUrl.split('/').pop() || 'video';
               const altSanitizedFilename = sanitizeFilename(altFilename);
-              
+
               // Check if alternative file exists in CDN
               const altFileExists = await checkFileExists(altFilename, signal);
               if (altFileExists) {
@@ -618,7 +618,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
                 return;
               }
 
-  
+
               // If alternative file doesn't exist, initiate download
               url = alternativeUrl; // Use alternative URL for further processing
               console.log('Using alternative URL for processing:', url);
@@ -631,12 +631,12 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
           console.log('Auto quality selected and file not found, fetching naija URL');
           try {
             const naijaUrl = await fetchActualUrlNaija(naijaRocks);
-            
+
             if (naijaUrl) {
               console.log('Retrieved naija URL:', naijaUrl);
               const naijaFilename = naijaUrl.split('/').pop() || 'video';
               const naijaSanitizedFilename = sanitizeFilename(naijaFilename);
-              
+
               // Check if naija file exists in CDN
               const naijaFileExists = await checkFileExists(naijaFilename, signal);
               if (naijaFileExists) {
@@ -656,17 +656,17 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
             // Continue with original URL if naija fetch fails
           }
         }
-      
-  
+
+
         console.log('Initiating download process...');
         setProcessingStatus('downloading');
-  
+        const urlWithoutQuery = originalFilename.split('?')[0];
         const encodedUrl = encodeURIComponent(url);
-        const encodedFilename = encodeURIComponent(originalFilename);
+        const encodedFilename = encodeURIComponent(urlWithoutQuery);
         const apiUrl = `https://api4.mp3vault.xyz/download?url=${encodedUrl}&filename=${encodedFilename}`;
-  
+
         console.log('Download API URL:', apiUrl);
-  
+
         // Initiate download
         fetch(apiUrl, {
           method: 'GET',
@@ -681,18 +681,18 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
         }).catch(error => {
           console.error('Download initiation error:', error);
         });
-  
+
         const checkInterval = 5000;
         const maxAttempts = Math.floor(240000 / checkInterval);
         let attempts = 0;
-  
+
         const checkForFile = async () => {
           while (attempts < maxAttempts) {
             try {
               console.log(`File check attempt ${attempts + 1}/${maxAttempts}`);
               const fileExists = await checkFileExists(originalFilename, signal);
               console.log(`File check result for attempt ${attempts + 1}:`, fileExists);
-  
+
               if (fileExists) {
                 const cdnUrl = `https://filmvault3.b-cdn.net/${sanitizedFilename}`;
                 console.log('File found, setting final CDN URL:', cdnUrl);
@@ -708,7 +708,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
                 throw error;
               }
             }
-  
+
             attempts++;
             if (attempts < maxAttempts) {
               await new Promise(resolve => setTimeout(resolve, checkInterval));
@@ -716,28 +716,28 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
           }
           return false;
         };
-  
+
         const fileFound = await checkForFile();
         if (!fileFound) {
           throw new Error('Content is taking longer than usual to prepare');
         }
-  
+
       } catch (cdnError) {
         console.error('Initial CDN check error:', cdnError);
         if (cdnError.message === 'Request aborted') {
           throw cdnError;
         }
       }
-  
+
     } catch (error) {
       console.error('Final error in processVideo:', error);
       if (error.message === 'Request aborted') {
         return;
       }
-  
+
       setProcessingStatus('error');
       setErrorMessage(error.message || 'Failed to process video');
-  
+
       if (retryCount < maxRetries) {
         setIsRetrying(true);
         await new Promise(resolve => setTimeout(resolve, retryDelay));
@@ -780,12 +780,12 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
 
   useEffect(() => {
     const availableQualitiesSet = new Set();
-    
+
     // Add "Auto" as the first option if mainSource or naijaRocks exists
     if (mainSource || naijaRocks) {
       availableQualitiesSet.add('auto');
     }
-    
+
     // Add other qualities from sources
     const qualitiesFromSources1 = sources?.map(source => {
       const resolution = getResolutionNumber(source.quality);
@@ -1146,6 +1146,11 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
     };
   }, []);
 
+  useEffect(() => {
+    // Detect Android on mount
+    const userAgent = navigator.userAgent.toLowerCase();
+    setIsAndroid(userAgent.includes("android"));
+  }, []);
 
 
   const handleVolumeChange = (e) => {
@@ -1184,8 +1189,9 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
       className="bg-black rounded-xl overflow-hidden shadow-xl relative group"
       onMouseMove={showControlsWithTimeout}
       onMouseLeave={() => !isFullscreen && hideControls()}
+      style={isAndroid ? { paddingBottom: '50px' } : {}} // Add bottom padding for Android
     >
-      <div className={`relative flex items-center justify-center bg-black ${isFullscreen ? 'h-screen w-screen' : 'aspect-video'}`}>
+      <div className={`flex items-center justify-center bg-black ${isFullscreen ? 'h-screen w-screen' : 'aspect-video'}`}> {/* Removed relative class here */}
         {/* Processing status: blocked */}
         {processingStatus === 'blocked' && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80">

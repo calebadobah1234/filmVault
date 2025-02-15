@@ -198,7 +198,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
       try {
         // First, check if the original subtitle exists in CDN
         const originalSubtitleFilename = `${originalFilename}.vtt`;
-        const cdnSubtitleUrl = `https://filmvaultsub.b-cdn.net/${encodeURIComponent(originalSubtitleFilename)}`;
+        const cdnSubtitleUrl = `https://fvsubtitles.b-cdn.net/${encodeURIComponent(originalSubtitleFilename)}`;
 
         // Try to verify if the original subtitle exists
         const checkResponse = await fetch(cdnSubtitleUrl, { method: 'HEAD' });
@@ -246,7 +246,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
 
         while (versionExists && version <= 10) { // Limit to 10 versions
           const versionedFilename = `v${version}_${originalFilename}.vtt`;
-          const versionedUrl = `https://filmvaultsub.b-cdn.net/${encodeURIComponent(versionedFilename)}`;
+          const versionedUrl = `https://fvsubtitles.b-cdn.net/${encodeURIComponent(versionedFilename)}`;
 
           try {
             const checkResponse = await fetch(versionedUrl, { method: 'HEAD' });
@@ -1056,8 +1056,9 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
         className="bg-gray-900 rounded-xl overflow-hidden shadow-xl relative group w-full"
         onMouseMove={showControlsWithTimeout}
         onMouseLeave={() => !isFullscreen && hideControls()}
+        style={isAndroid ? { paddingBottom: '50px' } : {}} // Conditionally apply padding for Android
       >
-        <div className={`relative ${isFullscreen ? 'h-screen w-screen' : 'aspect-video'}`}>
+        <div className={`flex items-center justify-center bg-gray-900 ${isFullscreen ? 'h-screen w-screen' : 'aspect-video'}`}> {/* Removed relative class here */}
           {processingStatus === 'downloading' && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-20">
               <FaSpinner className="animate-spin text-white text-4xl mb-4" />
