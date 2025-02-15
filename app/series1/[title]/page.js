@@ -101,6 +101,7 @@ const page = async ({ params }) => {
 
   // Normalize the seasons data before passing it to components
   const normalizedSeasons = normalizeSeasons(data.seasons);
+  const normalizedSeasons2 = normalizeSeasons(data.seasons2);
   
   const activeCategories = data.categories || [];
   const actors = data.actors || [];
@@ -225,11 +226,11 @@ const page = async ({ params }) => {
           </div>
         </div>
 
-        <EnhancedSeriesStreamingComponent seasons={normalizedSeasons} movieTitle={data.title} />
+        <EnhancedSeriesStreamingComponent seasons={normalizedSeasons} seasons2={normalizedSeasons2} movieTitle={data.title} />
 
         <div className="mt-12 text-center">
           <div className="flex flex-col flex-wrap justify-center mt-6 gap-4">
-            <DownloadSection seasons={normalizedSeasons} />
+            <DownloadSection seasons={normalizedSeasons} seasons2={normalizedSeasons2}/>
           </div>
         </div>
         <AdScript />
