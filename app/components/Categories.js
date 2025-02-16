@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { ChevronDown } from 'lucide-react';
 
 const categoryTypes = {
   movies: [
@@ -357,54 +358,68 @@ const Categories = () => {
   }, [isOpen]);
 
   return (
-    <li className="relative group mb-2 md:mb-0">
+    <li className="relative group">
       <button
         ref={buttonRef}
         onClick={toggleCategories}
-        className="hover:text-green-400 uppercase text-lg md:text-xl font-bold relative px-2 py-1 transition-colors duration-300 ease-in-out"
+        className="px-3 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-gray-800 hover:text-white transition-all duration-200 flex items-center gap-1 group"
       >
-        Categories
-        <span className="absolute bottom-0 left-0 w-full h-0.5 bg-green-400 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-in-out"></span>
+        <span>Categories</span>
+        <ChevronDown 
+          className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`}
+        />
+        <div className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-green-400 via-blue-500 to-purple-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out"></div>
       </button>
+      
       {isOpen && (
         <div
           ref={popupRef}
-          className="absolute left-1/2 transform -translate-x-1/2 mt-2 z-10 bg-gray-800 text-white p-6 rounded-lg shadow-xl w-72 md:w-[48rem] max-h-[80vh] overflow-y-auto"
+          className="absolute left-1/2 transform -translate-x-1/2 mt-4 z-10 bg-gray-900/95 backdrop-blur-md text-white rounded-xl shadow-2xl w-72 md:w-[48rem] max-h-[80vh] overflow-y-auto border border-gray-800 animate-in fade-in slide-in-from-top-4 duration-200"
         >
-          <div className="flex justify-between mb-6 border-b border-gray-700 pb-4 sticky top-0 bg-gray-800">
-            {Object.keys(categoryTypes).map((type) => (
-              <button
-                key={type}
-                onClick={() => setActiveType(type)}
-                className={`text-sm px-3 py-2 rounded-full transition-colors duration-200 ${
-                  activeType === type
-                    ? "bg-green-500 text-white"
-                    : "text-gray-300 hover:text-white hover:bg-gray-700"
-                }`}
-              >
-                {type.charAt(0).toUpperCase() + type.slice(1)}
-              </button>
-            ))}
+          {/* Category Type Tabs */}
+          <div className="flex justify-between p-4 border-b border-gray-800 sticky top-0 bg-gray-900/95 backdrop-blur-md z-10">
+            <div className="flex gap-2 w-full justify-between">
+              {Object.keys(categoryTypes).map((type) => (
+                <button
+                  key={type}
+                  onClick={() => setActiveType(type)}
+                  className={`text-sm px-4 py-2 rounded-lg transition-all duration-200 ${
+                    activeType === type
+                      ? "bg-gradient-to-r from-green-400 to-blue-500 text-white shadow-lg shadow-green-500/20"
+                      : "text-gray-400 hover:text-white hover:bg-gray-800"
+                  }`}
+                >
+                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                </button>
+              ))}
+            </div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {categoryTypes[activeType].map((category, index) => (
-              <Link
-                key={index}
-                href={`/category-page${activeType == "movies" ? "" : "-"}${
-                  activeType === "korean Series"
-                    ? "kdrama"
-                    : activeType == "movies"
-                    ? ""
-                    : activeType
-                }?category=${encodeURIComponent(
-                  category
-                )}&limit=30&skip=1&currentPage=1`}
-                onClick={() => setIsOpen(false)}
-                className="text-sm hover:text-green-400 transition-colors duration-200"
-              >
-                {category}
-              </Link>
-            ))}
+
+          {/* Category Grid */}
+          <div className="p-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {categoryTypes[activeType].map((category, index) => (
+                <Link
+                  key={index}
+                  href={`/category-page${activeType == "movies" ? "" : "-"}${
+                    activeType === "korean Series"
+                      ? "kdrama"
+                      : activeType == "movies"
+                      ? ""
+                      : activeType
+                  }?category=${encodeURIComponent(
+                    category
+                  )}&limit=30&skip=1&currentPage=1`}
+                  onClick={() => setIsOpen(false)}
+                  className="text-sm text-gray-400 hover:text-white px-4 py-3 rounded-lg transition-all duration-200 hover:bg-gray-800/50 hover:shadow-lg hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-green-400/20 group"
+                >
+                  <span className="relative">
+                    {category}
+                    <span className="absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-green-400 to-blue-500 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 ease-out"></span>
+                  </span>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       )}

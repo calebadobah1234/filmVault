@@ -335,24 +335,48 @@ const MobileNav = () => {
   const [activeType, setActiveType] = useState(null);
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
-  const toggleCategoryType = (type) =>
-    setActiveType(activeType === type ? null : type);
+  const toggleCategoryType = (type) => setActiveType(activeType === type ? null : type);
 
+  // Lock body scroll when sidebar is open
   useEffect(() => {
-    document.body.style.overflow = sidebarOpen ? "hidden" : "unset";
+    if (sidebarOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
     return () => {
-      document.body.style.overflow = "unset";
+      document.body.style.overflow = 'unset';
+    };
+  }, [sidebarOpen]);
+
+  // Handle escape key to close sidebar
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        setSidebarOpen(false);
+      }
+    };
+    
+    if (sidebarOpen) {
+      window.addEventListener('keydown', handleEscape);
+    }
+    
+    return () => {
+      window.removeEventListener('keydown', handleEscape);
     };
   }, [sidebarOpen]);
 
   const NavLink = ({ href, children }) => (
-    <li>
+    <li className="group">
       <Link
         href={href}
-        className="block py-3 px-4 text-lg font-semibold text-white hover:bg-gray-700 rounded transition-colors duration-200"
+        className="flex items-center py-3 px-4 text-lg font-medium text-gray-100 hover:text-white group-hover:bg-gray-700/50 rounded-lg transition-all duration-200"
         onClick={toggleSidebar}
       >
-        {children}
+        <span className="relative">
+          {children}
+          <span className="absolute inset-x-0 -bottom-0.5 h-0.5 bg-green-400 scale-x-0 group-hover:scale-x-100 transition-transform duration-300" />
+        </span>
       </Link>
     </li>
   );
@@ -360,38 +384,48 @@ const MobileNav = () => {
   return (
     <>
       <button
-        className="md:hidden text-white focus:outline-none hover:text-green-400 transition-colors duration-200"
-        onClick={toggleSidebar}
-        aria-label="Open menu"
-      >
-        <Menu size={28} />
-      </button>
+  className="md:hidden relative p-3 text-gray-100 hover:text-white hover:bg-gray-700/50 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 focus:ring-offset-gray-800 rounded-lg transition-all duration-200"
+  onClick={toggleSidebar}
+  aria-label="Open menu"
+  aria-expanded={sidebarOpen}
+>
+  <Menu size={28} />
+</button>
 
+      {/* Backdrop */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
           onClick={toggleSidebar}
+          aria-hidden="true"
         />
       )}
 
+      {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 right-0 z-50 w-80 bg-gray-800 shadow-lg transform ${
-          sidebarOpen ? "translate-x-0" : "translate-x-full"
-        } transition-transform duration-300 ease-in-out md:hidden overflow-hidden`}
+        className={`fixed inset-y-0 right-0 z-50 w-80 bg-gray-800/95 backdrop-blur-md shadow-2xl transform ${
+          sidebarOpen ? 'translate-x-0' : 'translate-x-full'
+        } transition-all duration-300 ease-out md:hidden`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation menu"
       >
         <div className="flex flex-col h-full">
-          <div className="flex justify-between items-center p-4 border-b border-gray-700">
+          {/* Header */}
+          <div className="flex justify-between items-center p-4 border-b border-gray-700/50">
             <h2 className="text-xl font-bold text-white">Menu</h2>
             <button
-              className="text-white focus:outline-none hover:text-green-400 transition-colors duration-200"
+              className="p-2 text-gray-100 hover:text-white focus:outline-none focus:ring-2 focus:ring-green-400 rounded-lg transition-colors duration-200"
               onClick={toggleSidebar}
               aria-label="Close menu"
             >
-              <X size={24} />
+              <X size={20} />
             </button>
           </div>
-          <nav className="flex-grow overflow-y-auto">
-            <ul className="py-2">
+
+          {/* Navigation */}
+          <nav className="flex-grow overflow-y-auto overscroll-contain">
+            <ul className="p-3 space-y-1">
               <NavLink href="/">Home</NavLink>
               <NavLink href="/category-page?category=all&limit=30&skip=1&currentPage=1">
                 Movies
@@ -405,46 +439,52 @@ const MobileNav = () => {
               <NavLink href="/category-page-kdrama?category=all&limit=30&skip=1&currentPage=1">
                 Korean Series
               </NavLink>
-                <NavLink href="https://www.craacksoft.xyz/">
-                Korean Series
-              </NavLink>
             </ul>
-            <div className="px-4 py-2">
-              <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">
+
+            {/* Categories */}
+            <div className="px-3 py-4">
+              <h3 className="px-2 text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
                 Categories
               </h3>
               {Object.entries(categoryTypes).map(([type, categories]) => (
                 <div key={type} className="mb-2">
                   <button
                     onClick={() => toggleCategoryType(type)}
-                    className="flex justify-between items-center w-full py-2 px-3 text-white hover:bg-gray-700 rounded transition-colors duration-200"
+                    className="flex justify-between items-center w-full py-2.5 px-3 text-gray-100 hover:text-white hover:bg-gray-700/50 rounded-lg transition-all duration-200"
+                    aria-expanded={activeType === type}
                   >
                     <span className="font-medium">
                       {type.charAt(0).toUpperCase() + type.slice(1)}
                     </span>
-                    {activeType === type ? (
-                      <ChevronUp size={20} />
-                    ) : (
-                      <ChevronDown size={20} />
-                    )}
+                    <span className="transform transition-transform duration-200">
+                      {activeType === type ? (
+                        <ChevronUp size={18} />
+                      ) : (
+                        <ChevronDown size={18} />
+                      )}
+                    </span>
                   </button>
-                  {activeType === type && (
-                    <ul className="ml-4 mt-1 space-y-1">
+                  <div
+                    className={`mt-1 overflow-hidden transition-all duration-200 ${
+                      activeType === type ? 'max-h-96' : 'max-h-0'
+                    }`}
+                  >
+                    <ul className="pl-4 py-1 space-y-1">
                       {categories.map((category) => (
                         <li key={category}>
                           <Link
                             href={`/category-page${
-                              type == "movies" ? "" : "-"
+                              type === "movies" ? "" : "-"
                             }${
                               type === "korean Series"
                                 ? "kdrama"
-                                : type == "movies"
+                                : type === "movies"
                                 ? ""
                                 : type
                             }?category=${encodeURIComponent(
                               category
                             )}&limit=30&skip=1&currentPage=1`}
-                            className="block py-2 px-3 text-sm text-gray-300 hover:text-white hover:bg-gray-700 rounded transition-colors duration-200"
+                            className="block py-2 px-3 text-sm text-gray-300 hover:text-white hover:bg-gray-700/50 rounded-lg transition-colors duration-200"
                             onClick={toggleSidebar}
                           >
                             {category}
@@ -452,7 +492,7 @@ const MobileNav = () => {
                         </li>
                       ))}
                     </ul>
-                  )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -464,3 +504,4 @@ const MobileNav = () => {
 };
 
 export default MobileNav;
+

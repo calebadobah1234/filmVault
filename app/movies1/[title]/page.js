@@ -6,6 +6,7 @@ import Link from "next/link";
 import { JsonLd } from "react-schemaorg";
 import CommentSection from "@/app/components/CommentSection";
 import ImageWithFallback from "@/app/components/ImageWithFallback";
+import ViewCounter from "@/app/components/ViewCounter";
 import Script from "next/script";
 // import StreamingComponent from "@/app/components/StreamingComponent"
 import dynamic from 'next/dynamic';
@@ -161,6 +162,7 @@ const page = async ({ params }) => {
 
   return (
     <>
+    <ViewCounter itemId={data._id} specifier="Am" />
       <JsonLd
         item={{
           "@context": "https://schema.org",

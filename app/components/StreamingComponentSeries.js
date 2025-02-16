@@ -6,7 +6,7 @@ import { FaPlay, FaPause, FaVolumeUp, FaExpand, FaSpinner, FaClosedCaptioning, F
 import { FaRotate } from 'react-icons/fa6';
 import screenfull from 'screenfull';
 
-const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle,seasons2 }) => {
+const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle, seasons2 }) => {
 
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
@@ -35,7 +35,10 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle,seasons2 }) => {
   const [showSubtitleTooltip, setShowSubtitleTooltip] = useState(false);
   const [subtitleChangeMessage, setSubtitleChangeMessage] = useState('');
   const [showSubtitleChangeMessage, setShowSubtitleChangeMessage] = useState(false);
-
+  const [showNextEpisodeTooltip, setShowNextEpisodeTooltip] = useState(false); // State for next episode tooltip
+  const [showEpisodeStartTooltip, setShowEpisodeStartTooltip] = useState(false); // State for episode start tooltip
+  const [showFullscreenTooltip, setShowFullscreenTooltip] = useState(false); // State for fullscreen tooltip
+  const [lastTapTime, setLastTapTime] = useState(0); // For double tap detection
 
   const [selectedSeason, setSelectedSeason] = useState('1');
   const [selectedEpisode, setSelectedEpisode] = useState('1');
@@ -51,12 +54,19 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle,seasons2 }) => {
   const [subtitlesEnabled, setSubtitlesEnabled] = useState(true);
   const [prevVolume, setPrevVolume] = useState(1);
   const [currentSubtitleIndex, setCurrentSubtitleIndex] = useState(0);
+  const [isPlayButtonClicked, setIsPlayButtonClicked] = useState(false);
 
 
   const playerRef = useRef(null);
   const controlsRef = useRef(null);
   const containerRef = useRef(null);
   const bufferingTimeoutRef = useRef(null);
+  const nextEpisodeTooltipTimeoutRef = useRef(null);
+  const episodeStartTooltipTimeoutRef = useRef(null);
+  const fullscreenTooltipTimeoutRef = useRef(null);
+
+  
+
 
   const cleanSeriesTitle = (title) => {
     return title
@@ -66,8 +76,9 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle,seasons2 }) => {
   };
 
 
-   const fetchActualUrl = async (url) => {
+  const fetchActualUrl = async (url) => {
     console.log('Fetching actual URL for:', url);
+    setIsBuffering(true);
     try {
       const actualUrl = await fetch(`https://api5.mp3vault.xyz/getDownloadUrl?url=${url}`);
       const data = await actualUrl.json();
@@ -94,21 +105,21 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle,seasons2 }) => {
 
   const detectSeasonFromUrl = (filename) => {
     if (!filename) return null;
-    
+
     // First check for SXX pattern (e.g., S01, s02)
     const sPattern = /S(\d{1,2})/i;
     const sMatch = filename.match(sPattern);
     if (sMatch) return parseInt(sMatch[1]);
-  
+
     // Check for season in SXXEXX format
     const seasonFromEpisode = filename.match(/S(\d{1,2})E\d{1,3}/i);
     if (seasonFromEpisode) return parseInt(seasonFromEpisode[1]);
-  
+
     // Check for -sXX- pattern with dashes
     const dashPattern = /-s(\d{1,2})-/i;
     const dashMatch = filename.match(dashPattern);
     if (dashMatch) return parseInt(dashMatch[1]);
-  
+
     return null;
   };
 
@@ -119,7 +130,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle,seasons2 }) => {
       setSelectedSeason(initialSeason.seasonNumber.toString());
       setAvailableQualities(['smooth']);
       setSelectedQuality('smooth');
-      
+
       if (initialSeason.episodes) {
         const processedEpisodes = initialSeason.episodes.map(episode => ({
           ...episode,
@@ -136,10 +147,10 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle,seasons2 }) => {
     if (seasons && seasons.length > 0) {
       const initialSeason = seasons[0];
       setSelectedSeason(initialSeason.seasonNumber.toString());
-  
+
       const qualities = new Set();
       const allowedQualities = [480, 720, 1080]; // Allowed resolutions
-  
+
       // Handle both season formats
       if (initialSeason.resolutions) {
         initialSeason.resolutions.forEach(res => {
@@ -147,7 +158,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle,seasons2 }) => {
           if (folderQuality && allowedQualities.includes(parseInt(folderQuality))) {
             qualities.add(parseInt(folderQuality));
           }
-  
+
           res.episodes.forEach(episode => {
             const filenameQuality = detectQualityFromUrl(episode.downloadLink);
             if (filenameQuality && allowedQualities.includes(parseInt(filenameQuality))) {
@@ -166,28 +177,28 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle,seasons2 }) => {
           });
         });
       }
-  
+
       // Add "smooth" quality if seasons2 exists
       if (seasons2 && seasons2.length > 0) {
         qualities.add('smooth');
       }
-  
+
       // Sort qualities with "smooth" as the first option
       const sortedQualities = Array.from(qualities).sort((a, b) => {
         if (a === 'smooth') return -1; // Smooth first
         if (b === 'smooth') return 1;
         return a - b;
       });
-  
+
       setAvailableQualities(sortedQualities);
-  
+
       // Set default quality to "smooth" if available, otherwise the lowest quality
       if (seasons2 && seasons2.length > 0) {
         setSelectedQuality('smooth');
       } else if (sortedQualities.length > 0) {
         setSelectedQuality(sortedQualities[0].toString());
       }
-  
+
       // Handle initial episodes based on the selected quality
       if (seasons2 && seasons2.length > 0 && selectedQuality === 'smooth') {
         const initialSeason2 = seasons2[0];
@@ -419,52 +430,54 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle,seasons2 }) => {
 
   const detectEpisodeFromUrl = (filename) => {
     if (!filename) return null;
-  
+
     // First check for SXXEXX pattern (case insensitive)
     const sPattern = /S\d{1,2}E(\d{1,3})/i;
     const sMatch = filename.match(sPattern);
     if (sMatch) return parseInt(sMatch[1]);
-  
+
     // Then check for -sXXeXX- pattern with dashes
     const dashPattern = /-s\d{1,2}e(\d{1,3})-/i;
     const dashMatch = filename.match(dashPattern);
     if (dashMatch) return parseInt(dashMatch[1]);
-  
+
     // Existing detection patterns remain unchanged
     const ePattern = /[Ee](\d{1,3})/i;
     const eMatch = filename.match(ePattern);
     if (eMatch) return parseInt(eMatch[1]);
-  
+
     const bracketPattern = /\[(\d{1,3})\]/;
     const bracketMatch = filename.match(bracketPattern);
     if (bracketMatch) return parseInt(bracketMatch[1]);
-  
+
     return null;
   };
-  
+
   useEffect(() => {
     const updateEpisodes = () => {
       console.log('Updating episodes for season:', selectedSeason, 'quality:', selectedQuality);
       if (!selectedSeason) return;
-    
+
       // Determine which seasons to use based on the selected quality
       const currentSeasons = selectedQuality === 'smooth' ? seasons2 : seasons;
       if (!currentSeasons) return;
-    
+
       const season = currentSeasons.find(s => s.seasonNumber.toString() === selectedSeason);
       if (!season) return;
-    
+
       const collectedEpisodes = [];
       let hasExplicitEpisodeNumbers = false;
-    
+
       // Handle episodes for "smooth" quality (using seasons2)
       if (selectedQuality === 'smooth') {
         if (season.episodes) {
           season.episodes.forEach((episode, index) => {
-            collectedEpisodes.push({
-              ...episode,
-              episodeNumber: episode.episodeNumber || index + 1,
-            });
+            if (episode.downloadLink) { // Filter valid episodes
+              collectedEpisodes.push({
+                ...episode,
+                episodeNumber: episode.episodeNumber || index + 1,
+              });
+            }
           });
         }
       } else {
@@ -474,10 +487,10 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle,seasons2 }) => {
             resolution.episodes.forEach(episode => {
               const quality = detectQualityFromUrl(episode.downloadLink);
               console.log(`Resolution-based episode ${episode.downloadLink} quality: ${quality}`);
-    
-              if (quality === selectedQuality) {
+
+              if (quality === selectedQuality && episode.downloadLink) {
                 const filename = episode.downloadLink.split('/').pop();
-    
+
                 // Check if episodeNumber is explicitly provided
                 if (episode.episodeNumber) {
                   hasExplicitEpisodeNumbers = true;
@@ -499,11 +512,11 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle,seasons2 }) => {
             episode.downloadLinks.forEach(link => {
               const quality = link.quality.replace('دانلود ', '').replace('P', '');
               console.log(`DownloadLinks-based episode ${link.downloadLink} quality: ${quality}`);
-    
+
               if (quality === selectedQuality) {
                 const filename = link.downloadLink.split('/').pop();
                 const detectedEpisode = detectEpisodeFromUrl(filename);
-    
+
                 collectedEpisodes.push({
                   ...episode,
                   downloadLink: link.downloadLink,
@@ -515,7 +528,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle,seasons2 }) => {
           });
         }
       }
-    
+
       // Fallback: If no matches, collect all episodes
       if (collectedEpisodes.length === 0) {
         console.log('No quality matches, falling back to all episodes');
@@ -537,7 +550,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle,seasons2 }) => {
           });
         }
       }
-    
+
       // If no explicit episode numbers were provided, assign them sequentially
       if (!hasExplicitEpisodeNumbers) {
         collectedEpisodes.forEach((episode, index) => {
@@ -548,23 +561,24 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle,seasons2 }) => {
           }
         });
       }
-    
+
       // Sort and update episodes
-      collectedEpisodes.sort((a, b) => a.episodeNumber - b.episodeNumber);
-    
+      const validEpisodes = collectedEpisodes.filter(ep => ep.downloadLink);
+      validEpisodes.sort((a, b) => a.episodeNumber - b.episodeNumber);
+
       // Remove duplicates based on episodeNumber
       const uniqueEpisodes = [];
       const seenEpisodeNumbers = new Set();
-      for (const episode of collectedEpisodes) {
+      for (const episode of validEpisodes) {
         if (!seenEpisodeNumbers.has(episode.episodeNumber)) {
           uniqueEpisodes.push(episode);
           seenEpisodeNumbers.add(episode.episodeNumber);
         }
       }
-    
+
       console.log('Processed episodes:', uniqueEpisodes);
       setEpisodes(uniqueEpisodes);
-    
+
       // Update selected episode if needed
       if (uniqueEpisodes.length > 0 && !uniqueEpisodes.some(e => e.episodeNumber.toString() === selectedEpisode)) {
         const newEpisode = uniqueEpisodes[0].episodeNumber.toString();
@@ -585,11 +599,22 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle,seasons2 }) => {
         'Quality:', selectedQuality,
         'Episodes count:', episodes.length);
 
-      if (!selectedEpisode || !episodes.length) return;
+      if (!selectedEpisode || !episodes.length) {
+        setProcessingStatus('error');
+        setStreamingUrl(null);
+        return;
+      }
 
       const targetEpisode = episodes.find(e =>
         e.episodeNumber?.toString() === selectedEpisode
       );
+
+      if (!targetEpisode?.downloadLink) {
+        console.error('Invalid episode selected');
+        setProcessingStatus('error');
+        setStreamingUrl(null);
+        return;
+      }
 
       console.log('Found target episode:', targetEpisode);
 
@@ -600,8 +625,10 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle,seasons2 }) => {
       }
     };
 
-    processSelectedContent();
-  }, [selectedSeason, selectedEpisode, episodes, selectedQuality]);
+    if (isPlayButtonClicked) {
+      processSelectedContent();
+    }
+  }, [selectedSeason, selectedEpisode, episodes, selectedQuality, isPlayButtonClicked]);
 
   const detectQualityFromUrl = (url) => {
     // First check if quality is in folder structure
@@ -791,109 +818,109 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle,seasons2 }) => {
   }, [selectedEpisode]);
 
   // Function to process video through backend
-// Process video when quality, season, or episode changes
-const processVideo = async (url) => {
-  try {
-    const cleanedTitle = cleanSeriesTitle(movieTitle);
-    console.log("Starting video processing for URL:", url);
-    setProcessingStatus('checking');
-    setStreamingUrl(null);
+  // Process video when quality, season, or episode changes
+  const processVideo = async (url) => {
+    try {
+      const cleanedTitle = cleanSeriesTitle(movieTitle);
+      console.log("Starting video processing for URL:", url);
+      setProcessingStatus('checking');
+      setStreamingUrl(null);
 
-    if (!url) throw new Error('No URL provided for processing');
+      if (!url) throw new Error('No URL provided for processing');
 
-    // Handle URL processing for smooth quality
-    let processUrl = url;
-    if (selectedQuality === 'smooth') {
-      console.log('Smooth quality selected, fetching actual URL:', url);
-      const actualUrl = await fetchActualUrl(url);
-      if (!actualUrl) {
-        throw new Error('Failed to fetch actual URL for smooth quality');
+      // Handle URL processing for smooth quality
+      let processUrl = url;
+      if (selectedQuality === 'smooth') {
+        console.log('Smooth quality selected, fetching actual URL:', url);
+        const actualUrl = await fetchActualUrl(url);
+        if (!actualUrl) {
+          throw new Error('Failed to fetch actual URL for smooth quality');
+        }
+        console.log('Successfully fetched actual URL for smooth quality:', actualUrl);
+        processUrl = actualUrl;
       }
-      console.log('Successfully fetched actual URL for smooth quality:', actualUrl);
-      processUrl = actualUrl;
-    }
 
-    const originalFilename = processUrl.split('/').pop() || 'video';
-    console.log('Original filename:', originalFilename);
-    setOriginalFilename(originalFilename);
+      const originalFilename = processUrl.split('/').pop() || 'video';
+      console.log('Original filename:', originalFilename);
+      setOriginalFilename(originalFilename);
 
-    const sanitizedFilename = sanitizeFilename(originalFilename);
-    console.log('Sanitized filename:', sanitizedFilename);
+      const sanitizedFilename = sanitizeFilename(originalFilename);
+      console.log('Sanitized filename:', sanitizedFilename);
 
-    // File existence check
-    const initialFileCheck = await checkFileExists(sanitizedFilename);
-    console.log('Initial file check result:', initialFileCheck);
-    
-    if (initialFileCheck) {
-      const cdnUrl = `https://filmvault3.b-cdn.net/${sanitizedFilename}`;
-      console.log('File already exists, setting CDN URL:', cdnUrl);
-      setStreamingUrl(cdnUrl);
-      setProcessingStatus('ready');
-      return;
-    }
+      // File existence check
+      const initialFileCheck = await checkFileExists(sanitizedFilename);
+      console.log('Initial file check result:', initialFileCheck);
 
-    setProcessingStatus('downloading');
-    const encodedUrl = encodeURIComponent(processUrl);
-    const encodedFilename = encodeURIComponent(originalFilename);
-
-    // Use cleaned title in API call
-    const apiUrl = `https://api4.mp3vault.xyz/download?url=${encodedUrl}&filename=${encodedFilename}&movie=${encodeURIComponent(cleanedTitle)}`;
-    console.log('Initiating download with API URL:', apiUrl);
-
-    // Initiate the download
-    const downloadResponse = await fetch(apiUrl, { 
-      method: 'GET', 
-      headers: { 'Accept': 'application/json' },
-      mode: 'no-cors'
-    });
-    console.log('Download initiated');
-
-    // Retry logic with cleaned title
-    let retryCount = 0;
-    const maxRetries = 24;
-    const retryInterval = 10000; // 10 seconds
-
-    console.log('Starting file existence check retries');
-    while (retryCount < maxRetries) {
-      console.log(`Retry attempt ${retryCount + 1} of ${maxRetries}`);
-      const fileExists = await checkFileExists(sanitizedFilename);
-      
-      if (fileExists) {
-        const finalCdnUrl = `https://filmvault3.b-cdn.net/${sanitizedFilename}`;
-        console.log('File processing complete, setting final CDN URL:', finalCdnUrl);
-        setStreamingUrl(finalCdnUrl);
+      if (initialFileCheck) {
+        const cdnUrl = `https://filmvault3.b-cdn.net/${sanitizedFilename}`;
+        console.log('File already exists, setting CDN URL:', cdnUrl);
+        setStreamingUrl(cdnUrl);
         setProcessingStatus('ready');
         return;
       }
 
-      console.log(`File not ready yet, waiting ${retryInterval/1000} seconds before next check`);
-      await new Promise(resolve => setTimeout(resolve, retryInterval));
-      retryCount++;
-    }
+      setProcessingStatus('downloading');
+      const encodedUrl = encodeURIComponent(processUrl);
+      const encodedFilename = encodeURIComponent(originalFilename);
 
-    throw new Error(`File not available after ${maxRetries} retry attempts`);
-  } catch (error) {
-    console.error('Video processing error:', error);
-    setProcessingStatus('error');
-    
-    // Provide more specific error messages based on the error type
-    let errorMessage = 'Error processing video: ';
-    if (error.message.includes('Failed to fetch actual URL')) {
-      errorMessage += 'Unable to process smooth quality stream. Please try a different quality.';
-    } else if (error.message.includes('File not available after')) {
-      errorMessage += 'Video processing timed out. Please try again.';
-    } else {
-      errorMessage += error.message;
+      // Use cleaned title in API call
+      const apiUrl = `https://api4.mp3vault.xyz/download?url=${encodedUrl}&filename=${encodedFilename}&movie=${encodeURIComponent(cleanedTitle)}`;
+      console.log('Initiating download with API URL:', apiUrl);
+
+      // Initiate the download
+      const downloadResponse = await fetch(apiUrl, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+        mode: 'no-cors'
+      });
+      console.log('Download initiated');
+
+      // Retry logic with cleaned title
+      let retryCount = 0;
+      const maxRetries = 24;
+      const retryInterval = 10000; // 10 seconds
+
+      console.log('Starting file existence check retries');
+      while (retryCount < maxRetries) {
+        console.log(`Retry attempt ${retryCount + 1} of ${maxRetries}`);
+        const fileExists = await checkFileExists(sanitizedFilename);
+
+        if (fileExists) {
+          const finalCdnUrl = `https://filmvault3.b-cdn.net/${sanitizedFilename}`;
+          console.log('File processing complete, setting final CDN URL:', finalCdnUrl);
+          setStreamingUrl(finalCdnUrl);
+          setProcessingStatus('ready');
+          return;
+        }
+
+        console.log(`File not ready yet, waiting ${retryInterval / 1000} seconds before next check`);
+        await new Promise(resolve => setTimeout(resolve, retryInterval));
+        retryCount++;
+      }
+
+      throw new Error(`File not available after ${maxRetries} retry attempts`);
+    } catch (error) {
+      // console.error('Video processing error:', error);
+      // setProcessingStatus('error');
+
+      // Provide more specific error messages based on the error type
+      // let errorMessage = 'Error processing video: ';
+      // if (error.message.includes('Failed to fetch actual URL')) {
+      //   errorMessage += 'Unable to process smooth quality stream. Please try a different quality.';
+      // } else if (error.message.includes('File not available after')) {
+      //   errorMessage += 'Video processing timed out. Please try again.';
+      // } else {
+      //   errorMessage += error.message;
+      // }
+
+      // alert(errorMessage);
+    } finally {
+      // Additional cleanup or state reset if needed
+      if (bufferingTimeoutRef.current) {
+        clearTimeout(bufferingTimeoutRef.current);
+      }
     }
-    
-    alert(errorMessage);
-  } finally {
-    // Additional cleanup or state reset if needed
-    if (bufferingTimeoutRef.current) {
-      clearTimeout(bufferingTimeoutRef.current);
-    }
-  }
-};
+  };
 
 
 
@@ -1048,8 +1075,18 @@ const processVideo = async (url) => {
         }, 500);
       }
     }
-  };
 
+    // Episode completion tooltip logic
+    if (duration && state.played > 0.95 && !showNextEpisodeTooltip) {
+      setShowNextEpisodeTooltip(true);
+      nextEpisodeTooltipTimeoutRef.current = setTimeout(() => {
+        setShowNextEpisodeTooltip(false);
+      }, 5000); // Show for 5 seconds
+    } else if (state.played <= 0.95 && showNextEpisodeTooltip) {
+      setShowNextEpisodeTooltip(false);
+      clearTimeout(nextEpisodeTooltipTimeoutRef.current);
+    }
+  };
 
 
   const handleVideoClick = (e) => {
@@ -1063,9 +1100,18 @@ const processVideo = async (url) => {
   };
 
   const handlePlayPause = () => {
-    if (!hasStarted) setHasStarted(true);
+    if (!hasStarted) {
+      setHasStarted(true);
+      setIsPlayButtonClicked(true); // Trigger video processing
+    }
     setPlaying(!playing);
     showControlsWithTimeout();
+    if (!playing && !isFullscreen && !showFullscreenTooltip) {
+      setShowFullscreenTooltip(true);
+      fullscreenTooltipTimeoutRef.current = setTimeout(() => {
+        setShowFullscreenTooltip(false);
+      }, 5000); // Show tooltip for 5 seconds
+    }
   };
 
   const handleError = () => {
@@ -1078,6 +1124,15 @@ const processVideo = async (url) => {
     return () => {
       if (bufferingTimeoutRef.current) {
         clearTimeout(bufferingTimeoutRef.current);
+      }
+      if (nextEpisodeTooltipTimeoutRef.current) {
+        clearTimeout(nextEpisodeTooltipTimeoutRef.current);
+      }
+      if (episodeStartTooltipTimeoutRef.current) {
+        clearTimeout(episodeStartTooltipTimeoutRef.current);
+      }
+      if (fullscreenTooltipTimeoutRef.current) {
+        clearTimeout(fullscreenTooltipTimeoutRef.current);
       }
     };
   }, []);
@@ -1142,21 +1197,54 @@ const processVideo = async (url) => {
     return hh ? `${hh}:${mm}:${ss}` : `${mm}:${ss}`;
   };
 
+  // Episode start tooltip effect
+  useEffect(() => {
+    if (streamingUrl && playing) {
+      setShowEpisodeStartTooltip(true);
+      episodeStartTooltipTimeoutRef.current = setTimeout(() => {
+        setShowEpisodeStartTooltip(false);
+      }, 3000); // Show for 3 seconds
+    } else {
+      setShowEpisodeStartTooltip(false);
+      clearTimeout(episodeStartTooltipTimeoutRef.current);
+    }
+  }, [streamingUrl, playing, selectedSeason, selectedEpisode]);
+
+  // Double tap fullscreen
+  const handleDoubleTap = () => {
+    if ((isAndroid || isMobile) && !isFullscreen) {
+      handleFullscreen();
+    }
+  };
+
+  const handleTouchStart = (e) => {
+    const currentTime = new Date().getTime();
+    const timeDiff = currentTime - lastTapTime;
+
+    if (timeDiff < 300 && timeDiff > 0) { // 300ms is the threshold for double tap
+      handleDoubleTap();
+      setLastTapTime(0); // Reset last tap time after double tap
+    } else {
+      setLastTapTime(currentTime);
+      showControlsWithTimeout(); // Show controls on single tap as well
+    }
+  };
+
 
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-4 mb-4 mt-5">
-      <select
-  value={selectedSeason}
-  onChange={(e) => setSelectedSeason(e.target.value)}
-  className="bg-gray-700 text-white px-4 py-2 rounded-md"
->
-  {(seasons?.length ? seasons : seasons2 || []).map(season => (
-    <option key={`season-select-top-${season.seasonNumber}`} value={season.seasonNumber}>
-      Season {season.seasonNumber}
-    </option>
-  ))}
-</select>
+        <select
+          value={selectedSeason}
+          onChange={(e) => setSelectedSeason(e.target.value)}
+          className="bg-gray-700 text-white px-4 py-2 rounded-md"
+        >
+          {(seasons?.length ? seasons : seasons2 || []).map(season => (
+            <option key={`season-select-top-${season.seasonNumber}`} value={season.seasonNumber}>
+              Season {season.seasonNumber}
+            </option>
+          ))}
+        </select>
 
         <select
           value={selectedEpisode}
@@ -1176,9 +1264,22 @@ const processVideo = async (url) => {
         className="bg-gray-900 rounded-xl overflow-hidden shadow-xl relative group w-full"
         onMouseMove={showControlsWithTimeout}
         onMouseLeave={() => !isFullscreen && hideControls()}
+        onTouchStart={handleTouchStart} // Add touch start for double tap and controls
         style={isAndroid ? { paddingBottom: '50px' } : {}} // Conditionally apply padding for Android
       >
         <div className={`flex items-center justify-center bg-gray-900 ${isFullscreen ? 'h-screen w-screen' : 'aspect-video'}`}> {/* Removed relative class here */}
+          
+        {!isPlayButtonClicked && (
+    <div className="absolute inset-0 flex items-center justify-center cursor-pointer z-10">
+      <button 
+        onClick={handlePlayPause}
+        className="text-white bg-black/50 rounded-full p-8 hover:bg-black/70 transition-all"
+      >
+        <FaPlay className="text-6xl" />
+      </button>
+    </div>
+  )}
+          
           {processingStatus === 'downloading' && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-20">
               <FaSpinner className="animate-spin text-white text-4xl mb-4" />
@@ -1202,7 +1303,7 @@ const processVideo = async (url) => {
                     {/* Pulsating Outline */}
                     {!hasStarted && (
                       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform -scale-110 group-hover:scale-125 rounded-full bg-blue-500 opacity-75 animate-pulse-fast"
-                      style={{ padding: 'calc(48px * 0.6)' }} // Adjust padding to match icon size
+                        style={{ padding: 'calc(48px * 0.6)' }} // Adjust padding to match icon size
                       ></div>
                     )}
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/50 rounded-full p-4 transition-transform group-hover:scale-110">
@@ -1334,6 +1435,24 @@ const processVideo = async (url) => {
             </div>
           )}
 
+          {showNextEpisodeTooltip && (
+            <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 bg-black/60 text-white text-sm p-2 rounded-md z-20">
+              Episode about to end. Use episode dropdown to select next episode.
+            </div>
+          )}
+
+          {showEpisodeStartTooltip && (
+            <div className="absolute top-10 left-1/2 transform -translate-x-1/2 bg-black/60 text-white text-sm p-2 rounded-md z-20">
+              Playing Season {selectedSeason}, Episode {selectedEpisode}
+            </div>
+          )}
+
+          {showFullscreenTooltip && !isFullscreen && hasStarted && (
+            <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 bg-black/60 text-white text-sm p-2 rounded-md z-20">
+              Double tap for fullscreen
+            </div>
+          )}
+
 
           {isSubtitleLoading && (
             <div className="absolute bottom-20 left-4 text-white text-sm bg-black/50 px-2 py-1 rounded">
@@ -1450,17 +1569,17 @@ const processVideo = async (url) => {
               </div>
 
               <span className='max-md:hidden'>
-              <select
-  value={selectedSeason}
-  onChange={(e) => setSelectedSeason(e.target.value)}
-  className="bg-gray-700 text-white px-4 py-2 rounded-md mr-1"
->
-  {(seasons?.length ? seasons : seasons2 || []).map(season => (
-    <option key={`season-select-control-${season.seasonNumber}`} value={season.seasonNumber}>
-      Season {season.seasonNumber}
-    </option>
-  ))}
-</select>
+                <select
+                  value={selectedSeason}
+                  onChange={(e) => setSelectedSeason(e.target.value)}
+                  className="bg-gray-700 text-white px-4 py-2 rounded-md mr-1"
+                >
+                  {(seasons?.length ? seasons : seasons2 || []).map(season => (
+                    <option key={`season-select-control-${season.seasonNumber}`} value={season.seasonNumber}>
+                      Season {season.seasonNumber}
+                    </option>
+                  ))}
+                </select>
 
                 <select
                   value={selectedEpisode}
@@ -1475,16 +1594,16 @@ const processVideo = async (url) => {
                 </select>
 
                 <select
-  value={selectedQuality}
-  onChange={(e) => setSelectedQuality(e.target.value)}
-  className="bg-gray-700 text-white px-4 py-2 rounded-md"
->
-  {availableQualities.map(quality => (
-    <option key={quality} value={quality}>
-      {quality === 'smooth' ? 'Smooth' : `${quality}p`}
-    </option>
-  ))}
-</select>
+                  value={selectedQuality}
+                  onChange={(e) => setSelectedQuality(e.target.value)}
+                  className="bg-gray-700 text-white px-4 py-2 rounded-md"
+                >
+                  {availableQualities.map(quality => (
+                    <option key={quality} value={quality}>
+                      {quality === 'smooth' ? 'Smooth' : `${quality}p`}
+                    </option>
+                  ))}
+                </select>
               </span>
 
               {isMobile && isFullscreen && (

@@ -1,5 +1,6 @@
 import { use } from "react";
 import LatestItems from "./components/LatestItems";
+import TrendingItems from "./components/TrendingItems";
 
 const BASE_URL = "https://api3.mp3vault.xyz";
 
@@ -55,6 +56,16 @@ async function fetchAllData() {
       key: "actionMovies",
       options: { next: { revalidate: 21600 } },
     },
+    {
+      url: `${BASE_URL}/sort-viewsAm`,
+      key: "trendingMovies",
+      options: { next: { revalidate: 0 } },
+    },
+    {
+      url: `${BASE_URL}/sort-viewsAiom`,
+      key: "trendingSeries",
+      options: { next: { revalidate: 0 } },
+    },
   ];
 
   const results = await Promise.all(
@@ -73,19 +84,28 @@ export default function Home() {
     return <div>Error loading data. Please try again later.</div>;
   }
 
-  const { moviesData, animeData, seriesData, actionMovies, kdramaData } = data;
+  const { moviesData, animeData, seriesData, actionMovies, kdramaData,trendingMovies,trendingSeries } = data;
 
   return (
     <div>
       <div className="mt-5 flex justify-center">
-        <div>
-          {/* <TrendingItems
-            data={moviesData}
-            title="Trending"
+      <div className="w-full">
+        <div >
+          <TrendingItems
+            data={trendingMovies}
+            title="Trending Movies"
             flex={false}
-            itemsToShow={14}
+            itemsToShow={20}
             showMoreCategory="all"
-          /> */}
+          />
+          <TrendingItems
+            data={trendingSeries}
+            title="Trending Series"
+            flex={false}
+            itemsToShow={20}
+            showMoreCategory="all"
+          />
+          
           <LatestItems
             data={moviesData}
             title="Latest Movies"
@@ -125,7 +145,7 @@ export default function Home() {
             flex={true}
             showMoreCategory="action"
             itemsToShow={14}
-          />
+          /></div>
         </div>
       </div>
     </div>

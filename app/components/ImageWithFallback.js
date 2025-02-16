@@ -9,7 +9,7 @@ const ImageWithFallback = ({ src, alt, ...props }) => {
   if (error) {
     return (
       <img
-        src={src}
+        src={src='N/A'? 'https://th.bing.com/th/id/OIP.vemXta-UoBudoiVJZZgKZgHaHa?rs=1&pid=ImgDetMain' : src}
         alt={alt}
         {...props}
         onError={(e) => {

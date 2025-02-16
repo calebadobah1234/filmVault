@@ -8,7 +8,7 @@ import ImageWithFallback from "@/app/components/ImageWithFallback";
 import Script from "next/script";
 import AdScript from "@/app/components/Adscript";
 import EnhancedSeriesStreamingComponent from "@/app/components/StreamingComponentSeries";
-
+import ViewCounter from "@/app/components/ViewCounter";
 // Normalize seasons data function
 const normalizeSeasons = (seasons) => {
   if (!seasons) return [];
@@ -135,6 +135,7 @@ const page = async ({ params }) => {
 
   return (
     <>
+    <ViewCounter itemId={data._id} specifier="Aiom" />
       <JsonLd
         item={{
           "@context": "https://schema.org",

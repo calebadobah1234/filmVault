@@ -54,14 +54,27 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
   const [subtitleChangeMessage, setSubtitleChangeMessage] = useState('');
   const [showSubtitleChangeMessage, setShowSubtitleChangeMessage] = useState(false);
   const [isAndroid, setIsAndroid] = useState(false); // New state to detect Android
+  const [showFullscreenTooltip, setShowFullscreenTooltip] = useState(false); // State for fullscreen tooltip
+  const [fullscreenTooltipTimeoutRef] = useState(useRef(null));
+  const [lastTapTime, setLastTapTime] = useState(0); // For double tap detection
+  const [showInitialPlayButton, setShowInitialPlayButton] = useState(true);
+  const [processingInitiated, setProcessingInitiated] = useState(false);
 
 
   const playerRef = useRef(null);
   const controlsRef = useRef(null);
   const containerRef = useRef(null);
 
+  const handleInitialPlay = () => {
+    setShowInitialPlayButton(false);
+    setProcessingInitiated(true);
+    setPlaying(true);
+    setHasStarted(true);
+  };
+
   const fetchActualUrl = async (url) => {
     console.log('Fetching actual URL for:', url);
+    setIsBuffering(true);
     try {
       const actualUrl = await fetch(`https://api5.mp3vault.xyz/getDownloadUrl?url=${url}`);
       const data = await actualUrl.json();
@@ -165,6 +178,9 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
       cancelActiveRequest();
       if (processingTimeoutRef.current) {
         clearTimeout(processingTimeoutRef.current);
+      }
+      if (fullscreenTooltipTimeoutRef.current) {
+        clearTimeout(fullscreenTooltipTimeoutRef.current);
       }
     };
   }, []);
@@ -823,81 +839,79 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
 
   useEffect(() => {
     const processSelectedQuality = async () => {
-      if (selectedQuality) {
-        cancelActiveRequest();
+      if (!processingInitiated || !selectedQuality) return;
 
-        // Handle auto quality selection
-        if (selectedQuality === 'auto') {
-          if (mainSource) {
-            try {
-              await processVideo(mainSource, activeRequestRef.current?.signal);
-            } catch (error) {
-              if (error.message !== 'Request aborted') {
-                console.error('Error processing video:', error);
-              }
-            }
-            return;
-          } else if (naijaRocks) {
-            try {
-              const naijaUrl = await fetchActualUrlNaija(naijaRocks);
-              if (naijaUrl) {
-                await processVideo(naijaUrl, activeRequestRef.current?.signal);
-              }
-            } catch (error) {
-              if (error.message !== 'Request aborted') {
-                console.error('Error processing naija video:', error);
-              }
-            }
-            return;
-          }
-        }
+      cancelActiveRequest();
 
-        // Otherwise, proceed with regular quality selection
-        let selectedSource = null;
-        let sourceType = 'sources';
-
-        selectedSource = sources?.find(s => {
-          const resolution = getResolutionNumber(s.quality);
-          return resolution.toString() === selectedQuality;
-        });
-
-        if (!selectedSource) {
-          selectedSource = sources2?.find(s => {
-            const resolution = getResolutionNumber(s.quality);
-            return resolution.toString() === selectedQuality;
-          });
-          sourceType = 'sources2';
-        }
-
-        if (selectedSource?.downloadLink) {
-          if (selectedSource.downloadLink.includes('dl4.sermovie')) {
-            setProcessingStatus('blocked');
-            setErrorMessage('Video will soon be available for streaming');
-            return;
-          }
-
-          setCurrentSourcesType(sourceType);
-
-          const controller = new AbortController();
-          activeRequestRef.current = controller;
-
+      if (selectedQuality === 'auto') {
+        if (mainSource) {
           try {
-            await processVideo(selectedSource.downloadLink, controller.signal);
+            await processVideo(mainSource, activeRequestRef.current?.signal);
           } catch (error) {
             if (error.message !== 'Request aborted') {
               console.error('Error processing video:', error);
             }
           }
-        } else {
-          setStreamingUrl(null);
-          setProcessingStatus('error');
-          setErrorMessage('No source available for selected quality.');
+          return;
+        } else if (naijaRocks) {
+          try {
+            const naijaUrl = await fetchActualUrlNaija(naijaRocks);
+            if (naijaUrl) {
+              await processVideo(naijaUrl, activeRequestRef.current?.signal);
+            }
+          } catch (error) {
+            if (error.message !== 'Request aborted') {
+              console.error('Error processing naija video:', error);
+            }
+          }
+          return;
         }
+      }
+
+      let selectedSource = null;
+      let sourceType = 'sources';
+
+      selectedSource = sources?.find(s => {
+        const resolution = getResolutionNumber(s.quality);
+        return resolution.toString() === selectedQuality;
+      });
+
+      if (!selectedSource) {
+        selectedSource = sources2?.find(s => {
+          const resolution = getResolutionNumber(s.quality);
+          return resolution.toString() === selectedQuality;
+        });
+        sourceType = 'sources2';
+      }
+
+      if (selectedSource?.downloadLink) {
+        if (selectedSource.downloadLink.includes('dl4.sermovie')) {
+          setProcessingStatus('blocked');
+          setErrorMessage('Video will soon be available for streaming');
+          return;
+        }
+
+        setCurrentSourcesType(sourceType);
+
+        const controller = new AbortController();
+        activeRequestRef.current = controller;
+
+        try {
+          await processVideo(selectedSource.downloadLink, controller.signal);
+        } catch (error) {
+          if (error.message !== 'Request aborted') {
+            console.error('Error processing video:', error);
+          }
+        }
+      } else {
+        setStreamingUrl(null);
+        setProcessingStatus('error');
+        setErrorMessage('No source available for selected quality.');
       }
     };
 
     processSelectedQuality();
-  }, [selectedQuality, sources, sources2, mainSource, naijaRocks]);
+  }, [selectedQuality, processingInitiated, sources, sources2, mainSource, naijaRocks]);
 
 
 
@@ -1110,6 +1124,12 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
     if (!hasStarted) setHasStarted(true);
     setPlaying(!playing);
     showControlsWithTimeout();
+    if (!playing && !isFullscreen && hasStarted && !showFullscreenTooltip) {
+      setShowFullscreenTooltip(true);
+      fullscreenTooltipTimeoutRef.current = setTimeout(() => {
+        setShowFullscreenTooltip(false);
+      }, 5000); // Show tooltip for 5 seconds
+    }
   };
 
   const handleError = () => {
@@ -1183,16 +1203,54 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
     return hh ? `${hh}:${mm}:${ss}` : `${mm}:${ss}`;
   };
 
+  // Double tap fullscreen
+  const handleDoubleTap = () => {
+    if ((isAndroid || isMobile) && !isFullscreen) {
+      handleFullscreen();
+    }
+  };
+
+  const handleTouchStart = (e) => {
+    const currentTime = new Date().getTime();
+    const timeDiff = currentTime - lastTapTime;
+
+    if (timeDiff < 300 && timeDiff > 0) { // 300ms is the threshold for double tap
+      handleDoubleTap();
+      setLastTapTime(0); // Reset last tap time after double tap
+    } else {
+      setLastTapTime(currentTime);
+      showControlsWithTimeout(); // Show controls on single tap as well
+    }
+  };
+
+
   return (
     <div
       ref={containerRef}
       className="bg-black rounded-xl overflow-hidden shadow-xl relative group"
       onMouseMove={showControlsWithTimeout}
       onMouseLeave={() => !isFullscreen && hideControls()}
+      onTouchStart={handleTouchStart} // Add touch start for double tap and controls
       style={isAndroid ? { paddingBottom: '50px' } : {}} // Add bottom padding for Android
     >
       <div className={`flex items-center justify-center bg-black ${isFullscreen ? 'h-screen w-screen' : 'aspect-video'}`}> {/* Removed relative class here */}
         {/* Processing status: blocked */}
+        {showInitialPlayButton && (
+          <div className="absolute inset-0 flex items-center justify-center cursor-pointer z-10">
+            <button
+              onClick={handleInitialPlay}
+              className="group relative"
+              aria-label="Start video"
+            >
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform -scale-110 group-hover:scale-125 rounded-full bg-blue-500 opacity-75 animate-pulse-fast"
+                style={{ padding: 'calc(48px * 0.6)' }}
+              ></div>
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/50 rounded-full p-4 transition-transform group-hover:scale-110">
+                <FaPlay className="text-white text-4xl" />
+              </div>
+            </button>
+          </div>
+        )}
         {processingStatus === 'blocked' && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80">
             <div className="text-white text-lg text-center p-4">
@@ -1385,6 +1443,13 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
             </button>
           </div>
         )}
+
+        {showFullscreenTooltip && hasStarted && !isFullscreen && playing && (
+          <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 bg-black/60 text-white text-sm p-2 rounded-md z-20">
+            Double tap for fullscreen
+          </div>
+        )}
+
 
         {/* Bottom controls */}
         <div
