@@ -1,28 +1,25 @@
-"use client";
+"use client"
 
-import React, { useState } from "react";
-import Image from "next/image";
+import React, { useState } from 'react';
 
-const ImageWithFallback = ({ src, alt, ...props }) => {
-  const [error, setError] = useState(false);
+const ImageWithFallback = ({ src, title, fallbackUrl }) => {
+  const [imgSrc, setImgSrc] = useState(src);
 
-  if (error) {
-    return (
-      <img
-        src={src='N/A'? 'https://th.bing.com/th/id/OIP.vemXta-UoBudoiVJZZgKZgHaHa?rs=1&pid=ImgDetMain' : src}
-        alt={alt}
-        {...props}
-        onError={(e) => {
-          e.target.onerror = null; // Prevent infinite loop
-          e.target.src =
-            "https://th.bing.com/th/id/OIP.vemXta-UoBudoiVJZZgKZgHaHa?rs=1&pid=ImgDetMain"; // Replace with your placeholder image path
-        }}
-      />
-    );
-  }
+  const handleError = () => {
+    setImgSrc('https://th.bing.com/th/id/OIP.vemXta-UoBudoiVJZZgKZgHaHa?rs=1&pid=ImgDetMain');
+  };
 
   return (
-    <Image src={src} alt={alt} {...props} onError={() => setError(true)} />
+    <img
+      src={imgSrc}
+      alt={title || "Movie poster"}
+      className="rounded-md transition duration-500 ease-in-out transform group-hover:brightness-75 relative w-full h-full object-cover aspect-[2/3]"
+      width={180}
+      height={250}
+      onError={handleError}
+      placeholder="blur"
+      blurDataURL="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mN8/+F9PQAI8wNPvd7POQAAAABJRU5ErkJggg=="
+    />
   );
 };
 

@@ -149,7 +149,7 @@ const Searchbar = (props) => {
                       <div className="flex items-center px-4 py-3 cursor-pointer">
                         {(item.img || item.imageUrl) && (
                           <div className="flex-shrink-0">
-                            <ImageWithFallback
+                            <img
                               src={
                                 item.type == "aioMovie" ||
                                 item.type == "aioAnime" ||
@@ -163,7 +163,7 @@ const Searchbar = (props) => {
                                   ? `/images1/${sanitizedTitle}`
                                   : item.img
                               }
-                              alt={item.title}
+                              // alt={item.title}
                               width={45}
                               height={45}
                               className="rounded object-cover"
