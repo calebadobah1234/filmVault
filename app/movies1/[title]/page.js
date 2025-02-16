@@ -157,7 +157,7 @@ const page = async ({ params }) => {
     data.title
   );
 
-  
+  console.log(`pagapaga :${data.downloadPageUrl}`)
   
 
   return (

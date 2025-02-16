@@ -9,7 +9,7 @@ import { act } from 'react';
 
 
 const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,naijaRocks }) => {
-
+console.log(`mainsuu`,mainSource)
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
   const [played, setPlayed] = useState(0);
@@ -802,29 +802,30 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
       availableQualitiesSet.add('auto');
     }
 
-    // Add other qualities from sources
-    const qualitiesFromSources1 = sources?.map(source => {
-      const resolution = getResolutionNumber(source.quality);
-      return resolution ? resolution.toString() : null;
-    }).filter(Boolean) || [];
-    qualitiesFromSources1.forEach(q => availableQualitiesSet.add(q));
-
+    // Add qualities from sources2 first (higher priority)
     const qualitiesFromSources2 = sources2?.map(source => {
       const resolution = getResolutionNumber(source.quality);
       return resolution ? resolution.toString() : null;
     }).filter(Boolean) || [];
     qualitiesFromSources2.forEach(q => availableQualitiesSet.add(q));
 
+    // Then add qualities from sources if they don't already exist
+    const qualitiesFromSources1 = sources?.map(source => {
+      const resolution = getResolutionNumber(source.quality);
+      return resolution ? resolution.toString() : null;
+    }).filter(Boolean) || [];
+    qualitiesFromSources1.forEach(q => availableQualitiesSet.add(q));
+
     const availableQualities = Array.from(availableQualitiesSet).sort((a, b) => {
       if (a === 'auto') return -1;
       if (b === 'auto') return 1;
-      return parseInt(a) - parseInt(b);
+      return parseInt(a) - parseInt(b); // Sort in descending order
     });
 
     console.log("Available qualities:", availableQualities);
     setQualities(availableQualities);
 
-    // Set initial quality to 'auto' if mainSource or naijaRocks exists, otherwise first available quality
+    // Set initial quality to 'auto' if mainSource or naijaRocks exists, otherwise highest available quality
     if (availableQualities.length > 0) {
       const initialQuality = (mainSource || naijaRocks) ? 'auto' : availableQualities[0];
       console.log("Setting initial quality:", initialQuality);
@@ -868,20 +869,20 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
         }
       }
 
-      let selectedSource = null;
-      let sourceType = 'sources';
-
-      selectedSource = sources?.find(s => {
+      // Check sources2 first (higher priority)
+      let selectedSource = sources2?.find(s => {
         const resolution = getResolutionNumber(s.quality);
         return resolution.toString() === selectedQuality;
       });
+      let sourceType = 'sources2';
 
+      // If not found in sources2, check sources
       if (!selectedSource) {
-        selectedSource = sources2?.find(s => {
+        selectedSource = sources?.find(s => {
           const resolution = getResolutionNumber(s.quality);
           return resolution.toString() === selectedQuality;
         });
-        sourceType = 'sources2';
+        sourceType = 'sources';
       }
 
       if (selectedSource?.downloadLink) {

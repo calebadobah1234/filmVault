@@ -52,8 +52,18 @@ async function fetchAllData() {
       options: { next: { revalidate: 21600 } },
     },
     {
-      url: `${BASE_URL}/get-category-dataAm?category=action&limit=20&skip=0`,
+      url: `${BASE_URL}/get-category-dataAm?category=action&limit=30&skip=0`,
       key: "actionMovies",
+      options: { next: { revalidate: 21600 } },
+    },
+    {
+      url: `${BASE_URL}/get-category-dataAm?category=comedy&limit=30&skip=0`,
+      key: "comedyMovies",
+      options: { next: { revalidate: 21600 } },
+    },
+    {
+      url: `${BASE_URL}/get-category-dataAiom?category=comedy&limit=30&skip=0`,
+      key: "comedySeries",
       options: { next: { revalidate: 21600 } },
     },
     {
@@ -84,8 +94,8 @@ export default function Home() {
     return <div>Error loading data. Please try again later.</div>;
   }
 
-  const { moviesData, animeData, seriesData, actionMovies, kdramaData,trendingMovies,trendingSeries } = data;
-
+  const { moviesData, animeData, seriesData, actionMovies, kdramaData,trendingMovies,trendingSeries,comedySeries,comedyMovies } = data;
+console.log(`actionMovies`,actionMovies)
   return (
     <div>
       <div className="mt-5 flex justify-center">
@@ -96,56 +106,63 @@ export default function Home() {
             title="Trending Movies"
             flex={false}
             itemsToShow={20}
-            showMoreCategory="all"
           />
           <TrendingItems
             data={trendingSeries}
             title="Trending Series"
             flex={false}
             itemsToShow={20}
-            showMoreCategory="all"
+          />
+          <TrendingItems
+            data={actionMovies?.items}
+            title="Action Movies"
+            flex={false}
+            itemsToShow={30}
+          />
+          <TrendingItems
+            data={comedyMovies?.items}
+            title="Comedy Movies"
+            flex={false}
+            itemsToShow={30}
           />
           
-          <LatestItems
+          <TrendingItems
             data={moviesData}
             title="Latest Movies"
-            flex={true}
-            itemsToShow={14}
-            showMoreCategory="all"
+            flex={false}
+            itemsToShow={30}
           />
-          <LatestItems
+          <TrendingItems
             data={seriesData}
             title="Series"
-            flex={true}
-            itemsToShow={14}
-            showMoreCategory="all"
+            flex={false}
+            itemsToShow={20}
             series={true}
           />
-          <LatestItems
+          <TrendingItems
+            data={comedySeries?.items}
+            title="Comedy Series"
+            flex={false}
+            itemsToShow={20}
+            series={true}
+          />
+          <TrendingItems
             data={animeData}
             title="Anime"
-            flex={true}
-            itemsToShow={14}
-            showMoreCategory="all"
+            flex={false}
+            itemsToShow={20}
             anime={true}
           />
-          <LatestItems
+          <TrendingItems
             data={kdramaData}
             title="Korean Series"
-            flex={true}
-            itemsToShow={14}
-            showMoreCategory="all"
+            flex={false}
+            itemsToShow={20}
             kdrama={true}
           />
+          
 
-          <LatestItems
-            data={actionMovies?.items}
-            title="Action"
-            link={true}
-            flex={true}
-            showMoreCategory="action"
-            itemsToShow={14}
-          /></div>
+          </div>
         </div>
       </div>
     </div>

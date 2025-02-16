@@ -13,16 +13,14 @@ const sanitizeTitle = (title) => {
 const fallbackImageUrl = "https://th.bing.com/th/id/OIP.vemXta-UoBudoiVJZZgKZgHaHa?rs=1&pid=ImgDetMain";
 
 const getImagePath = (item) => {
-  if (
-    item.type === "aioMovie" ||
-    item.type === "aioAnime" ||
-    item.type === "aioKdrama" ||
-    item.type === "moviePovie" ||
-    item.type === "series"
-  ) {
+  if (item.type === "aioMovie" || 
+      item.type === "aioAnime" || 
+      item.type === "aioKdrama" || 
+      item.type === "moviePovie" || 
+      item.type === "series") {
     return item.imageUrl || fallbackImageUrl;
   }
-
+  
   if (item.imageUrl && item.imageUrl.includes("m.media-amazon")) {
     return item.imageUrl;
   }
@@ -115,7 +113,7 @@ const LatestItems = (props) => {
             return (
               <div
                 key={item._id}
-                className="aspect-[9/16] max-w-[200px] group flex-none h-[380px] relative md:mr-5 mr-1 cursor-pointer overflow-hidden transition-transform duration-300 ease-in-out hover:scale-105 w-[180px] max-md:w-[calc(50%-0.5rem)]"
+                className=" max-w-[200px] group flex-none  relative md:mr-5 mr-1 cursor-pointer overflow-hidden transition-transform duration-300 ease-in-out hover:scale-105 w-[180px] max-md:w-[calc(50%-0.5rem)]"
               >
                 <div className="relative w-full">
                   <Link
@@ -162,7 +160,7 @@ const LatestItems = (props) => {
                 </div>
 
                 <div
-                  className={`absolute left-0 bottom-16 max-sm:bottom-28 text-blue-300 group-hover:text-white group-hover:bg-yellow-500 rounded-sm ml-3 bg-red-500 px-2 py-1 text-xs transition-all duration-300 ease-in-out transform group-hover:translate-y-1 mb-14`}
+                  className={`absolute left-0 bottom-1  text-blue-300 group-hover:text-white group-hover:bg-yellow-500 rounded-sm ml-3 bg-red-500 px-2 py-1 text-xs transition-all duration-300 ease-in-out transform group-hover:translate-y-1 mb-14`}
                 >
                   <p>
                     {item.categories[0]
@@ -173,7 +171,7 @@ const LatestItems = (props) => {
 
                 {item.imdbRating || imdb ? (
                   <div
-                    className={`absolute right-0 bottom-16 max-sm:bottom-28 text-red-500 rounded-sm mr-3 bg-yellow-500 px-2 py-1 text-xs group-hover:text-white group-hover:bg-red-500 transition-all duration-300 ease-in-out transform group-hover:translate-y-1 mb-14`}
+                    className={`absolute right-0 bottom-1 text-red-500 rounded-sm mr-3 bg-yellow-500 px-2 py-1 text-xs group-hover:text-white group-hover:bg-red-500 transition-all duration-300 ease-in-out transform group-hover:translate-y-1 mb-14`}
                   >
                     <p>
                       {item.imdbRating ? item.imdbRating : imdb}
@@ -184,7 +182,7 @@ const LatestItems = (props) => {
                   <></>
                 )}
 
-                <div className="absolute text-black font-sans font-bold antialiased text-sm transition-colors duration-300 ease-in-out group-hover:text-green-400 w-full">
+                <div className=" text-black font-sans font-bold antialiased text-sm transition-colors duration-300 ease-in-out group-hover:text-green-400 w-full">
                   <div className="p-2">
                     <Link
                       href={
