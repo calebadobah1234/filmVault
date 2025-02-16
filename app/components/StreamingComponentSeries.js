@@ -55,7 +55,8 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle, seasons2 }) => 
   const [prevVolume, setPrevVolume] = useState(1);
   const [currentSubtitleIndex, setCurrentSubtitleIndex] = useState(0);
   const [isPlayButtonClicked, setIsPlayButtonClicked] = useState(false);
-
+  const [lastClickTime, setLastClickTime] = useState(0);
+const clickTimeoutRef = useRef(null);
 
   const playerRef = useRef(null);
   const controlsRef = useRef(null);
@@ -1045,6 +1046,12 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle, seasons2 }) => 
     }
   };
 
+  const handleDoubleClick = () => {
+    if (!isMobile) { // Only trigger on desktop
+      handleFullscreen();
+    }
+  };
+
   const handleBuffer = () => {
     if (isPlayerReady && videoMetadataLoaded) {
       setIsBuffering(true);
@@ -1090,13 +1097,31 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle, seasons2 }) => 
 
 
   const handleVideoClick = (e) => {
-
+    // Prevent click from triggering if user was dragging/seeking
     if (seeking) return;
-
-
+  
+    // Don't trigger if click was on a control element
     if (controlsRef.current && controlsRef.current.contains(e.target)) return;
-
-    handlePlayPause();
+  
+    const currentTime = new Date().getTime();
+    const timeDiff = currentTime - lastClickTime;
+  
+    // Clear any existing timeout
+    if (clickTimeoutRef.current) {
+      clearTimeout(clickTimeoutRef.current);
+    }
+  
+    if (timeDiff < 300) { // 300ms threshold for double click
+      // Handle double click
+      handleFullscreen();
+      setLastClickTime(0);
+    } else {
+      // Set new timeout for single click
+      clickTimeoutRef.current = setTimeout(() => {
+        // handlePlayPause();
+      }, 200); // Wait 200ms before triggering single click action
+      setLastClickTime(currentTime);
+    }
   };
 
   const handlePlayPause = () => {
@@ -1265,6 +1290,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle, seasons2 }) => 
         onMouseMove={showControlsWithTimeout}
         onMouseLeave={() => !isFullscreen && hideControls()}
         onTouchStart={handleTouchStart} // Add touch start for double tap and controls
+        onClick={handleVideoClick}
         style={isAndroid ? { paddingBottom: '50px' } : {}} // Conditionally apply padding for Android
       >
         <div className={`flex items-center justify-center bg-gray-900 ${isFullscreen ? 'h-screen w-screen' : 'aspect-video'}`}> {/* Removed relative class here */}

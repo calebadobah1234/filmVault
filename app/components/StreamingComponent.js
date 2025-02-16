@@ -59,6 +59,8 @@ console.log(`mainsuu`,mainSource)
   const [lastTapTime, setLastTapTime] = useState(0); // For double tap detection
   const [showInitialPlayButton, setShowInitialPlayButton] = useState(true);
   const [processingInitiated, setProcessingInitiated] = useState(false);
+  const [lastClickTime, setLastClickTime] = useState(0);
+const clickTimeoutRef = useRef(null);
 
 
   const playerRef = useRef(null);
@@ -98,6 +100,8 @@ console.log(`mainsuu`,mainSource)
       return null;
     }
   };
+
+ 
 
 
 
@@ -430,12 +434,31 @@ console.log(`mainsuu`,mainSource)
   const handleVideoClick = (e) => {
     // Prevent click from triggering if user was dragging/seeking
     if (seeking) return;
-
+  
     // Don't trigger if click was on a control element
     if (controlsRef.current && controlsRef.current.contains(e.target)) return;
-
-    handlePlayPause();
+  
+    const currentTime = new Date().getTime();
+    const timeDiff = currentTime - lastClickTime;
+  
+    // Clear any existing timeout
+    if (clickTimeoutRef.current) {
+      clearTimeout(clickTimeoutRef.current);
+    }
+  
+    if (timeDiff < 300) { // 300ms threshold for double click
+      // Handle double click
+      handleFullscreen();
+      setLastClickTime(0);
+    } else {
+      // Set new timeout for single click
+      clickTimeoutRef.current = setTimeout(() => {
+        // handlePlayPause();
+      }, 200); // Wait 200ms before triggering single click action
+      setLastClickTime(currentTime);
+    }
   };
+  
 
 
 
@@ -1232,6 +1255,7 @@ console.log(`mainsuu`,mainSource)
       onMouseMove={showControlsWithTimeout}
       onMouseLeave={() => !isFullscreen && hideControls()}
       onTouchStart={handleTouchStart} // Add touch start for double tap and controls
+      onClick={handleVideoClick}
       style={isAndroid ? { paddingBottom: '50px' } : {}} // Add bottom padding for Android
     >
       <div className={`flex items-center justify-center bg-black ${isFullscreen ? 'h-screen w-screen' : 'aspect-video'}`}> {/* Removed relative class here */}
