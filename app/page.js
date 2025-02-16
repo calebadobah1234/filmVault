@@ -112,6 +112,7 @@ console.log(`actionMovies`,actionMovies)
             title="Trending Series"
             flex={false}
             itemsToShow={20}
+            series={true}
           />
           <TrendingItems
             data={actionMovies?.items}

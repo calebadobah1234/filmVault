@@ -36,6 +36,8 @@ const LatestItems = (props) => {
     
     if (item.img) {
       return item.img;
+    } if (item.imageUrl){
+      return item.imageUrl
     }
     
     return fallbackImageUrl;
