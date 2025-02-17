@@ -383,19 +383,20 @@ const MobileNav = () => {
 
   return (
     <>
+    <div className="md:hidden">
       <button
-  className="md:hidden relative p-3 text-gray-100 hover:text-white hover:bg-gray-700/50 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 focus:ring-offset-gray-800 rounded-lg transition-all duration-200"
-  onClick={toggleSidebar}
-  aria-label="Open menu"
-  aria-expanded={sidebarOpen}
->
-  <Menu size={28} />
-</button>
+        className="relative p-3 text-gray-100 hover:text-white hover:bg-gray-700/50 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 focus:ring-offset-gray-800 rounded-lg transition-all duration-200"
+        onClick={toggleSidebar}
+        aria-label="Open menu"
+        aria-expanded={sidebarOpen}
+      >
+        <Menu size={28} />
+      </button>
 
       {/* Backdrop */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
           onClick={toggleSidebar}
           aria-hidden="true"
         />
@@ -403,9 +404,9 @@ const MobileNav = () => {
 
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 right-0 z-50 w-80 bg-gray-800/95 backdrop-blur-md shadow-2xl transform ${
+        className={`fixed inset-y-0 right-0 z-50 w-80 max-w-[100vw] bg-gray-800/95 backdrop-blur-md shadow-2xl transform ${
           sidebarOpen ? 'translate-x-0' : 'translate-x-full'
-        } transition-all duration-300 ease-out md:hidden`}
+        } transition-all duration-300 ease-out`}
         role="dialog"
         aria-modal="true"
         aria-label="Navigation menu"
@@ -498,7 +499,7 @@ const MobileNav = () => {
             </div>
           </nav>
         </div>
-      </div>
+      </div></div>
     </>
   );
 };
