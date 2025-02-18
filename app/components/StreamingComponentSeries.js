@@ -592,6 +592,74 @@ const clickTimeoutRef = useRef(null);
   }, [selectedSeason, selectedQuality, seasons, selectedEpisode]);
 
 
+  useEffect(() => {
+    const updateAvailableQualities = () => {
+      const allowedQualities = [480, 720, 1080];
+      const qualities = new Set();
+  
+      // Check if the selected season exists in seasons2
+      const isSelectedSeasonInSeasons2 = seasons2?.some(
+        (s) => s.seasonNumber.toString() === selectedSeason
+      );
+  
+      // Collect qualities from the current season in 'seasons'
+      const currentSeason = seasons?.find(
+        (s) => s.seasonNumber.toString() === selectedSeason
+      );
+  
+      if (currentSeason) {
+        if (currentSeason.resolutions) {
+          currentSeason.resolutions.forEach((res) => {
+            const folderQuality = res.resolution.match(/(\d+)[pP]/)?.[1];
+            if (folderQuality && allowedQualities.includes(parseInt(folderQuality))) {
+              qualities.add(parseInt(folderQuality));
+            }
+  
+            res.episodes.forEach((episode) => {
+              const filenameQuality = detectQualityFromUrl(episode.downloadLink);
+              if (filenameQuality && allowedQualities.includes(parseInt(filenameQuality))) {
+                qualities.add(parseInt(filenameQuality));
+              }
+            });
+          });
+        } else if (currentSeason.episodes) {
+          currentSeason.episodes.forEach((episode) => {
+            episode.downloadLinks.forEach((link) => {
+              const quality = link.quality.replace('دانلود ', '').replace('P', '');
+              const qualityNum = parseInt(quality);
+              if (allowedQualities.includes(qualityNum)) {
+                qualities.add(qualityNum);
+              }
+            });
+          });
+        }
+      }
+  
+      // Add 'smooth' quality only if the selected season is in seasons2
+      if (isSelectedSeasonInSeasons2) {
+        qualities.add('smooth');
+      }
+  
+      // Sort qualities with 'smooth' as the first option if present
+      const sortedQualities = Array.from(qualities).sort((a, b) => {
+        if (a === 'smooth') return -1;
+        if (b === 'smooth') return 1;
+        return a - b;
+      });
+  
+      setAvailableQualities(sortedQualities);
+  
+      // Update selected quality if needed
+      if (isSelectedSeasonInSeasons2 && !selectedQuality.includes('smooth')) {
+        setSelectedQuality('smooth');
+      } else if (sortedQualities.length > 0 && !sortedQualities.includes(selectedQuality)) {
+        setSelectedQuality(sortedQualities[0].toString());
+      }
+    };
+  
+    updateAvailableQualities();
+  }, [selectedSeason, seasons, seasons2]); // Add selectedSeason to dependencies
+
   // Process video when quality, season, or episode changes
   useEffect(() => {
     const processSelectedContent = async () => {
@@ -647,6 +715,9 @@ const clickTimeoutRef = useRef(null);
     // Return null if no quality found
     return null;
   };
+
+
+  
 
   const handleRotate = async () => {
     if (isFullscreen && isMobile) {

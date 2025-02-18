@@ -28,17 +28,20 @@ const Navbar = ({ isHomePage }) => {
       }`}>
         {/* Top Bar */}
         <div className="container mx-auto">
-  <div className="flex items-center justify-between py-4 px-4"> {/* Changed justify-center to justify-between */}
-    <Link href="/" className='flex justify-center'>
-      <HeadingTag className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-blue-400 to-purple-500 hover:from-purple-500 hover:via-blue-400 hover:to-green-400 transition-all duration-500">
-        FilmVault.XYZ
-      </HeadingTag>
-    </Link>
-    <div className="md:hidden ml-auto"> {/* Added ml-auto */}
-      <MobileNav />
-    </div>
-  </div>
-</div>
+          <div className="flex items-center py-4 px-4">
+            <div className="md:flex-1 hidden md:block"></div>
+            <Link href="/" className='flex justify-center md:flex-1'>
+              <HeadingTag className="text-3xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-blue-400 to-purple-500 hover:from-purple-500 hover:via-blue-400 hover:to-green-400 transition-all duration-500">
+                FilmVault.XYZ
+              </HeadingTag>
+            </Link>
+            <div className="md:flex-1 flex justify-end">
+              <div className="md:hidden">
+                <MobileNav />
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Main Navigation */}
         <nav className="hidden md:block text-white border-t border-gray-800">

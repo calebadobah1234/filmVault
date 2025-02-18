@@ -61,6 +61,7 @@ console.log(`mainsuu`,mainSource)
   const [processingInitiated, setProcessingInitiated] = useState(false);
   const [lastClickTime, setLastClickTime] = useState(0);
 const clickTimeoutRef = useRef(null);
+const [isIOS, setIsIOS] = useState(false);
 
 
   const playerRef = useRef(null);
@@ -87,6 +88,14 @@ const clickTimeoutRef = useRef(null);
       return null;
     }
   };
+
+  useEffect(() => {
+    // Enhanced user agent detection
+    const userAgent = navigator.userAgent.toLowerCase();
+    setIsMobile(/iphone|ipad|ipod|android/i.test(userAgent));
+    setIsIOS(/iphone|ipad|ipod/.test(userAgent));
+    setIsAndroid(/android/.test(userAgent));
+  }, []);
 
   const fetchActualUrlNaija = async (url) => {
     console.log('Fetching actual URL for:', url);
@@ -1213,10 +1222,21 @@ const clickTimeoutRef = useRef(null);
   };
 
   const handleFullscreen = () => {
-    if (screenfull.isEnabled && containerRef.current) {
+    const videoElement = playerRef.current?.getInternalPlayer();
+    
+    if (isMobile && videoElement) {
+      // Mobile-specific fullscreen handling
+      if (typeof videoElement.webkitEnterFullscreen === 'function') {
+        videoElement.webkitEnterFullscreen();
+      } else if (videoElement.requestFullscreen) {
+        videoElement.requestFullscreen();
+      }
+    } else if (screenfull.isEnabled && containerRef.current) {
+      // Desktop fullscreen
       screenfull.toggle(containerRef.current);
-      showControlsWithTimeout();
     }
+    
+    showControlsWithTimeout();
   };
 
   const formatTime = (seconds) => {
@@ -1389,8 +1409,14 @@ const clickTimeoutRef = useRef(null);
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  backgroundColor: 'black'
+                  backgroundColor: 'black',
+                  // Add iOS specific styles
+                  ...(isIOS && {
+                    WebkitOverflowScrolling: 'touch',
+                    overflow: 'auto'
+                  })
                 }}
+          
                 className={`react-player ${isFullscreen ? 'fullscreen' : ''}`}
                 onProgress={handleProgress}
                 onClick={handleVideoClick}
@@ -1407,7 +1433,9 @@ const clickTimeoutRef = useRef(null);
                     attributes: {
                       controlsList: 'nodownload',
                       crossOrigin: 'anonymous',
-                      muted: false,
+                      playsInline: true,
+                      webkitPlaysinline: 'true', // For iOS
+                      muted: isMuted,
                       style: {
                         width: '100%',
                         height: '100%',
