@@ -66,6 +66,7 @@ const clickTimeoutRef = useRef(null);
   const playerRef = useRef(null);
   const controlsRef = useRef(null);
   const containerRef = useRef(null);
+  const [isIOS, setIsIOS] = useState(false);
 
   const handleInitialPlay = () => {
     setShowInitialPlayButton(false);
@@ -73,6 +74,13 @@ const clickTimeoutRef = useRef(null);
     setPlaying(true);
     setHasStarted(true);
   };
+
+  useEffect(() => {
+    // Detect iOS device
+    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    setIsIOS(isIOSDevice);
+  }, []);
 
   const fetchActualUrl = async (url) => {
     console.log('Fetching actual URL for:', url);

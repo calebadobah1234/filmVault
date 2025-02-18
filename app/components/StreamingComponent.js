@@ -61,12 +61,12 @@ console.log(`mainsuu`,mainSource)
   const [processingInitiated, setProcessingInitiated] = useState(false);
   const [lastClickTime, setLastClickTime] = useState(0);
 const clickTimeoutRef = useRef(null);
-const [isIOS, setIsIOS] = useState(false);
 
 
   const playerRef = useRef(null);
   const controlsRef = useRef(null);
   const containerRef = useRef(null);
+  const [isIOS, setIsIOS] = useState(false);
 
   const handleInitialPlay = () => {
     setShowInitialPlayButton(false);
@@ -74,6 +74,13 @@ const [isIOS, setIsIOS] = useState(false);
     setPlaying(true);
     setHasStarted(true);
   };
+
+  useEffect(() => {
+    // Detect iOS device
+    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    setIsIOS(isIOSDevice);
+  }, []);
 
   const fetchActualUrl = async (url) => {
     console.log('Fetching actual URL for:', url);
@@ -88,14 +95,6 @@ const [isIOS, setIsIOS] = useState(false);
       return null;
     }
   };
-
-  useEffect(() => {
-    // Enhanced user agent detection
-    const userAgent = navigator.userAgent.toLowerCase();
-    setIsMobile(/iphone|ipad|ipod|android/i.test(userAgent));
-    setIsIOS(/iphone|ipad|ipod/.test(userAgent));
-    setIsAndroid(/android/.test(userAgent));
-  }, []);
 
   const fetchActualUrlNaija = async (url) => {
     console.log('Fetching actual URL for:', url);
@@ -1153,17 +1152,34 @@ const [isIOS, setIsIOS] = useState(false);
     }
   };
 
-  const handlePlayPause = () => {
-    if (!hasStarted) setHasStarted(true);
-    setPlaying(!playing);
-    showControlsWithTimeout();
-    if (!playing && !isFullscreen && hasStarted && !showFullscreenTooltip) {
-      setShowFullscreenTooltip(true);
-      fullscreenTooltipTimeoutRef.current = setTimeout(() => {
-        setShowFullscreenTooltip(false);
-      }, 5000); // Show tooltip for 5 seconds
+  const handlePlayPause = useCallback(() => {
+    if (!hasStarted) {
+      setHasStarted(true);
     }
-  };
+    
+    const videoElement = playerRef.current?.getInternalPlayer();
+    if (isIOS && videoElement) {
+      if (!playing) {
+        // On iOS, we need to explicitly call play()
+        const playPromise = videoElement.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            setPlaying(true);
+          }).catch(error => {
+            console.error("iOS play failed:", error);
+            // Handle user interaction requirement
+            setShowInitialPlayButton(true);
+          });
+        }
+      } else {
+        videoElement.pause();
+        setPlaying(false);
+      }
+    } else {
+      setPlaying(!playing);
+    }
+    showControlsWithTimeout();
+  }, [playing, hasStarted, isIOS, showControlsWithTimeout]);
 
   const handleError = () => {
     setIsBuffering(false);
@@ -1224,18 +1240,16 @@ const [isIOS, setIsIOS] = useState(false);
   const handleFullscreen = () => {
     const videoElement = playerRef.current?.getInternalPlayer();
     
-    if (isMobile && videoElement) {
-      // Mobile-specific fullscreen handling
-      if (typeof videoElement.webkitEnterFullscreen === 'function') {
+    if (isIOS && videoElement) {
+      if (videoElement.webkitEnterFullscreen) {
         videoElement.webkitEnterFullscreen();
-      } else if (videoElement.requestFullscreen) {
-        videoElement.requestFullscreen();
+      } else if (videoElement.webkitSupportsFullscreen) {
+        videoElement.webkitRequestFullscreen();
       }
+      setIsFullscreen(true);
     } else if (screenfull.isEnabled && containerRef.current) {
-      // Desktop fullscreen
       screenfull.toggle(containerRef.current);
     }
-    
     showControlsWithTimeout();
   };
 
@@ -1270,14 +1284,17 @@ const [isIOS, setIsIOS] = useState(false);
 
   return (
     <div
-      ref={containerRef}
-      className="bg-black rounded-xl overflow-hidden shadow-xl relative group"
-      onMouseMove={showControlsWithTimeout}
-      onMouseLeave={() => !isFullscreen && hideControls()}
-      onTouchStart={handleTouchStart} // Add touch start for double tap and controls
-      onClick={handleVideoClick}
-      style={isAndroid ? { paddingBottom: '50px' } : {}} // Add bottom padding for Android
-    >
+    ref={containerRef}
+    className="bg-black rounded-xl overflow-hidden shadow-xl relative group"
+    onMouseMove={showControlsWithTimeout}
+    onMouseLeave={() => !isFullscreen && hideControls()}
+    onTouchStart={handleTouchStart}
+    onClick={handleVideoClick}
+    style={{
+      ...(isIOS ? { WebkitTapHighlightColor: 'transparent' } : {}),
+      ...(isAndroid ? { paddingBottom: '50px' } : {})
+    }}
+  >
       <div className={`flex items-center justify-center bg-black ${isFullscreen ? 'h-screen w-screen' : 'aspect-video'}`}> {/* Removed relative class here */}
         {/* Processing status: blocked */}
         {showInitialPlayButton && (
@@ -1409,14 +1426,8 @@ const [isIOS, setIsIOS] = useState(false);
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  backgroundColor: 'black',
-                  // Add iOS specific styles
-                  ...(isIOS && {
-                    WebkitOverflowScrolling: 'touch',
-                    overflow: 'auto'
-                  })
+                  backgroundColor: 'black'
                 }}
-          
                 className={`react-player ${isFullscreen ? 'fullscreen' : ''}`}
                 onProgress={handleProgress}
                 onClick={handleVideoClick}
@@ -1434,8 +1445,8 @@ const [isIOS, setIsIOS] = useState(false);
                       controlsList: 'nodownload',
                       crossOrigin: 'anonymous',
                       playsInline: true,
-                      webkitPlaysinline: 'true', // For iOS
-                      muted: isMuted,
+                      'webkit-playsinline': true,
+                      muted: false,
                       style: {
                         width: '100%',
                         height: '100%',
@@ -1462,6 +1473,9 @@ const [isIOS, setIsIOS] = useState(false);
                       abrBandWidthFactor: 0.95,
                       abrBandWidthUpFactor: 0.7,
                       abrMaxWithRealBitrate: true,
+                      enableWorker: false, // Disable worker for better iOS compatibility
+        autoStartLoad: true,
+        startPosition: -1
                     }
                   }
                 }}

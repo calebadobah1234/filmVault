@@ -18,7 +18,8 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={oswald.className}>
       {/* <GoogleAnalytics GA_MEASUREMENT_ID="G-XRQ23BL3CB" /> */}
-
+      <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"></meta>
+      <meta name="apple-mobile-web-app-capable" content="yes"></meta>
       <body className="text-black overflow-x-hidden">
         <GoogleAnalytics gaId={"G-G5F92NBCCE"} />
         <Analytics />
