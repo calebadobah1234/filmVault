@@ -61,6 +61,7 @@ console.log(`mainsuu`,mainSource)
   const [processingInitiated, setProcessingInitiated] = useState(false);
   const [lastClickTime, setLastClickTime] = useState(0);
 const clickTimeoutRef = useRef(null);
+const [iosReadyToPlay, setIosReadyToPlay] = useState(false);
 
 
   const playerRef = useRef(null);
@@ -68,11 +69,37 @@ const clickTimeoutRef = useRef(null);
   const containerRef = useRef(null);
   const [isIOS, setIsIOS] = useState(false);
 
-  const handleInitialPlay = () => {
-    setShowInitialPlayButton(false);
+  const handleInitialPlay = async () => {
     setProcessingInitiated(true);
-    setPlaying(true);
-    setHasStarted(true);
+    if (isIOS) {
+      // For iOS, just prepare the video but don't start playing
+      setShowInitialPlayButton(false);
+      setIosReadyToPlay(true);
+    } else {
+      // Normal behavior for other platforms
+      setShowInitialPlayButton(false);
+      setPlaying(true);
+      setHasStarted(true);
+    }
+  };
+
+  const handleIosPlay = () => {
+    const videoElement = playerRef.current?.getInternalPlayer();
+    if (videoElement) {
+      const playPromise = videoElement.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => {
+            setPlaying(true);
+            setHasStarted(true);
+            setIosReadyToPlay(false);
+          })
+          .catch(error => {
+            console.error("iOS play failed:", error);
+            setIosReadyToPlay(true);
+          });
+      }
+    }
   };
 
   useEffect(() => {
@@ -1153,24 +1180,14 @@ const clickTimeoutRef = useRef(null);
   };
 
   const handlePlayPause = useCallback(() => {
-    if (!hasStarted) {
+    if (!hasStarted && !isIOS) {
       setHasStarted(true);
     }
     
     const videoElement = playerRef.current?.getInternalPlayer();
     if (isIOS && videoElement) {
-      if (!playing) {
-        // On iOS, we need to explicitly call play()
-        const playPromise = videoElement.play();
-        if (playPromise !== undefined) {
-          playPromise.then(() => {
-            setPlaying(true);
-          }).catch(error => {
-            console.error("iOS play failed:", error);
-            // Handle user interaction requirement
-            setShowInitialPlayButton(true);
-          });
-        }
+      if (videoElement.paused) {
+        handleIosPlay();
       } else {
         videoElement.pause();
         setPlaying(false);
@@ -1241,13 +1258,23 @@ const clickTimeoutRef = useRef(null);
     const videoElement = playerRef.current?.getInternalPlayer();
     
     if (isIOS && videoElement) {
-      if (videoElement.webkitEnterFullscreen) {
-        videoElement.webkitEnterFullscreen();
-      } else if (videoElement.webkitSupportsFullscreen) {
-        videoElement.webkitRequestFullscreen();
+      // iOS native fullscreen handling
+      try {
+        if (videoElement.webkitDisplayingFullscreen) {
+          videoElement.webkitExitFullscreen();
+          setIsFullscreen(false);
+        } else {
+          videoElement.webkitEnterFullscreen();
+          videoElement.addEventListener('webkitendfullscreen', () => {
+            setIsFullscreen(false);
+          });
+          setIsFullscreen(true);
+        }
+      } catch (error) {
+        console.error('iOS fullscreen error:', error);
       }
-      setIsFullscreen(true);
     } else if (screenfull.isEnabled && containerRef.current) {
+      // Standard fullscreen handling for other devices
       screenfull.toggle(containerRef.current);
     }
     showControlsWithTimeout();
@@ -1294,6 +1321,27 @@ const clickTimeoutRef = useRef(null);
     >
       <div className={`flex items-center justify-center bg-black ${isFullscreen ? 'h-screen w-screen' : 'aspect-video'}`}> {/* Removed relative class here */}
         {/* Processing status: blocked */}
+
+        {isIOS && iosReadyToPlay && processingStatus === 'ready' && (
+  <div className="absolute inset-0 flex items-center justify-center cursor-pointer z-10">
+    <button
+      onClick={handleIosPlay}
+      className="group relative"
+      aria-label="Play video"
+    >
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform -scale-110 group-hover:scale-125 rounded-full bg-blue-500 opacity-75 animate-pulse-fast"
+        style={{ padding: 'calc(48px * 0.6)' }}
+      ></div>
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/50 rounded-full p-4 transition-transform group-hover:scale-110">
+        <FaPlay className="text-white text-4xl" />
+      </div>
+    </button>
+    <div className="absolute bottom-20 text-white text-sm text-center w-full">
+      Tap play again to start playback
+    </div>
+  </div>
+)}
+
         {showInitialPlayButton && (
           <div className="absolute inset-0 flex items-center justify-center cursor-pointer z-10">
             <button
