@@ -6,6 +6,7 @@ import { FaPlay, FaPause, FaVolumeUp, FaExpand, FaSpinner,FaClosedCaptioning,FaV
 import screenfull from 'screenfull';
 import { FaRotate } from 'react-icons/fa6';
 import { act } from 'react';
+import HlsPlayer from './HlsPlayer';
 
 
 const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,naijaRocks }) => {
@@ -1036,7 +1037,9 @@ const clickTimeoutRef = useRef(null);
 
 
   const handlePlayerReady = () => {
-    const videoElement = playerRef.current?.getInternalPlayer();
+    const videoElement = isIOS 
+    ? document.querySelector('video') 
+    : playerRef.current?.getInternalPlayer();
     if (videoElement) {
       // Add custom styles for subtitles
       const style = document.createElement('style');
@@ -1156,25 +1159,9 @@ const clickTimeoutRef = useRef(null);
     if (!hasStarted) {
       setHasStarted(true);
     }
-    
-    const videoElement = playerRef.current?.getInternalPlayer();
-    if (isIOS && videoElement) {
-      if (!playing) {
-        // On iOS, we need to explicitly call play()
-        const playPromise = videoElement.play();
-        if (playPromise !== undefined) {
-          playPromise.then(() => {
-            setPlaying(true);
-          }).catch(error => {
-            console.error("iOS play failed:", error);
-            // Handle user interaction requirement
-            setShowInitialPlayButton(true);
-          });
-        }
-      } else {
-        videoElement.pause();
-        setPlaying(false);
-      }
+  
+    if (isIOS) {
+      setPlaying(prev => !prev);
     } else {
       setPlaying(!playing);
     }
@@ -1396,18 +1383,53 @@ const clickTimeoutRef = useRef(null);
             )}
 
             {/* Video wrapper */}
-            <div
-              className={`video-wrapper ${isFullscreen ? 'w-full h-full' : 'w-full h-full'}`}
-              style={{
-                position: 'relative',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                transition: 'transform 0.3s ease',
-                backgroundColor: 'black'
-              }}
-            >
-              <ReactPlayer
+            
+            <div className={`video-wrapper ${isFullscreen ? 'w-full h-full' : 'w-full h-full'}`}>
+      {isIOS ? (
+        <HlsPlayer
+          url={streamingUrl}
+          playing={playing}
+          volume={volume}
+          muted={isMuted}
+          onPlay={() => setPlaying(true)}
+          onPause={() => setPlaying(false)}
+          onProgress={handleProgress}
+          onDuration={setDuration}
+          onBuffer={handleBuffer}
+          onBufferEnd={handleBufferEnd}
+          onReady={handlePlayerReady}
+          onError={handleError}
+          config={{
+            hlsOptions: {
+              // More robust HLS.js configuration for wider compatibility
+              maxMaxBufferLength: 600, // Increased max buffer
+              maxBufferLength: 30,      // Reduced buffer length to start playback faster
+              startPosition: -1,
+              backBufferLength: 30,
+              liveSyncDurationCount: 3, // Reduced for potentially lower latency
+              maxLoadingDelay: 4,
+              manifestLoadingTimeOut: 10000, // Reduced timeouts for faster error detection
+              manifestLoadingMaxRetry: 3,   // Reduced retries
+              fragLoadingTimeOut: 15000,
+              fragLoadingMaxRetry: 3,
+              levelLoadingTimeOut: 10000,
+              levelLoadingMaxRetry: 3,
+              abrEwmaDefaultEstimate: 500000, // Reduced default bitrate estimate
+              abrBandWidthFactor: 0.9,     // Slightly more conservative ABR
+              abrBandWidthUpFactor: 0.7,
+              abrMaxWithRealBitrate: true,
+              enableWorker: true, // Keep worker enabled for performance, but monitor if issues arise
+              autoStartLoad: true,
+              startPosition: -1,
+              // Experimental settings - use with caution and testing
+              // lowLatencyMode: true, // Consider for low latency streams if applicable
+              // liveDurationInfinity: true, // If stream is truly live and infinite
+            }
+
+          }}
+        />
+      ) : (
+        <ReactPlayer
                 ref={playerRef}
                 url={streamingUrl}
                 playing={playing}
@@ -1432,10 +1454,7 @@ const clickTimeoutRef = useRef(null);
                 onBuffer={handleBuffer}
                 onBufferEnd={handleBufferEnd}
                 onReady={handlePlayerReady}
-                onError={(err) => {
-                  console.error('ReactPlayer error:', err);
-                  handleError();
-                }}
+                onError={handleError} // Use the enhanced error handler
                 config={{
                   file: {
                     attributes: {
@@ -1453,31 +1472,36 @@ const clickTimeoutRef = useRef(null);
                     },
                     forceVideo: true,
                     hlsOptions: {
-                      maxBufferSize: 200 * 1024 * 1024,
-                      maxBufferLength: 200,
+                      // More robust HLS.js configuration for wider compatibility
+                      maxMaxBufferLength: 600, // Increased max buffer
+                      maxBufferLength: 30,      // Reduced buffer length to start playback faster
                       startPosition: -1,
-                      backBufferLength: 300,
-                      liveSyncDurationCount: 10,
-                      maxMaxBufferLength: 600,
+                      backBufferLength: 30,
+                      liveSyncDurationCount: 3, // Reduced for potentially lower latency
                       maxLoadingDelay: 4,
-                      manifestLoadingTimeOut: 20000,
-                      manifestLoadingMaxRetry: 5,
-                      fragLoadingTimeOut: 30000,
-                      fragLoadingMaxRetry: 5,
-                      levelLoadingTimeOut: 20000,
-                      levelLoadingMaxRetry: 5,
-                      abrEwmaDefaultEstimate: 5000000,
-                      abrBandWidthFactor: 0.95,
+                      manifestLoadingTimeOut: 10000, // Reduced timeouts for faster error detection
+                      manifestLoadingMaxRetry: 3,   // Reduced retries
+                      fragLoadingTimeOut: 15000,
+                      fragLoadingMaxRetry: 3,
+                      levelLoadingTimeOut: 10000,
+                      levelLoadingMaxRetry: 3,
+                      abrEwmaDefaultEstimate: 500000, // Reduced default bitrate estimate
+                      abrBandWidthFactor: 0.9,     // Slightly more conservative ABR
                       abrBandWidthUpFactor: 0.7,
                       abrMaxWithRealBitrate: true,
-                      enableWorker: false, // Disable worker for better iOS compatibility
-        autoStartLoad: true,
-        startPosition: -1
+                      enableWorker: true, // Keep worker enabled for performance, but monitor if issues arise
+                      autoStartLoad: true,
+                      startPosition: -1,
+                      // Experimental settings - use with caution and testing
+                      // lowLatencyMode: true, // Consider for low latency streams if applicable
+                      // liveDurationInfinity: true, // If stream is truly live and infinite
                     }
-                  }
+                  },
                 }}
               />
-            </div>
+
+      )}
+    </div>
           </>
         )}
 
