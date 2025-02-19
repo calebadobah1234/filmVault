@@ -71,18 +71,7 @@ const clickTimeoutRef = useRef(null);
   const handleInitialPlay = () => {
     setShowInitialPlayButton(false);
     setProcessingInitiated(true);
-    
-    if (isIOS) {
-      const videoElement = playerRef.current?.getInternalPlayer();
-      if (videoElement) {
-        videoElement.play().catch(error => {
-          console.error("iOS play failed:", error);
-          setShowInitialPlayButton(true);
-        });
-      }
-    } else {
-      setPlaying(true);
-    }
+    setPlaying(true);
     setHasStarted(true);
   };
 
@@ -1163,27 +1152,34 @@ const clickTimeoutRef = useRef(null);
     }
   };
 
-  // Update handlePlayPause for better iOS support
-const handlePlayPause = useCallback(() => {
-  const videoElement = playerRef.current?.getInternalPlayer();
-  
-  if (isIOS && videoElement) {
-    if (videoElement.paused) {
-      videoElement.play().then(() => {
-        setPlaying(true);
-      }).catch(error => {
-        console.error("iOS play failed:", error);
-        setShowInitialPlayButton(true);
-      });
-    } else {
-      videoElement.pause();
-      setPlaying(false);
+  const handlePlayPause = useCallback(() => {
+    if (!hasStarted) {
+      setHasStarted(true);
     }
-  } else {
-    setPlaying(!playing);
-  }
-  showControlsWithTimeout();
-}, [playing, isIOS]);
+    
+    const videoElement = playerRef.current?.getInternalPlayer();
+    if (isIOS && videoElement) {
+      if (!playing) {
+        // On iOS, we need to explicitly call play()
+        const playPromise = videoElement.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            setPlaying(true);
+          }).catch(error => {
+            console.error("iOS play failed:", error);
+            // Handle user interaction requirement
+            setShowInitialPlayButton(true);
+          });
+        }
+      } else {
+        videoElement.pause();
+        setPlaying(false);
+      }
+    } else {
+      setPlaying(!playing);
+    }
+    showControlsWithTimeout();
+  }, [playing, hasStarted, isIOS, showControlsWithTimeout]);
 
   const handleError = () => {
     setIsBuffering(false);
@@ -1241,22 +1237,21 @@ const handlePlayPause = useCallback(() => {
     showControlsWithTimeout();
   };
 
- // Update fullscreen handler for iOS
-const handleFullscreen = () => {
-  const videoElement = playerRef.current?.getInternalPlayer();
-  
-  if (isIOS && videoElement) {
-    if (videoElement.webkitDisplayingFullscreen) {
-      videoElement.webkitExitFullscreen();
-      setIsFullscreen(false);
-    } else {
-      videoElement.webkitEnterFullscreen();
+  const handleFullscreen = () => {
+    const videoElement = playerRef.current?.getInternalPlayer();
+    
+    if (isIOS && videoElement) {
+      if (videoElement.webkitEnterFullscreen) {
+        videoElement.webkitEnterFullscreen();
+      } else if (videoElement.webkitSupportsFullscreen) {
+        videoElement.webkitRequestFullscreen();
+      }
       setIsFullscreen(true);
+    } else if (screenfull.isEnabled && containerRef.current) {
+      screenfull.toggle(containerRef.current);
     }
-  } else if (screenfull.isEnabled) {
-    screenfull.toggle(containerRef.current);
-  }
-};
+    showControlsWithTimeout();
+  };
 
   const formatTime = (seconds) => {
     const date = new Date(seconds * 1000);
@@ -1454,8 +1449,7 @@ const handleFullscreen = () => {
                       }
                     },
                     forceVideo: true,
-                    forceHLS: !isIOS,
-                    hlsOptions: isIOS ? undefined : {
+                    hlsOptions: {
                       // More robust HLS.js configuration for wider compatibility
                       maxMaxBufferLength: 600, // Increased max buffer
                       maxBufferLength: 30,      // Reduced buffer length to start playback faster
