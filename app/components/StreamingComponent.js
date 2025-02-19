@@ -5,10 +5,11 @@ import ReactPlayer from 'react-player';
 import { FaPlay, FaPause, FaVolumeUp, FaExpand, FaSpinner,FaClosedCaptioning,FaVolumeMute,FaForward, FaBackward,FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import screenfull from 'screenfull';
 import { FaRotate } from 'react-icons/fa6';
+import { act } from 'react';
 
 
 const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,naijaRocks }) => {
-  console.log(`mainsuu`,mainSource);
+console.log(`mainsuu`,mainSource)
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
   const [played, setPlayed] = useState(0);
@@ -52,15 +53,15 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
   const [showSubtitleTooltip, setShowSubtitleTooltip] = useState(false);
   const [subtitleChangeMessage, setSubtitleChangeMessage] = useState('');
   const [showSubtitleChangeMessage, setShowSubtitleChangeMessage] = useState(false);
-  const [isAndroid, setIsAndroid] = useState(false);
-  const [showFullscreenTooltip, setShowFullscreenTooltip] = useState(false);
+  const [isAndroid, setIsAndroid] = useState(false); // New state to detect Android
+  const [showFullscreenTooltip, setShowFullscreenTooltip] = useState(false); // State for fullscreen tooltip
   const [fullscreenTooltipTimeoutRef] = useState(useRef(null));
-  const [lastTapTime, setLastTapTime] = useState(0);
+  const [lastTapTime, setLastTapTime] = useState(0); // For double tap detection
   const [showInitialPlayButton, setShowInitialPlayButton] = useState(true);
   const [processingInitiated, setProcessingInitiated] = useState(false);
   const [lastClickTime, setLastClickTime] = useState(0);
-  const clickTimeoutRef = useRef(null);
-  const [playbackError, setPlaybackError] = useState(null); // State to track playback errors
+const clickTimeoutRef = useRef(null);
+
 
   const playerRef = useRef(null);
   const controlsRef = useRef(null);
@@ -72,15 +73,13 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
     setProcessingInitiated(true);
     setPlaying(true);
     setHasStarted(true);
-    setPlaybackError(null); // Clear any previous playback errors on new play attempt
   };
 
   useEffect(() => {
-    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    // Detect iOS device
+    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
                        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     setIsIOS(isIOSDevice);
-    setIsAndroid(/android/i.test(navigator.userAgent)); // Detect Android
-
   }, []);
 
   const fetchActualUrl = async (url) => {
@@ -94,14 +93,11 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
     } catch (error) {
       console.error('Error fetching actual URL:', error);
       return null;
-    } finally {
-      setIsBuffering(false); // Ensure buffering indicator is turned off even on error
     }
   };
 
   const fetchActualUrlNaija = async (url) => {
     console.log('Fetching actual URL for:', url);
-    setIsBuffering(true);
     try {
       const actualUrl = await fetch(`https://api5.mp3vault.xyz/getNaijaDownloadUrl?url=${url}`);
       const data = await actualUrl.json();
@@ -110,17 +106,19 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
     } catch (error) {
       console.error('Error fetching actual URL:', error);
       return null;
-    } finally {
-      setIsBuffering(false); // Ensure buffering indicator is turned off even on error
     }
   };
 
+ 
 
+
+
+  // Function to extract resolution number from quality string
   const getResolutionNumber = (quality) => {
     if (!quality) return 0;
     let match = quality.match(/(\d+)[pP]/);
     if (match) return parseInt(match[1]);
-    match = quality.match(/(\d{3,4})/);
+    match = quality.match(/(\d{3,4})/); // Fallback to match 3 or 4 digit numbers if 'p' is missing
     return match ? parseInt(match[1]) : 0;
   };
 
@@ -167,14 +165,17 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
     }
   };
 
+  // Add mute toggle function
   const toggleMute = () => {
     setIsMuted(!isMuted);
     if (!isMuted) {
+      // Store the current volume before muting
       setVolume(prevVolume => {
         setPrevVolume(prevVolume);
         return 0;
       });
     } else {
+      // Restore the previous volume when unmuting
       setVolume(prevVolume || 1);
     }
   };
@@ -196,7 +197,6 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
     };
   }, []);
 
-
   useEffect(() => {
     const fetchSubtitle = async () => {
       console.log('=== Starting subtitle fetch process ===');
@@ -212,11 +212,13 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
       console.log('🔄 Set subtitle loading state to true');
 
       try {
+        // First, check if the original subtitle exists in Wasabi/CDN
         const originalSubtitleFilename = `${originalFilename}.vtt`;
         const cdnSubtitleUrl = `https://filmvaultsub.b-cdn.net/${encodeURIComponent(originalSubtitleFilename)}`;
 
         console.log('🔍 Checking for original subtitle at CDN URL:', cdnSubtitleUrl);
 
+        // Try to verify if the original subtitle exists
         const checkResponse = await fetch(cdnSubtitleUrl, { method: 'HEAD' });
         console.log('CDN Check Response Status:', checkResponse.status);
 
@@ -233,6 +235,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
         } else {
           console.log('❌ Original subtitle not found in CDN, initiating download process');
 
+          // If the original subtitle doesn't exist, proceed with download
           const encodedMovie = encodeURIComponent(movieTitle);
           const encodedFilename = encodeURIComponent(originalFilename);
           const downloadUrl = `https://subtitles-production.up.railway.app/nodejs/download-subtitle-subsource?movie=${encodedMovie}&type=movie&filename=${encodedFilename}`;
@@ -249,9 +252,11 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
           const responseData = await downloadResponse.json();
           console.log('Download Response Data:', responseData);
 
+          // Wait for processing
           console.log('⏳ Waiting for subtitle processing...');
           await new Promise(resolve => setTimeout(resolve, 3000));
 
+          // Check again for the file in CDN after processing
           const finalCheckResponse = await fetch(cdnSubtitleUrl, { method: 'HEAD' });
           console.log('Final CDN Check Response Status:', finalCheckResponse.status);
 
@@ -284,12 +289,13 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
           }
         }
 
+        // Check for additional subtitle versions (v2, v3, etc.)
         console.log('🔍 Checking for additional subtitle versions...');
         const additionalTracks = [];
         let version = 2;
         let versionExists = true;
 
-        while (versionExists && version <= 10) {
+        while (versionExists && version <= 10) { // Limit to 10 versions
           const versionedFilename = `v${version}_${originalFilename}.vtt`;
           const versionedUrl = `https://fvsubtitles.b-cdn.net/${encodeURIComponent(versionedFilename)}`;
 
@@ -429,29 +435,39 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
       }
     } catch (error) {
       console.error('Failed to change orientation:', error);
+      // Fallback to CSS transform if orientation lock fails
       handleFallbackRotation();
     }
   };
   const handleVideoClick = (e) => {
+    // Prevent click from triggering if user was dragging/seeking
     if (seeking) return;
+  
+    // Don't trigger if click was on a control element
     if (controlsRef.current && controlsRef.current.contains(e.target)) return;
-
+  
     const currentTime = new Date().getTime();
     const timeDiff = currentTime - lastClickTime;
-
+  
+    // Clear any existing timeout
     if (clickTimeoutRef.current) {
       clearTimeout(clickTimeoutRef.current);
     }
-
-    if (timeDiff < 300) {
+  
+    if (timeDiff < 300) { // 300ms threshold for double click
+      // Handle double click
       handleFullscreen();
       setLastClickTime(0);
     } else {
+      // Set new timeout for single click
       clickTimeoutRef.current = setTimeout(() => {
-      }, 200);
+        // handlePlayPause();
+      }, 200); // Wait 200ms before triggering single click action
       setLastClickTime(currentTime);
     }
   };
+  
+
 
 
   const handleFallbackRotation = () => {
@@ -460,6 +476,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
 
       if (videoWrapper) {
         if (screenOrientation === 'portrait') {
+          // Rotating to landscape
           videoWrapper.style.transform = 'rotate(90deg)';
           videoWrapper.style.width = '100vh';
           videoWrapper.style.height = '100vw';
@@ -470,6 +487,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
           videoWrapper.style.margin = '0';
           setScreenOrientation('landscape');
         } else {
+          // Rotating back to portrait
           videoWrapper.style.transform = 'none';
           videoWrapper.style.width = '100%';
           videoWrapper.style.height = '100%';
@@ -484,6 +502,8 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
   };
 
 
+
+  // Function to check if file exists in Wasabi using a range request
   const checkFileExists = async (filename, signal) => {
     const encodedFilename = sanitizeFilename(filename);
     const url = `https://filmvault3.b-cdn.net/${encodedFilename}`;
@@ -496,6 +516,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
     });
 
     try {
+      // Try HEAD request first
       const headResponse = await fetch(url, {
         method: 'HEAD',
         cache: 'no-cache',
@@ -509,6 +530,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
         return true;
       }
 
+      // If HEAD fails, try GET
       const getResponse = await fetch(url, {
         method: 'GET',
         cache: 'no-cache',
@@ -544,10 +566,13 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
 
   const sanitizeFilename = (filename) => {
     console.log('Original filename:', filename);
+
+    // Split off any query parameters, including download_token
     let cleanedFilename = filename.split('?')[0];
     console.log('Filename without query params:', cleanedFilename);
 
     const hasEncodedBrackets = cleanedFilename.includes('%5B') || cleanedFilename.includes('%5D');
+
     const decodedFilename = hasEncodedBrackets ? cleanedFilename : decodeURIComponent(cleanedFilename);
     console.log('Decoded filename:', decodedFilename);
 
@@ -585,7 +610,6 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
 
       setProcessingStatus('checking');
       setErrorMessage('');
-      setPlaybackError(null); // Clear any previous playback errors when starting new process
 
       if (!url) {
         throw new Error('No URL provided for processing');
@@ -606,6 +630,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
         setErrorMessage('Processing timed out. Please try again.');
       }, 240000);
 
+      // Initial file check with detailed logging
       try {
         console.log('Performing initial file check...');
         const initialFileCheck = await checkFileExists(originalFilename, signal);
@@ -619,6 +644,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
           return;
         }
 
+        // If auto quality is selected and file not found, try alternative URL
         if (selectedQuality === 'auto' && mainSource) {
           console.log('Auto quality selected and file not found, fetching alternative URL');
           try {
@@ -629,6 +655,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
               const altFilename = alternativeUrl.split('/').pop() || 'video';
               const altSanitizedFilename = sanitizeFilename(altFilename);
 
+              // Check if alternative file exists in CDN
               const altFileExists = await checkFileExists(altFilename, signal);
               if (altFileExists) {
                 const altCdnUrl = `https://filmvault3.b-cdn.net/${altSanitizedFilename}`;
@@ -639,11 +666,13 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
               }
 
 
-              url = alternativeUrl;
+              // If alternative file doesn't exist, initiate download
+              url = alternativeUrl; // Use alternative URL for further processing
               console.log('Using alternative URL for processing:', url);
             }
           } catch (altError) {
             console.error('Error fetching alternative URL:', altError);
+            // Continue with original URL if alternative fetch fails
           }
         }  else if (naijaRocks && selectedQuality === 'auto' && !mainSource) {
           console.log('Auto quality selected and file not found, fetching naija URL');
@@ -655,6 +684,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
               const naijaFilename = naijaUrl.split('/').pop() || 'video';
               const naijaSanitizedFilename = sanitizeFilename(naijaFilename);
 
+              // Check if naija file exists in CDN
               const naijaFileExists = await checkFileExists(naijaFilename, signal);
               if (naijaFileExists) {
                 const naijaCdnUrl = `https://filmvault3.b-cdn.net/${naijaSanitizedFilename}`;
@@ -663,11 +693,14 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
                 setProcessingStatus('ready');
                 return;
               }
+
+              // If naija file doesn't exist, use naija URL for further processing
               url = naijaUrl;
               console.log('Using naija URL for processing:', url);
             }
           } catch (naijaError) {
             console.error('Error fetching naija URL:', naijaError);
+            // Continue with original URL if naija fetch fails
           }
         }
 
@@ -681,6 +714,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
 
         console.log('Download API URL:', apiUrl);
 
+        // Initiate download
         fetch(apiUrl, {
           method: 'GET',
           headers: {
@@ -794,16 +828,19 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
   useEffect(() => {
     const availableQualitiesSet = new Set();
 
+    // Add "Auto" as the first option if mainSource or naijaRocks exists
     if (mainSource || naijaRocks) {
       availableQualitiesSet.add('auto');
     }
 
+    // Add qualities from sources2 first (higher priority)
     const qualitiesFromSources2 = sources2?.map(source => {
       const resolution = getResolutionNumber(source.quality);
       return resolution ? resolution.toString() : null;
     }).filter(Boolean) || [];
     qualitiesFromSources2.forEach(q => availableQualitiesSet.add(q));
 
+    // Then add qualities from sources if they don't already exist
     const qualitiesFromSources1 = sources?.map(source => {
       const resolution = getResolutionNumber(source.quality);
       return resolution ? resolution.toString() : null;
@@ -813,12 +850,13 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
     const availableQualities = Array.from(availableQualitiesSet).sort((a, b) => {
       if (a === 'auto') return -1;
       if (b === 'auto') return 1;
-      return parseInt(a) - parseInt(b);
+      return parseInt(a) - parseInt(b); // Sort in descending order
     });
 
     console.log("Available qualities:", availableQualities);
     setQualities(availableQualities);
 
+    // Set initial quality to 'auto' if mainSource or naijaRocks exists, otherwise highest available quality
     if (availableQualities.length > 0) {
       const initialQuality = (mainSource || naijaRocks) ? 'auto' : availableQualities[0];
       console.log("Setting initial quality:", initialQuality);
@@ -827,6 +865,8 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
       setSelectedQuality('');
     }
   }, [sources, sources2, mainSource, naijaRocks]);
+
+
 
 
   useEffect(() => {
@@ -860,12 +900,14 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
         }
       }
 
+      // Check sources2 first (higher priority)
       let selectedSource = sources2?.find(s => {
         const resolution = getResolutionNumber(s.quality);
         return resolution.toString() === selectedQuality;
       });
       let sourceType = 'sources2';
 
+      // If not found in sources2, check sources
       if (!selectedSource) {
         selectedSource = sources?.find(s => {
           const resolution = getResolutionNumber(s.quality);
@@ -937,15 +979,17 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
   }, [controlsTimeout, hideControls]);
 
     useEffect(() => {
+    // Check if subtitles are loaded and there are multiple tracks for tooltip
     if (subtitleTracks.length > 1) {
       setShowSubtitleTooltip(true);
+      // Hide tooltip after 5 seconds (adjust as needed)
       const timer = setTimeout(() => {
         setShowSubtitleTooltip(false);
-      }, 5000);
+      }, 5000); // 5000 milliseconds = 5 seconds
 
-      return () => clearTimeout(timer);
+      return () => clearTimeout(timer); // Cleanup timer on unmount or re-render
     } else {
-      setShowSubtitleTooltip(false);
+      setShowSubtitleTooltip(false); // Ensure tooltip is hidden if no multiple tracks
     }
   }, [subtitleTracks]);
 
@@ -954,17 +998,19 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
     setShowSubtitleChangeMessage(true);
     setTimeout(() => {
       setShowSubtitleChangeMessage(false);
-      setSubtitleChangeMessage('');
-    }, 3000);
+      setSubtitleChangeMessage(''); // Clear the message after timeout
+    }, 3000); // 3 seconds duration - adjust as needed
   };
 
 
   useEffect(() => {
     const videoElement = playerRef.current?.getInternalPlayer();
     if (videoElement && subtitleTracks.length > 0) {
+      // Remove existing tracks
       const existingTracks = videoElement.getElementsByTagName('track');
       Array.from(existingTracks).forEach(track => track.remove());
 
+      // Add current track
       const currentTrack = subtitleTracks[currentSubtitleIndex];
       if (currentTrack) {
         const track = document.createElement('track');
@@ -976,6 +1022,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
 
         videoElement.appendChild(track);
 
+        // Set track visibility
         setTimeout(() => {
           const textTrack = videoElement.textTracks[0];
           if (textTrack) {
@@ -991,6 +1038,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
   const handlePlayerReady = () => {
     const videoElement = playerRef.current?.getInternalPlayer();
     if (videoElement) {
+      // Add custom styles for subtitles
       const style = document.createElement('style');
       style.textContent = `
         video::cue {
@@ -1019,6 +1067,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
       `;
       document.head.appendChild(style);
 
+      // Remove existing tracks
       while (videoElement.textTracks.length > 0) {
         const track = videoElement.getElementsByTagName('track')[0];
         if (track) {
@@ -1026,6 +1075,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
         }
       }
 
+      // Add new track if we have subtitles
       if (subtitleTracks.length > 0) {
         const track = document.createElement('track');
         track.kind = 'subtitles';
@@ -1036,6 +1086,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
 
         videoElement.appendChild(track);
 
+        // Force track mode to showing
         setTimeout(() => {
           const textTrack = videoElement.textTracks[0];
           if (textTrack) {
@@ -1083,14 +1134,17 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
       setPlayed(state.played);
       setCurrentTime(state.playedSeconds);
 
+
       if (bufferingTimeoutRef.current) {
         clearTimeout(bufferingTimeoutRef.current);
       }
+
 
       if (state.playedSeconds !== lastPlayedTime) {
         setIsBuffering(false);
         setLastPlayedTime(state.playedSeconds);
       } else if (playing && isPlayerReady) {
+
         bufferingTimeoutRef.current = setTimeout(() => {
           setIsBuffering(true);
         }, 500);
@@ -1102,16 +1156,18 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
     if (!hasStarted) {
       setHasStarted(true);
     }
-
+    
     const videoElement = playerRef.current?.getInternalPlayer();
     if (isIOS && videoElement) {
       if (!playing) {
+        // On iOS, we need to explicitly call play()
         const playPromise = videoElement.play();
         if (playPromise !== undefined) {
           playPromise.then(() => {
             setPlaying(true);
           }).catch(error => {
             console.error("iOS play failed:", error);
+            // Handle user interaction requirement
             setShowInitialPlayButton(true);
           });
         }
@@ -1123,17 +1179,13 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
       setPlaying(!playing);
     }
     showControlsWithTimeout();
-    setPlaybackError(null); // Clear playback error on play/pause
   }, [playing, hasStarted, isIOS, showControlsWithTimeout]);
 
-  const handleError = (event, url) => {
-    console.error('ReactPlayer error:', event, 'URL:', url);
+  const handleError = () => {
     setIsBuffering(false);
     setIsPlayerReady(false);
     setVideoMetadataLoaded(false);
-    setPlaybackError('Playback error. Please check your connection or try again later.'); // Set a user-friendly error message
   };
-
 
   useEffect(() => {
     return () => {
@@ -1163,6 +1215,12 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
     };
   }, []);
 
+  useEffect(() => {
+    // Detect Android on mount
+    const userAgent = navigator.userAgent.toLowerCase();
+    setIsAndroid(userAgent.includes("android"));
+  }, []);
+
 
   const handleVolumeChange = (e) => {
     setVolume(parseFloat(e.target.value));
@@ -1181,7 +1239,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
 
   const handleFullscreen = () => {
     const videoElement = playerRef.current?.getInternalPlayer();
-
+    
     if (isIOS && videoElement) {
       if (videoElement.webkitEnterFullscreen) {
         videoElement.webkitEnterFullscreen();
@@ -1203,6 +1261,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
     return hh ? `${hh}:${mm}:${ss}` : `${mm}:${ss}`;
   };
 
+  // Double tap fullscreen
   const handleDoubleTap = () => {
     if ((isAndroid || isMobile) && !isFullscreen) {
       handleFullscreen();
@@ -1213,12 +1272,12 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
     const currentTime = new Date().getTime();
     const timeDiff = currentTime - lastTapTime;
 
-    if (timeDiff < 300 && timeDiff > 0) {
+    if (timeDiff < 300 && timeDiff > 0) { // 300ms is the threshold for double tap
       handleDoubleTap();
-      setLastTapTime(0);
+      setLastTapTime(0); // Reset last tap time after double tap
     } else {
       setLastTapTime(currentTime);
-      showControlsWithTimeout();
+      showControlsWithTimeout(); // Show controls on single tap as well
     }
   };
 
@@ -1229,20 +1288,12 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
       className="bg-black rounded-xl overflow-hidden shadow-xl relative group"
       onMouseMove={showControlsWithTimeout}
       onMouseLeave={() => !isFullscreen && hideControls()}
-      onTouchStart={handleTouchStart}
+      onTouchStart={handleTouchStart} // Add touch start for double tap and controls
       onClick={handleVideoClick}
-      style={isAndroid ? { paddingBottom: '50px' } : {}}
+      style={isAndroid ? { paddingBottom: '50px' } : {}} // Add bottom padding for Android
     >
-      <div className={`flex items-center justify-center bg-black ${isFullscreen ? 'h-screen w-screen' : 'aspect-video'}`}>
-        {processingStatus === 'blocked' && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80">
-            <div className="text-white text-lg text-center p-4">
-              Video will soon be available for streaming
-            </div>
-          </div>
-        )}
-
-
+      <div className={`flex items-center justify-center bg-black ${isFullscreen ? 'h-screen w-screen' : 'aspect-video'}`}> {/* Removed relative class here */}
+        {/* Processing status: blocked */}
         {showInitialPlayButton && (
           <div className="absolute inset-0 flex items-center justify-center cursor-pointer z-10">
             <button
@@ -1259,7 +1310,15 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
             </button>
           </div>
         )}
+        {processingStatus === 'blocked' && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80">
+            <div className="text-white text-lg text-center p-4">
+              Video will soon be available for streaming
+            </div>
+          </div>
+        )}
 
+        {/* Processing status: downloading */}
         {processingStatus === 'downloading' && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80">
             <FaSpinner className="animate-spin text-white text-4xl mb-4" />
@@ -1267,6 +1326,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
           </div>
         )}
 
+        {/* Video player */}
         {processingStatus === 'ready' && streamingUrl && (
           <>
            {showSubtitleChangeMessage && subtitleChangeMessage && (
@@ -1281,18 +1341,21 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
               </div>
             )}
 
+            {/* Always Show Play Button when not playing or not started */}
             {(!playing || !hasStarted) && (
               <div
                 className="absolute inset-0 flex items-center justify-center cursor-pointer z-10"
                 onClick={handlePlayPause}
               >
+                {/* Enhanced Play Button Design with Pulsating Outline */}
                 <button
                   className="group relative"
                   aria-label="Play video"
                 >
+                  {/* Pulsating Outline */}
                   {!hasStarted && (
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform -scale-110 group-hover:scale-125 rounded-full bg-blue-500 opacity-75 animate-pulse-fast"
-                    style={{ padding: 'calc(48px * 0.6)' }}
+                    style={{ padding: 'calc(48px * 0.6)' }} // Adjust padding to match icon size
                     ></div>
                   )}
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/50 rounded-full p-4 transition-transform group-hover:scale-110">
@@ -1302,6 +1365,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
               </div>
             )}
 
+            {/* Center controls while playing */}
             {playing && showControls && isMobile && (
               <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
                 <div className="flex items-center justify-center space-x-8 pointer-events-auto">
@@ -1331,6 +1395,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
               </div>
             )}
 
+            {/* Video wrapper */}
             <div
               className={`video-wrapper ${isFullscreen ? 'w-full h-full' : 'w-full h-full'}`}
               style={{
@@ -1367,7 +1432,10 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
                 onBuffer={handleBuffer}
                 onBufferEnd={handleBufferEnd}
                 onReady={handlePlayerReady}
-                onError={handleError} // Use the enhanced error handler
+                onError={(err) => {
+                  console.error('ReactPlayer error:', err);
+                  handleError();
+                }}
                 config={{
                   file: {
                     attributes: {
@@ -1385,31 +1453,28 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
                     },
                     forceVideo: true,
                     hlsOptions: {
-                      // More robust HLS.js configuration for wider compatibility
-                      maxMaxBufferLength: 600, // Increased max buffer
-                      maxBufferLength: 30,      // Reduced buffer length to start playback faster
+                      maxBufferSize: 200 * 1024 * 1024,
+                      maxBufferLength: 200,
                       startPosition: -1,
-                      backBufferLength: 30,
-                      liveSyncDurationCount: 3, // Reduced for potentially lower latency
+                      backBufferLength: 300,
+                      liveSyncDurationCount: 10,
+                      maxMaxBufferLength: 600,
                       maxLoadingDelay: 4,
-                      manifestLoadingTimeOut: 10000, // Reduced timeouts for faster error detection
-                      manifestLoadingMaxRetry: 3,   // Reduced retries
-                      fragLoadingTimeOut: 15000,
-                      fragLoadingMaxRetry: 3,
-                      levelLoadingTimeOut: 10000,
-                      levelLoadingMaxRetry: 3,
-                      abrEwmaDefaultEstimate: 500000, // Reduced default bitrate estimate
-                      abrBandWidthFactor: 0.9,     // Slightly more conservative ABR
+                      manifestLoadingTimeOut: 20000,
+                      manifestLoadingMaxRetry: 5,
+                      fragLoadingTimeOut: 30000,
+                      fragLoadingMaxRetry: 5,
+                      levelLoadingTimeOut: 20000,
+                      levelLoadingMaxRetry: 5,
+                      abrEwmaDefaultEstimate: 5000000,
+                      abrBandWidthFactor: 0.95,
                       abrBandWidthUpFactor: 0.7,
                       abrMaxWithRealBitrate: true,
-                      enableWorker: true, // Keep worker enabled for performance, but monitor if issues arise
-                      autoStartLoad: true,
-                      startPosition: -1,
-                      // Experimental settings - use with caution and testing
-                      // lowLatencyMode: true, // Consider for low latency streams if applicable
-                      // liveDurationInfinity: true, // If stream is truly live and infinite
+                      enableWorker: false, // Disable worker for better iOS compatibility
+        autoStartLoad: true,
+        startPosition: -1
                     }
-                  },
+                  }
                 }}
               />
             </div>
@@ -1442,21 +1507,6 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
             </button>
           </div>
         )}
-         {playbackError && processingStatus === 'ready' && ( // Show playback error when streaming is ready but playback fails
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 p-4">
-            <div className="text-red-500 mb-4 text-center">
-              {playbackError}
-            </div>
-            <button
-              onClick={handleRetry}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center"
-            >
-              <FaRotate className="mr-2" />
-              Retry Playback
-            </button>
-          </div>
-        )}
-
 
         {showFullscreenTooltip && hasStarted && !isFullscreen && playing && (
           <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 bg-black/60 text-white text-sm p-2 rounded-md z-20">
@@ -1465,6 +1515,7 @@ const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,nai
         )}
 
 
+        {/* Bottom controls */}
         <div
           ref={controlsRef}
           className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 transition-opacity duration-300 ${
