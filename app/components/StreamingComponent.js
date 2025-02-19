@@ -71,27 +71,27 @@ const clickTimeoutRef = useRef(null);
   const handleInitialPlay = () => {
     setShowInitialPlayButton(false);
     setProcessingInitiated(true);
-    
-    if (isIOS) {
-      const videoElement = playerRef.current?.getInternalPlayer();
-      if (videoElement) {
-        videoElement.play().catch(error => {
-          console.error("iOS play failed:", error);
-          setShowInitialPlayButton(true);
-        });
-      }
-    } else {
-      setPlaying(true);
-    }
+    setPlaying(true);
     setHasStarted(true);
   };
 
   useEffect(() => {
     // Detect iOS device
-    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
                        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     setIsIOS(isIOSDevice);
   }, []);
+
+
+  useEffect(() => {
+    if (isIOS && showInitialPlayButton) {
+      // Ensure playback starts with user interaction on iOS
+      setPlaying(false); // Initially paused on iOS
+    } else if (!showInitialPlayButton && processingStatus === 'ready' && streamingUrl && !playing && hasStarted) {
+        setPlaying(true); // Auto-play after initial interaction or on non-iOS
+    }
+  }, [isIOS, showInitialPlayButton, processingStatus, streamingUrl, playing, hasStarted]);
+
 
   const fetchActualUrl = async (url) => {
     console.log('Fetching actual URL for:', url);
@@ -119,9 +119,6 @@ const clickTimeoutRef = useRef(null);
       return null;
     }
   };
-
- 
-
 
 
   // Function to extract resolution number from quality string
@@ -453,18 +450,18 @@ const clickTimeoutRef = useRef(null);
   const handleVideoClick = (e) => {
     // Prevent click from triggering if user was dragging/seeking
     if (seeking) return;
-  
+
     // Don't trigger if click was on a control element
     if (controlsRef.current && controlsRef.current.contains(e.target)) return;
-  
+
     const currentTime = new Date().getTime();
     const timeDiff = currentTime - lastClickTime;
-  
+
     // Clear any existing timeout
     if (clickTimeoutRef.current) {
       clearTimeout(clickTimeoutRef.current);
     }
-  
+
     if (timeDiff < 300) { // 300ms threshold for double click
       // Handle double click
       handleFullscreen();
@@ -472,12 +469,12 @@ const clickTimeoutRef = useRef(null);
     } else {
       // Set new timeout for single click
       clickTimeoutRef.current = setTimeout(() => {
-        // handlePlayPause();
+        handlePlayPause(); // Call play/pause on single click
       }, 200); // Wait 200ms before triggering single click action
       setLastClickTime(currentTime);
     }
   };
-  
+
 
 
 
@@ -1163,27 +1160,36 @@ const clickTimeoutRef = useRef(null);
     }
   };
 
-  // Update handlePlayPause for better iOS support
-const handlePlayPause = useCallback(() => {
-  const videoElement = playerRef.current?.getInternalPlayer();
-  
-  if (isIOS && videoElement) {
-    if (videoElement.paused) {
-      videoElement.play().then(() => {
-        setPlaying(true);
-      }).catch(error => {
-        console.error("iOS play failed:", error);
-        setShowInitialPlayButton(true);
-      });
-    } else {
-      videoElement.pause();
-      setPlaying(false);
+  const handlePlayPause = useCallback(() => {
+    if (!hasStarted && !isIOS) { // For non-iOS, start immediately on first play
+      setHasStarted(true);
     }
-  } else {
-    setPlaying(!playing);
-  }
-  showControlsWithTimeout();
-}, [playing, isIOS]);
+
+    const videoElement = playerRef.current?.getInternalPlayer();
+    if (isIOS && videoElement) {
+      if (!playing) {
+        // On iOS, we need to explicitly call play()
+        const playPromise = videoElement.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            setPlaying(true);
+          }).catch(error => {
+            console.error("iOS play failed:", error);
+            // Handle user interaction requirement
+            setShowInitialPlayButton(true); // Ensure initial play button is shown if play fails
+            setPlaying(false); // Keep playing state as false if play fails
+          });
+        }
+      } else {
+        videoElement.pause();
+        setPlaying(false);
+      }
+    } else {
+      setPlaying(!playing);
+    }
+    showControlsWithTimeout();
+  }, [playing, hasStarted, isIOS, showControlsWithTimeout]);
+
 
   const handleError = () => {
     setIsBuffering(false);
@@ -1241,22 +1247,21 @@ const handlePlayPause = useCallback(() => {
     showControlsWithTimeout();
   };
 
- // Update fullscreen handler for iOS
-const handleFullscreen = () => {
-  const videoElement = playerRef.current?.getInternalPlayer();
-  
-  if (isIOS && videoElement) {
-    if (videoElement.webkitDisplayingFullscreen) {
-      videoElement.webkitExitFullscreen();
-      setIsFullscreen(false);
-    } else {
-      videoElement.webkitEnterFullscreen();
+  const handleFullscreen = () => {
+    const videoElement = playerRef.current?.getInternalPlayer();
+
+    if (isIOS && videoElement) {
+      if (videoElement.webkitEnterFullscreen) {
+        videoElement.webkitEnterFullscreen();
+      } else if (videoElement.webkitSupportsFullscreen) {
+        videoElement.webkitRequestFullscreen();
+      }
       setIsFullscreen(true);
+    } else if (screenfull.isEnabled && containerRef.current) {
+      screenfull.toggle(containerRef.current);
     }
-  } else if (screenfull.isEnabled) {
-    screenfull.toggle(containerRef.current);
-  }
-};
+    showControlsWithTimeout();
+  };
 
   const formatTime = (seconds) => {
     const date = new Date(seconds * 1000);
@@ -1346,8 +1351,8 @@ const handleFullscreen = () => {
               </div>
             )}
 
-            {/* Always Show Play Button when not playing or not started */}
-            {(!playing || !hasStarted) && (
+            {/* Always Show Play Button when not playing or not started - except on iOS after initial interaction */}
+            {(!playing || showInitialPlayButton) && (
               <div
                 className="absolute inset-0 flex items-center justify-center cursor-pointer z-10"
                 onClick={handlePlayPause}
@@ -1358,7 +1363,7 @@ const handleFullscreen = () => {
                   aria-label="Play video"
                 >
                   {/* Pulsating Outline */}
-                  {!hasStarted && (
+                  {showInitialPlayButton && ( // Only show pulsating outline for initial play button
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform -scale-110 group-hover:scale-125 rounded-full bg-blue-500 opacity-75 animate-pulse-fast"
                     style={{ padding: 'calc(48px * 0.6)' }} // Adjust padding to match icon size
                     ></div>
@@ -1454,8 +1459,7 @@ const handleFullscreen = () => {
                       }
                     },
                     forceVideo: true,
-                    forceHLS: !isIOS,
-                    hlsOptions: isIOS ? undefined : {
+                    hlsOptions: {
                       // More robust HLS.js configuration for wider compatibility
                       maxMaxBufferLength: 600, // Increased max buffer
                       maxBufferLength: 30,      // Reduced buffer length to start playback faster
