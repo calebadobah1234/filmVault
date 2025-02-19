@@ -1152,17 +1152,34 @@ const clickTimeoutRef = useRef(null);
     }
   };
 
-  const handlePlayPause = () => {
-    if (!hasStarted) setHasStarted(true);
-    setPlaying(!playing);
-    showControlsWithTimeout();
-    if (!playing && !isFullscreen && hasStarted && !showFullscreenTooltip) {
-      setShowFullscreenTooltip(true);
-      fullscreenTooltipTimeoutRef.current = setTimeout(() => {
-        setShowFullscreenTooltip(false);
-      }, 5000); // Show tooltip for 5 seconds
+  const handlePlayPause = useCallback(() => {
+    if (!hasStarted) {
+      setHasStarted(true);
     }
-  };
+    
+    const videoElement = playerRef.current?.getInternalPlayer();
+    if (isIOS && videoElement) {
+      if (!playing) {
+        // On iOS, we need to explicitly call play()
+        const playPromise = videoElement.play();
+        if (playPromise !== undefined) {
+          playPromise.then(() => {
+            setPlaying(true);
+          }).catch(error => {
+            console.error("iOS play failed:", error);
+            // Handle user interaction requirement
+            setShowInitialPlayButton(true);
+          });
+        }
+      } else {
+        videoElement.pause();
+        setPlaying(false);
+      }
+    } else {
+      setPlaying(!playing);
+    }
+    showControlsWithTimeout();
+  }, [playing, hasStarted, isIOS, showControlsWithTimeout]);
 
   const handleError = () => {
     setIsBuffering(false);
@@ -1221,10 +1238,19 @@ const clickTimeoutRef = useRef(null);
   };
 
   const handleFullscreen = () => {
-    if (screenfull.isEnabled && containerRef.current) {
+    const videoElement = playerRef.current?.getInternalPlayer();
+    
+    if (isIOS && videoElement) {
+      if (videoElement.webkitEnterFullscreen) {
+        videoElement.webkitEnterFullscreen();
+      } else if (videoElement.webkitSupportsFullscreen) {
+        videoElement.webkitRequestFullscreen();
+      }
+      setIsFullscreen(true);
+    } else if (screenfull.isEnabled && containerRef.current) {
       screenfull.toggle(containerRef.current);
-      showControlsWithTimeout();
     }
+    showControlsWithTimeout();
   };
 
   const formatTime = (seconds) => {
@@ -1415,6 +1441,8 @@ const clickTimeoutRef = useRef(null);
                     attributes: {
                       controlsList: 'nodownload',
                       crossOrigin: 'anonymous',
+                      playsInline: true,
+                      'webkit-playsinline': true,
                       muted: false,
                       style: {
                         width: '100%',
@@ -1442,6 +1470,9 @@ const clickTimeoutRef = useRef(null);
                       abrBandWidthFactor: 0.95,
                       abrBandWidthUpFactor: 0.7,
                       abrMaxWithRealBitrate: true,
+                      enableWorker: false, // Disable worker for better iOS compatibility
+        autoStartLoad: true,
+        startPosition: -1
                     }
                   }
                 }}
