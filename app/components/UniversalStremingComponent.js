@@ -1,66 +1,134 @@
-import React, { useRef, useState } from 'react';
+'use client'
+import { useEffect, useState, useRef } from 'react';
 
-const IOSVideoPlayer = () => {
-  const videoRef = useRef(null);
-  const [isPlaying, setIsPlaying] = useState(false);
+const TripleVideoPlayer = ({ videoUrl }) => {
+  const plyrVideoRef = useRef(null);
+  const videojsRef = useRef(null);
+  const [plyrPlayer, setPlyrPlayer] = useState(null);
+  const [videojsPlayer, setVideojsPlayer] = useState(null);
 
-  const togglePlay = () => {
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        // iOS requires play() to be triggered by user interaction
-        const playPromise = videoRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(error => {
-            console.log("Playback failed:", error);
-          });
-        }
+  useEffect(() => {
+    let plyr;
+    let videojs;
+
+    const initializePlayers = async () => {
+      try {
+        // Initialize Plyr
+        const { default: Plyr } = await import('plyr');
+        plyr = new Plyr(plyrVideoRef.current, {
+          controls: [
+            'play-large',
+            'play',
+            'progress',
+            'current-time',
+            'mute',
+            'volume',
+            'captions',
+            'settings',
+            'fullscreen'
+          ],
+        });
+        setPlyrPlayer(plyr);
+
+        // Initialize Video.js
+        const videojsModule = await import('video.js');
+        const videojs = videojsModule.default;
+        
+        const player = videojs(videojsRef.current, {
+          controls: true,
+          fluid: true,
+          html5: {
+            hls: {
+              enableLowInitialPlaylist: true,
+              smoothQualityChange: true,
+              overrideNative: !videojs.browser.IS_SAFARI
+            },
+            nativeVideoTracks: true,
+            nativeAudioTracks: true,
+            nativeTextTracks: true
+          },
+          sources: [{
+            src: videoUrl,
+            type: videoUrl.includes('.m3u8') ? 'application/x-mpegURL' : 'video/mp4'
+          }]
+        });
+
+        setVideojsPlayer(player);
+
+        // Important for iOS touch events
+        player.on('touchend', function() {
+          if (player.paused()) {
+            player.play();
+          } else {
+            player.pause();
+          }
+        });
+
+      } catch (error) {
+        console.error('Error initializing players:', error);
       }
-      setIsPlaying(!isPlaying);
+    };
+
+    // Only run on client side
+    if (typeof window !== 'undefined') {
+      initializePlayers();
     }
-  };
+
+    // Cleanup
+    return () => {
+      if (plyr) {
+        plyr.destroy();
+      }
+      if (videojs) {
+        videojs.dispose();
+      }
+    };
+  }, [videoUrl]);
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
-      <div className="relative aspect-video bg-gray-900 rounded-lg overflow-hidden">
-        {/* Video element with iOS-specific attributes */}
+    <div className="grid grid-cols-1 gap-8 p-4">
+      <div className="w-full">
+        <h2 className="text-xl font-bold mb-2">Plyr Player</h2>
         <video
-          ref={videoRef}
-          className="w-full h-full"
-          playsInline // Required for iOS
-          webkit-playsinline="true" // Required for older iOS versions
-          preload="metadata"
-          poster="/api/placeholder/640/360" // Replace with your poster image
+          ref={plyrVideoRef}
+          className="plyr-react plyr w-full aspect-video"
+          playsInline
+          webkit-playsinline="true"
+          controls
         >
-          {/* Add multiple sources for better compatibility */}
-          <source src="https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4" />
-          
+          <source src={videoUrl} type="video/mp4" />
+        </video>
+      </div>
+      
+      <div className="w-full">
+        <h2 className="text-xl font-bold mb-2">Video.js Player</h2>
+        <div data-vjs-player>
+          <video
+            ref={videojsRef}
+            className="video-js vjs-big-play-centered w-full aspect-video"
+            playsInline
+            webkit-playsinline="true"
+            controls
+          />
+        </div>
+      </div>
+
+      <div className="w-full">
+        <h2 className="text-xl font-bold mb-2">Native HTML5 Player</h2>
+        <video
+          className="w-full aspect-video"
+          controls
+          playsInline
+          webkit-playsinline="true"
+          preload="auto"
+          src={videoUrl}
+        >
+          <source src={videoUrl} type="video/mp4" />
           Your browser does not support the video tag.
         </video>
-
-        {/* Custom controls */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/50 to-transparent">
-          <button
-            onClick={togglePlay}
-            className="bg-white rounded-full p-2 hover:bg-gray-200 transition-colors"
-          >
-            {isPlaying ? (
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <rect x="6" y="4" width="4" height="16" />
-                <rect x="14" y="4" width="4" height="16" />
-              </svg>
-            ) : (
-              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            )}
-          </button>
-        </div>
       </div>
     </div>
   );
 };
 
-export default IOSVideoPlayer;
+export default TripleVideoPlayer;
