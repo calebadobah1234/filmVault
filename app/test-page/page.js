@@ -17,7 +17,7 @@ export default function Page() {
     <div className="container mx-auto">
       <h1 className="text-2xl font-bold my-4">Video Player Comparison</h1>
       <TripleVideoPlayer 
-        videoUrl="https://filmvault3.b-cdn.net/Spider-Man.Into.The.Spider-Verse.2018.BluRay.480p.x264.30NAMACHI.mp4"
+        videoUrl="https://filmvault3.b-cdn.net/The_Vampire_Diaries_S08E13_-_The_Lies_Will_Catch_Up_With_You_(Awafim.tv).mp4"
       />
      
     </div>
