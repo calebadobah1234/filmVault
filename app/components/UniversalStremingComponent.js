@@ -33,7 +33,7 @@ const TripleVideoPlayer = ({ videoUrl }) => {
         // Initialize Video.js
         const videojsModule = await import('video.js');
         const videojs = videojsModule.default;
-        
+
         const player = videojs(videojsRef.current, {
           controls: true,
           fluid: true,
@@ -99,7 +99,7 @@ const TripleVideoPlayer = ({ videoUrl }) => {
           <source src={videoUrl} type="video/mp4" />
         </video>
       </div>
-      
+
       <div className="w-full">
         <h2 className="text-xl font-bold mb-2">Video.js Player</h2>
         <div data-vjs-player>

@@ -19,9 +19,7 @@ export default function Page() {
       <TripleVideoPlayer 
         videoUrl="https://filmvault3.b-cdn.net/Spider-Man.Into.The.Spider-Verse.2018.BluRay.480p.x264.30NAMACHI.mp4"
       />
-      <TripleVideoPlayer 
-        videoUrl="https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-      />
+     
     </div>
   );
 }
