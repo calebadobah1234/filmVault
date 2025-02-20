@@ -6,6 +6,7 @@ import { FaPlay, FaPause, FaVolumeUp, FaExpand, FaSpinner,FaClosedCaptioning,FaV
 import screenfull from 'screenfull';
 import { FaRotate } from 'react-icons/fa6';
 import { act } from 'react';
+import VideoPlayer from './VideoJSPlayer';
 
 
 const EnhancedStreamingComponent = ({ sources,movieTitle,sources2,mainSource,naijaRocks }) => {
@@ -1407,76 +1408,20 @@ const clickTimeoutRef = useRef(null);
                 backgroundColor: 'black'
               }}
             >
-              <ReactPlayer
-                ref={playerRef}
-                url={streamingUrl}
-                playing={playing}
-                volume={volume}
-                muted={isMuted}
-                width="100%"
-                height="100%"
-                style={{
-                  maxWidth: '100%',
-                  maxHeight: '100%',
-                  margin: 'auto',
-                  objectFit: 'contain',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: 'black'
-                }}
-                className={`react-player ${isFullscreen ? 'fullscreen' : ''}`}
-                onProgress={handleProgress}
-                onClick={handleVideoClick}
-                onDuration={setDuration}
-                onBuffer={handleBuffer}
-                onBufferEnd={handleBufferEnd}
-                onReady={handlePlayerReady}
-                onError={handleError} // Use the enhanced error handler
-                config={{
-                  file: {
-                    attributes: {
-                      controlsList: 'nodownload',
-                      crossOrigin: 'anonymous',
-                      playsInline: true,
-                      'webkit-playsinline': true,
-                      muted: false,
-                      style: {
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'contain',
-                        backgroundColor: 'black'
-                      }
-                    },
-                    forceVideo: true,
-                    hlsOptions: {
-                      // More robust HLS.js configuration for wider compatibility
-                      maxMaxBufferLength: 600, // Increased max buffer
-                      maxBufferLength: 30,      // Reduced buffer length to start playback faster
-                      startPosition: -1,
-                      backBufferLength: 30,
-                      liveSyncDurationCount: 3, // Reduced for potentially lower latency
-                      maxLoadingDelay: 4,
-                      manifestLoadingTimeOut: 10000, // Reduced timeouts for faster error detection
-                      manifestLoadingMaxRetry: 3,   // Reduced retries
-                      fragLoadingTimeOut: 15000,
-                      fragLoadingMaxRetry: 3,
-                      levelLoadingTimeOut: 10000,
-                      levelLoadingMaxRetry: 3,
-                      abrEwmaDefaultEstimate: 500000, // Reduced default bitrate estimate
-                      abrBandWidthFactor: 0.9,     // Slightly more conservative ABR
-                      abrBandWidthUpFactor: 0.7,
-                      abrMaxWithRealBitrate: true,
-                      enableWorker: true, // Keep worker enabled for performance, but monitor if issues arise
-                      autoStartLoad: true,
-                      startPosition: -1,
-                      // Experimental settings - use with caution and testing
-                      // lowLatencyMode: true, // Consider for low latency streams if applicable
-                      // liveDurationInfinity: true, // If stream is truly live and infinite
-                    }
-                  },
-                }}
-              />
+              <VideoPlayer
+  streamingUrl={streamingUrl}
+  processingStatus={processingStatus}
+  subtitleTracks={subtitleTracks}
+  qualities={qualities}
+  onReady={handlePlayerReady}
+  errorMessage={errorMessage}
+  handleRetry={handleRetry}
+  isFullscreen={isFullscreen}
+  handleFullscreen={handleFullscreen}
+  handleRotate={handleRotate}
+  isMobile={isMobile}
+  isAndroid={isAndroid}
+/>
             </div>
           </>
         )}
