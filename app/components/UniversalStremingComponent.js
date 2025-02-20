@@ -1,104 +1,127 @@
-"use client"
-import { useEffect, useState, useRef } from 'react'
-import Hls from 'hls.js'
-import Plyr from 'plyr'
-import 'plyr/dist/plyr.css'
-import ReactPlayer from 'react-player'
+'use client'
+import { useEffect, useState, useRef } from 'react';
 
-const IOSVideoPlayer = ({ src, subtitleTracks }) => {
-  const videoRef = useRef(null)
-  const playerRef = useRef(null)
+const DualVideoPlayer = ({ videoUrl }) => {
+  const hlsVideoRef = useRef(null);
+  const plyrVideoRef = useRef(null);
+  const [hlsPlayer, setHlsPlayer] = useState(null);
+  const [plyrPlayer, setPlyrPlayer] = useState(null);
 
   useEffect(() => {
-    if (Hls.isSupported()) {
-      const hls = new Hls()
-      hls.loadSource(src)
-      hls.attachMedia(videoRef.current)
-    } else if (videoRef.current.canPlayType('application/vnd.apple.mpegurl')) {
-      videoRef.current.src = src
-    }
+    let hls;
+    let plyr;
 
-    // Initialize Plyr
-    playerRef.current = new Plyr(videoRef.current, {
-      controls: [
-        'play-large',
-        'play',
-        'progress',
-        'current-time',
-        'mute',
-        'volume',
-        'captions',
-        'settings',
-        'fullscreen'
-      ],
-    })
+    const initializePlayers = async () => {
+      // Dynamically import Hls.js and Plyr
+      const [{ default: Hls }, { default: Plyr }] = await Promise.all([
+        import('hls.js'),
+        import('plyr')
+      ]);
 
-    return () => {
-      if (playerRef.current) playerRef.current.destroy()
-    }
-  }, [src])
+      // Initialize HLS player
+      if (Hls.isSupported()) {
+        hls = new Hls({
+          debug: true
+        });
+        hls.loadSource(videoUrl);
+        hls.attachMedia(hlsVideoRef.current);
+        
+        // Handle HLS events
+        hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          hlsVideoRef.current.play().catch(error => {
+            console.log('Playback was prevented:', error);
+          });
+        });
 
-  return (
-    <video ref={videoRef} controls crossOrigin="anonymous" playsInline>
-      {subtitleTracks.map((track, index) => (
-        <track
-          key={index}
-          kind="subtitles"
-          srcLang={track.srcLang}
-          src={track.src}
-          label={track.label}
-          default={index === 0}
-        />
-      ))}
-    </video>
-  )
-}
-
-const UniversalVideoPlayer = ({ sources, isIOS }) => {
-  if (isIOS) {
-    return <IOSVideoPlayer src={sources[0].src} subtitleTracks={sources[0].subtitleTracks} />
-  }
-
-  return (
-    <ReactPlayer 
-      url={sources[0].src}
-      controls
-      playsinline
-      config={{
-        file: {
-          attributes: {
-            crossOrigin: 'anonymous',
-            playsInline: true,
+        hls.on(Hls.Events.ERROR, (event, data) => {
+          if (data.fatal) {
+            switch (data.type) {
+              case Hls.ErrorTypes.NETWORK_ERROR:
+                console.log('Network error, trying to recover...');
+                hls.startLoad();
+                break;
+              case Hls.ErrorTypes.MEDIA_ERROR:
+                console.log('Media error, trying to recover...');
+                hls.recoverMediaError();
+                break;
+              default:
+                console.log('Fatal error, destroying HLS instance:', data);
+                hls.destroy();
+                break;
+            }
           }
-        }
-      }}
-    />
-  )
-}
+        });
 
-const EnhancedStreamingComponent = ({ sources }) => {
-  const [isIOS, setIsIOS] = useState(false)
+        setHlsPlayer(hls);
+      } else if (hlsVideoRef.current?.canPlayType('application/vnd.apple.mpegurl')) {
+        // For Safari on iOS, use native HLS support
+        hlsVideoRef.current.src = videoUrl;
+      } else {
+        // Fallback for non-HLS support
+        hlsVideoRef.current.src = videoUrl;
+      }
 
-  useEffect(() => {
-    const iosDevices = /iPad|iPhone|iPod/.test(navigator.userAgent)
-    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent)
-    setIsIOS(iosDevices || (isSafari && !window.MSStream))
-  }, [])
+      // Initialize Plyr with source
+      plyr = new Plyr(plyrVideoRef.current, {
+        controls: [
+          'play-large',
+          'play',
+          'progress',
+          'current-time',
+          'mute',
+          'volume',
+          'captions',
+          'settings',
+          'fullscreen'
+        ],
+        sources: [{
+          src: videoUrl,
+          type: 'video/mp4'
+        }]
+      });
+      setPlyrPlayer(plyr);
+    };
 
-  const formattedSources = sources.map(source => ({
-    src: source.url,
-    type: source.type || 'video/mp4',
-    subtitleTracks: source.subtitleTracks || []
-  }))
+    // Only run on client side
+    if (typeof window !== 'undefined') {
+      initializePlayers();
+    }
+
+    // Cleanup
+    return () => {
+      if (hls) {
+        hls.destroy();
+      }
+      if (plyr) {
+        plyr.destroy();
+      }
+    };
+  }, [videoUrl]);
 
   return (
-    <div className="player-container">
-      <UniversalVideoPlayer 
-        sources={formattedSources}
-        isIOS={isIOS}
-      />
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
+      <div className="w-full">
+        <h2 className="text-xl font-bold mb-2">HLS.js Player</h2>
+        <video
+          ref={hlsVideoRef}
+          controls
+          className="w-full aspect-video"
+          playsInline
+        />
+      </div>
+      
+      <div className="w-full">
+        <h2 className="text-xl font-bold mb-2">Plyr Player</h2>
+        <video
+          ref={plyrVideoRef}
+          className="plyr-react plyr w-full aspect-video"
+          playsInline
+        >
+          <source src={videoUrl} type="video/mp4" />
+        </video>
+      </div>
     </div>
-  )
-}
+  );
+};
 
-export default EnhancedStreamingComponent
+export default DualVideoPlayer;
