@@ -1,3 +1,5 @@
+"use client"
+
 import React from 'react'
 import UniversalVideoPlayer from '../components/UniversalStremingComponent'
 
