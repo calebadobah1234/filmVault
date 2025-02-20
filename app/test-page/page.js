@@ -1,20 +1,25 @@
-"use client"
+// page.js
+import React from 'react';
+import dynamic from 'next/dynamic';
 
-import React from 'react'
-import UniversalVideoPlayer from '../components/UniversalStremingComponent'
+// Dynamically import the video player with no SSR
+const UniversalVideoPlayer = dynamic(
+  () => import('../components/UniversalStremingComponent'),
+  { ssr: false }
+);
 
-const page = () => {
+const Page = () => {
   return (
     <div>
       <UniversalVideoPlayer
-  sources={[{
-    url: 'https://filmvault3.b-cdn.net/Spider-Man.Into.The.Spider-Verse.2018.BluRay.480p.x264.30NAMACHI.mp4',
-    type: 'video/mp4',
-    subtitleTracks: [] // Add your subtitle tracks here
-  }]}
-/>
+        sources={[{
+          url: 'https://filmvault3.b-cdn.net/Spider-Man.Into.The.Spider-Verse.2018.BluRay.480p.x264.30NAMACHI.mp4',
+          type: 'video/mp4',
+          subtitleTracks: []
+        }]}
+      />
     </div>
-  )
-}
+  );
+};
 
-export default page
+export default Page;
