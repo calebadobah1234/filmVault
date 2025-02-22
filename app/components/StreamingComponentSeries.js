@@ -98,11 +98,12 @@ const clickTimeoutRef = useRef(null);
   };
 
   useEffect(() => {
-    const checkAndroid = () => {
-      const userAgent = window.navigator.userAgent.toLowerCase();
-      setIsAndroid(/android/.test(userAgent));
-    };
-    checkAndroid();
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isTelegram = userAgent.includes('telegram');
+    const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+    
+    setIsMobile(isMobileDevice || isTelegram);
+    setIsAndroid(/android/i.test(userAgent) || isTelegram);
   }, []);
 
   const detectSeasonFromUrl = (filename) => {
@@ -1319,9 +1320,49 @@ useEffect(() => {
   };
 
   const handleFullscreen = () => {
+    // Try standard screenfull first
     if (screenfull.isEnabled && containerRef.current) {
       screenfull.toggle(containerRef.current);
       showControlsWithTimeout();
+    } else {
+      // Fallback for mobile browsers that block fullscreen API
+      const videoElement = playerRef.current?.getInternalPlayer();
+      if (videoElement) {
+        try {
+          // For Android browsers that require video element fullscreen
+          if (videoElement.requestFullscreen) {
+            videoElement.requestFullscreen();
+          } else if (videoElement.mozRequestFullScreen) { /* Firefox */
+            videoElement.mozRequestFullScreen();
+          } else if (videoElement.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+            videoElement.webkitRequestFullscreen();
+          } else if (videoElement.msRequestFullscreen) { /* IE/Edge */
+            videoElement.msRequestFullscreen();
+          }
+          
+          // Special handling for Telegram in-app browser
+          if (isAndroid && window.TelegramWebViewProxy) {
+            videoElement.style.position = 'fixed';
+            videoElement.style.top = '0';
+            videoElement.style.left = '0';
+            videoElement.style.width = '100vw';
+            videoElement.style.height = '100vh';
+            videoElement.style.zIndex = '9999';
+          }
+        } catch (error) {
+          console.error('Fullscreen failed:', error);
+          // Fallback to fullscreen styles
+          if (containerRef.current) {
+            containerRef.current.style.position = 'fixed';
+            containerRef.current.style.top = '0';
+            containerRef.current.style.left = '0';
+            containerRef.current.style.width = '100vw';
+            containerRef.current.style.height = '100vh';
+            containerRef.current.style.zIndex = '9999';
+            setIsFullscreen(true);
+          }
+        }
+      }
     }
   };
 
@@ -1350,6 +1391,12 @@ useEffect(() => {
   const handleDoubleTap = () => {
     if ((isAndroid || isMobile) && !isFullscreen) {
       handleFullscreen();
+      // Force video element to fill screen in Telegram
+      const videoElement = playerRef.current?.getInternalPlayer();
+      if (videoElement && window.TelegramWebViewProxy) {
+        videoElement.style.objectFit = 'contain';
+        videoElement.style.backgroundColor = 'black';
+      }
     }
   };
 

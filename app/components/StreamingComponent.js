@@ -1196,23 +1196,14 @@ const clickTimeoutRef = useRef(null);
   }, []);
 
   // Replace the existing isMobile useEffect with this:
-useEffect(() => {
-  // Proper mobile detection using user agent
-  const userAgent = navigator.userAgent.toLowerCase();
-  const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
-  setIsMobile(isMobileDevice);
-
-  // Optional: Handle landscape resize for non-mobile devices
-  const checkWidth = () => {
-    if (!isMobileDevice) {
-      setIsMobile(window.innerWidth <= 768);
-    }
-  };
-  
-  checkWidth();
-  window.addEventListener('resize', checkWidth);
-  return () => window.removeEventListener('resize', checkWidth);
-}, []);
+  useEffect(() => {
+    const userAgent = navigator.userAgent.toLowerCase();
+    const isTelegram = userAgent.includes('telegram');
+    const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+    
+    setIsMobile(isMobileDevice || isTelegram);
+    setIsAndroid(/android/i.test(userAgent) || isTelegram);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -1247,19 +1238,50 @@ useEffect(() => {
   };
 
   const handleFullscreen = () => {
-    const videoElement = playerRef.current?.getInternalPlayer();
-    
-    if (isIOS && videoElement) {
-      if (videoElement.webkitEnterFullscreen) {
-        videoElement.webkitEnterFullscreen();
-      } else if (videoElement.webkitSupportsFullscreen) {
-        videoElement.webkitRequestFullscreen();
-      }
-      setIsFullscreen(true);
-    } else if (screenfull.isEnabled && containerRef.current) {
+    // Try standard screenfull first
+    if (screenfull.isEnabled && containerRef.current) {
       screenfull.toggle(containerRef.current);
+      showControlsWithTimeout();
+    } else {
+      // Fallback for mobile browsers that block fullscreen API
+      const videoElement = playerRef.current?.getInternalPlayer();
+      if (videoElement) {
+        try {
+          // For Android browsers that require video element fullscreen
+          if (videoElement.requestFullscreen) {
+            videoElement.requestFullscreen();
+          } else if (videoElement.mozRequestFullScreen) { /* Firefox */
+            videoElement.mozRequestFullScreen();
+          } else if (videoElement.webkitRequestFullscreen) { /* Chrome, Safari & Opera */
+            videoElement.webkitRequestFullscreen();
+          } else if (videoElement.msRequestFullscreen) { /* IE/Edge */
+            videoElement.msRequestFullscreen();
+          }
+          
+          // Special handling for Telegram in-app browser
+          if (isAndroid && window.TelegramWebViewProxy) {
+            videoElement.style.position = 'fixed';
+            videoElement.style.top = '0';
+            videoElement.style.left = '0';
+            videoElement.style.width = '100vw';
+            videoElement.style.height = '100vh';
+            videoElement.style.zIndex = '9999';
+          }
+        } catch (error) {
+          console.error('Fullscreen failed:', error);
+          // Fallback to fullscreen styles
+          if (containerRef.current) {
+            containerRef.current.style.position = 'fixed';
+            containerRef.current.style.top = '0';
+            containerRef.current.style.left = '0';
+            containerRef.current.style.width = '100vw';
+            containerRef.current.style.height = '100vh';
+            containerRef.current.style.zIndex = '9999';
+            setIsFullscreen(true);
+          }
+        }
+      }
     }
-    showControlsWithTimeout();
   };
 
   const formatTime = (seconds) => {
@@ -1274,6 +1296,12 @@ useEffect(() => {
   const handleDoubleTap = () => {
     if ((isAndroid || isMobile) && !isFullscreen) {
       handleFullscreen();
+      // Force video element to fill screen in Telegram
+      const videoElement = playerRef.current?.getInternalPlayer();
+      if (videoElement && window.TelegramWebViewProxy) {
+        videoElement.style.objectFit = 'contain';
+        videoElement.style.backgroundColor = 'black';
+      }
     }
   };
 

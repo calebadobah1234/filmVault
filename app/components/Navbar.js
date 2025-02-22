@@ -23,7 +23,7 @@ const Navbar = ({ isHomePage }) => {
 
   return (
     <div className="w-full relative" style={{ zIndex: 40 }}>
-      <div className={`overflow-x-hidden w-full transition-all duration-300 ${
+      <div className={`max-md:overflow-x-hidden w-full transition-all duration-300 ${
         isScrolled ? 'bg-gray-900/95 backdrop-blur-md shadow-lg' : 'bg-gray-900'
       }`} style={{ zIndex: 40 }}>
         {/* Top Bar */}
