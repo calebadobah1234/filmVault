@@ -94,6 +94,17 @@ const [showIosTooltip, setShowIosTooltip] = useState(false);
     }
   }, [isTelegram, hasStarted]);
 
+
+  useEffect(() => {
+    if (hasStarted) {
+      setShowTelegramTooltip(true);
+      const timer = setTimeout(() => {
+        setShowTelegramTooltip(false);
+      }, 10000); // 30 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [hasStarted]);
+
   useEffect(() => {
     // Detect iOS device
     const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
@@ -1437,6 +1448,12 @@ const [showIosTooltip, setShowIosTooltip] = useState(false);
                 </button>
               </div>
             )}
+
+{showTelegramTooltip && (
+  <div className="absolute top-2 left-2 bg-black/60 text-white text-sm p-2 rounded-md z-20">
+  Fullscreen might not work if using Telegram browser. Switch to another browser if going fullscreen does not work.
+</div>
+)}
 
             {/* Center controls while playing */}
             {playing && showControls && isMobile && (

@@ -89,6 +89,16 @@ const clickTimeoutRef = useRef(null);
 
   
   useEffect(() => {
+    if (hasStarted) {
+      setShowTelegramTooltip(true);
+      const timer = setTimeout(() => {
+        setShowTelegramTooltip(false);
+      }, 10000); // 30 seconds
+      return () => clearTimeout(timer);
+    }
+  }, [hasStarted]);
+
+  useEffect(() => {
     if (isTelegram && hasStarted) {
       setShowTelegramTooltip(true);
       const timer = setTimeout(() => {
@@ -1653,6 +1663,12 @@ useEffect(() => {
               </div>
             </>
           )}
+
+{showTelegramTooltip && (
+  <div className="absolute top-2 left-2 bg-black/60 text-white text-sm p-2 rounded-md z-20">
+    Fullscreen might not work in Telegram browser. Switch to another browser if going fullscreen does not work.
+  </div>
+)}
 
 {showTelegramTooltip && (
       <div className="absolute top-2 left-2 bg-black/60 text-white text-sm p-2 rounded-md z-20">
