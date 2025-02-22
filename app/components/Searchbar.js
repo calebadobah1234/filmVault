@@ -98,6 +98,7 @@ const Searchbar = (props) => {
 
   return (
     <>
+      {/* Add a portal container at the root level */}
       <div className="relative w-full max-w-3xl mx-auto">
         <form
           onSubmit={handleSubmit}
@@ -122,7 +123,15 @@ const Searchbar = (props) => {
         {searchResults.length > 0 && showResults && (
           <div
             ref={searchContainerRef}
-            className="absolute z-10 w-full max-w-3xl bg-white border border-gray-200 rounded-lg shadow-xl -mt-7 overflow-hidden"
+            className="absolute w-full max-w-3xl bg-white border border-gray-200 rounded-lg shadow-xl -mt-7 overflow-hidden"
+            style={{
+              position: 'absolute',
+              zIndex: 9999,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              maxHeight: '80vh',
+              overflowY: 'auto'
+            }}
           >
             <ul className="divide-y divide-gray-100">
               {searchResults.map((item, index) => {
@@ -163,18 +172,17 @@ const Searchbar = (props) => {
                                   ? `/images1/${sanitizedTitle}`
                                   : item.img
                               }
-                              // alt={item.title}
                               width={45}
                               height={45}
                               className="rounded object-cover"
+                              alt={item.title}
                             />
                           </div>
                         )}
                         <div className="ml-4 flex-1">
                           <p className="text-sm font-medium text-gray-900">{item.title}</p>
                           <p className="text-xs text-gray-500 mt-1">
-                          {item.type?.replace('aio', '').replace('serMovie', 'movie').replace(/([A-Z])/g, ' $1').trim()}
-
+                            {item.type?.replace('aio', '').replace('serMovie', 'movie').replace(/([A-Z])/g, ' $1').trim()}
                           </p>
                         </div>
                       </div>
@@ -200,3 +208,5 @@ const Searchbar = (props) => {
 };
 
 export default Searchbar;
+
+

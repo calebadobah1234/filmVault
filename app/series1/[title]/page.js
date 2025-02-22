@@ -56,7 +56,7 @@ export async function generateMetadata({ params }) {
   const data1 = await res.json();
   const data = data1[0];
   return {
-    title: `watch and download ${data.title} ${
+    title: `watch and download ${data.title?data.title:"free tv shows"} ${
       data.year ? data.year : ""
     }| FilmVault.xyz`,
     description: `Watch and download ${data.title} (${
@@ -66,7 +66,7 @@ export async function generateMetadata({ params }) {
       title: `${data.title} ${
         data.year ? data.year : ""
       } free HD download | FilmVault.xyz`,
-      description: `Watch and download ${data.title} (${
+      description: `Watch and download ${data.title?data.title:"free tv shows"} (${
         data.year
       }) for free in HD quality. ${data.description.slice(0, 300)}`,
       images: [

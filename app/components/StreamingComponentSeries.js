@@ -1233,15 +1233,24 @@ const clickTimeoutRef = useRef(null);
     };
   }, []);
 
-  useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
+  // Replace the existing isMobile useEffect with this:
+useEffect(() => {
+  // Proper mobile detection using user agent
+  const userAgent = navigator.userAgent.toLowerCase();
+  const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+  setIsMobile(isMobileDevice);
 
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+  // Optional: Handle landscape resize for non-mobile devices
+  const checkWidth = () => {
+    if (!isMobileDevice) {
+      setIsMobile(window.innerWidth <= 768);
+    }
+  };
+  
+  checkWidth();
+  window.addEventListener('resize', checkWidth);
+  return () => window.removeEventListener('resize', checkWidth);
+}, []);
 
   useEffect(() => {
     // Check if subtitles are loaded and there are multiple tracks for tooltip

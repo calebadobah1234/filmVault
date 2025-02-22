@@ -45,7 +45,7 @@ const LatestItems = (props) => {
 
   return (
     <>
-      <div className="flex flex-row justify-center items-center space-x-2 ">
+      <div className="flex flex-row justify-center items-center space-x-2 z-10">
         {props.title && (
           <h2 className="text-center text-black font-bold text-3xl my-6">
             {props.title}

@@ -22,10 +22,11 @@ const Navbar = ({ isHomePage }) => {
   }, []);
 
   return (
-    <div className="z-50 w-screen overflow-x-hidden">
-      <div className={`w-full transition-all duration-300 ${
+    
+    <div className="  w-full relative" style={{ zIndex: 40 }}>
+      <div className={`overflow-x-hidden w-full transition-all duration-300 ${
         isScrolled ? 'bg-gray-900/95 backdrop-blur-md shadow-lg' : 'bg-gray-900'
-      }`}>
+      }`} style={{ zIndex: 40 }}>
         {/* Top Bar */}
         <div className="container mx-auto">
           <div className="flex items-center py-4 px-4">
@@ -82,7 +83,9 @@ const Navbar = ({ isHomePage }) => {
       </div>
       
       {/* Search Bar */}
-      <Searchbar />
+      
+        <Searchbar />
+     
     </div>
   );
 };
