@@ -57,6 +57,11 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle, seasons2 }) => 
   const [isPlayButtonClicked, setIsPlayButtonClicked] = useState(false);
   const [lastClickTime, setLastClickTime] = useState(0);
   const [mergedSeasons, setMergedSeasons] = useState([]);
+
+  const [isTelegram, setIsTelegram] = useState(false);
+const [showTelegramTooltip, setShowTelegramTooltip] = useState(false);
+const [showIosTooltip, setShowIosTooltip] = useState(false);
+const [isIOS, setIsIOS] = useState(false);
 const clickTimeoutRef = useRef(null);
 
   const playerRef = useRef(null);
@@ -69,6 +74,39 @@ const clickTimeoutRef = useRef(null);
 
   
 
+
+  useEffect(() => {
+    const userAgent = navigator.userAgent.toLowerCase();
+    setIsTelegram(userAgent.includes('telegram'));
+  }, []);
+
+  useEffect(() => {
+    // Detect iOS device
+    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+                       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    setIsIOS(isIOSDevice);
+  }, []);
+
+  
+  useEffect(() => {
+    if (isTelegram) {
+      setShowTelegramTooltip(true);
+      const timer = setTimeout(() => {
+        setShowTelegramTooltip(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [isTelegram]);
+
+  useEffect(() => {
+    if (hasStarted && isIOS) {
+      setShowIosTooltip(true);
+      const timer = setTimeout(() => {
+        setShowIosTooltip(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [hasStarted, isIOS]);
 
   const cleanSeriesTitle = (title) => {
     return title
@@ -1606,6 +1644,19 @@ useEffect(() => {
               </div>
             </>
           )}
+
+{showTelegramTooltip && (
+      <div className="absolute top-2 left-2 bg-black/60 text-white text-sm p-2 rounded-md z-20">
+        Fullscreen might not work in Telegram browser. Switch to another browser for the best experience.
+      </div>
+    )}
+
+{showIosTooltip && (
+      <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 bg-black/60 text-white text-sm p-2 rounded-md z-20 whitespace-nowrap">
+        Playback is currently not supported on iOS. Download the video instead.
+      </div>
+    )
+  }
 
           {showSubtitleChangeMessage && subtitleChangeMessage && (
             <div className="absolute top-2 left-2 bg-black/60 text-white text-sm p-2 rounded-md z-20">

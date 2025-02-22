@@ -62,6 +62,10 @@ console.log(`mainsuu`,mainSource)
   const [lastClickTime, setLastClickTime] = useState(0);
 const clickTimeoutRef = useRef(null);
 
+const [isTelegram, setIsTelegram] = useState(false);
+const [showTelegramTooltip, setShowTelegramTooltip] = useState(false);
+const [showIosTooltip, setShowIosTooltip] = useState(false);
+
 
   const playerRef = useRef(null);
   const controlsRef = useRef(null);
@@ -74,6 +78,21 @@ const clickTimeoutRef = useRef(null);
     setPlaying(true);
     setHasStarted(true);
   };
+
+  useEffect(() => {
+    const userAgent = navigator.userAgent.toLowerCase();
+    setIsTelegram(userAgent.includes('telegram'));
+  }, []);
+
+  useEffect(() => {
+    if (isTelegram) {
+      setShowTelegramTooltip(true);
+      const timer = setTimeout(() => {
+        setShowTelegramTooltip(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [isTelegram]);
 
   useEffect(() => {
     // Detect iOS device
@@ -110,7 +129,15 @@ const clickTimeoutRef = useRef(null);
   };
 
  
-
+  useEffect(() => {
+    if (hasStarted && isIOS) {
+      setShowIosTooltip(true);
+      const timer = setTimeout(() => {
+        setShowIosTooltip(false);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [hasStarted, isIOS]);
 
 
   // Function to extract resolution number from quality string
@@ -1545,11 +1572,23 @@ const clickTimeoutRef = useRef(null);
           </div>
         )}
 
+{showTelegramTooltip && (
+      <div className="absolute top-2 left-2 bg-black/60 text-white text-sm p-2 rounded-md z-20">
+        Fullscreen might not work in Telegram browser. Switch to another browser for the best experience.
+      </div>
+    )}
+
         {showFullscreenTooltip && hasStarted && !isFullscreen && playing && (
           <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 bg-black/60 text-white text-sm p-2 rounded-md z-20">
             Double tap for fullscreen
           </div>
         )}
+
+{showIosTooltip && (
+      <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 bg-black/60 text-white text-sm p-2 rounded-md z-20 whitespace-nowrap">
+        Playback is currently not supported on iOS. Download the video instead.
+      </div>
+    )}
 
 
         {/* Bottom controls */}
