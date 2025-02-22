@@ -69,12 +69,12 @@ async function fetchAllData() {
     {
       url: `${BASE_URL}/sort-viewsAm`,
       key: "trendingMovies",
-      options: { next: { revalidate: 0 } },
+      options: { next: { revalidate: 10000 } },
     },
     {
       url: `${BASE_URL}/sort-viewsAiom`,
       key: "trendingSeries",
-      options: { next: { revalidate: 0 } },
+      options: { next: { revalidate: 10000 } },
     },
   ];
 

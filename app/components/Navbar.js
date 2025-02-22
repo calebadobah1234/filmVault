@@ -28,15 +28,18 @@ const Navbar = ({ isHomePage }) => {
       }`} style={{ zIndex: 40 }}>
         {/* Top Bar */}
         <div className="container mx-auto">
-          <div className="flex items-center justify-between py-4 px-4 md:justify-center">
+          <div className="flex items-center justify-between md:justify-between py-4 px-4">
+            {/* Left spacer for desktop */}
+            <div className="hidden md:block md:flex-1"></div>
+            
             {/* Logo - Left aligned on mobile, centered on desktop */}
-            <Link href="/" className='md:flex-1 md:justify-center'>
-              <HeadingTag className="text-2xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-blue-400 to-purple-500 hover:from-purple-500 hover:via-blue-400 hover:to-green-400 transition-all duration-500">
+            <Link href="/" className="flex justify-center md:flex-1">
+              <HeadingTag className="text-3xl sm:text-4xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-blue-400 to-purple-500 hover:from-purple-500 hover:via-blue-400 hover:to-green-400 transition-all duration-500">
                 FilmVault.XYZ
               </HeadingTag>
             </Link>
 
-            {/* Right side icons container */}
+            {/* Right side icons container - Mobile */}
             <div className="md:hidden flex items-center gap-2">
               {/* Telegram Icon */}
               <a 
@@ -69,13 +72,12 @@ const Navbar = ({ isHomePage }) => {
               <MobileNav />
             </div>
 
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex md:flex-1 md:justify-end">
-            </div>
+            {/* Right spacer for desktop */}
+            <div className="hidden md:block md:flex-1"></div>
           </div>
         </div>
 
-        {/* Main Navigation */}
+        {/* Rest of the navigation remains unchanged */}
         <nav className="hidden md:block text-white border-t border-gray-800">
           <div className="container mx-auto">
             <ul className="flex flex-wrap justify-center items-center gap-1 py-3 px-4">

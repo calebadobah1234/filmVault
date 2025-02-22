@@ -5,6 +5,8 @@ import { Oswald } from "next/font/google";
 import { GoogleAnalytics, GoogleTagManager } from "@next/third-parties/google";
 import { Analytics } from "@vercel/analytics/react";
 import MobileNav from "./components/MobileNav";
+import 'video.js/dist/video-js.css';
+import BookmarkPrompt from "./components/Bookmarkprompt";
 
 const oswald = Oswald({ subsets: ["latin"] });
 
@@ -26,6 +28,7 @@ export default function RootLayout({ children }) {
         
         <Navbar />
         {children}
+        <BookmarkPrompt />
         <Footer />
       </body>
     </html>

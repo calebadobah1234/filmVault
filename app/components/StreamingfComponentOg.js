@@ -6,7 +6,7 @@ import { FaPlay, FaPause, FaVolumeUp, FaExpand, FaSpinner, FaClosedCaptioning, F
 import { FaRotate } from 'react-icons/fa6';
 import screenfull from 'screenfull';
 
-const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
+const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle, seasons2 }) => {
 
   const [playing, setPlaying] = useState(false);
   const [volume, setVolume] = useState(1);
@@ -32,7 +32,13 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
   const [subtitlesLoaded, setSubtitlesLoaded] = useState(false);
   const [isAndroid, setIsAndroid] = useState(false);
   const [videoMetadataLoaded, setVideoMetadataLoaded] = useState(false);
-
+  const [showSubtitleTooltip, setShowSubtitleTooltip] = useState(false);
+  const [subtitleChangeMessage, setSubtitleChangeMessage] = useState('');
+  const [showSubtitleChangeMessage, setShowSubtitleChangeMessage] = useState(false);
+  const [showNextEpisodeTooltip, setShowNextEpisodeTooltip] = useState(false); // State for next episode tooltip
+  const [showEpisodeStartTooltip, setShowEpisodeStartTooltip] = useState(false); // State for episode start tooltip
+  const [showFullscreenTooltip, setShowFullscreenTooltip] = useState(false); // State for fullscreen tooltip
+  const [lastTapTime, setLastTapTime] = useState(0); // For double tap detection
 
   const [selectedSeason, setSelectedSeason] = useState('1');
   const [selectedEpisode, setSelectedEpisode] = useState('1');
@@ -48,12 +54,20 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
   const [subtitlesEnabled, setSubtitlesEnabled] = useState(true);
   const [prevVolume, setPrevVolume] = useState(1);
   const [currentSubtitleIndex, setCurrentSubtitleIndex] = useState(0);
-
+  const [isPlayButtonClicked, setIsPlayButtonClicked] = useState(false);
+  const [lastClickTime, setLastClickTime] = useState(0);
+const clickTimeoutRef = useRef(null);
 
   const playerRef = useRef(null);
   const controlsRef = useRef(null);
   const containerRef = useRef(null);
   const bufferingTimeoutRef = useRef(null);
+  const nextEpisodeTooltipTimeoutRef = useRef(null);
+  const episodeStartTooltipTimeoutRef = useRef(null);
+  const fullscreenTooltipTimeoutRef = useRef(null);
+
+  
+
 
   const cleanSeriesTitle = (title) => {
     return title
@@ -62,6 +76,20 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
       .trim();
   };
 
+
+  const fetchActualUrl = async (url) => {
+    console.log('Fetching actual URL for:', url);
+    setIsBuffering(true);
+    try {
+      const actualUrl = await fetch(`https://api5.mp3vault.xyz/getDownloadUrl?url=${url}`);
+      const data = await actualUrl.json();
+      console.log('Received actual URL:', data.downloadUrl);
+      return data.downloadUrl;
+    } catch (error) {
+      console.error('Error fetching actual URL:', error);
+      return null;
+    }
+  };
 
   const handleVolumeChange = (e) => {
     setVolume(parseFloat(e.target.value));
@@ -76,47 +104,129 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
     checkAndroid();
   }, []);
 
+  const detectSeasonFromUrl = (filename) => {
+    if (!filename) return null;
+
+    // First check for SXX pattern (e.g., S01, s02)
+    const sPattern = /S(\d{1,2})/i;
+    const sMatch = filename.match(sPattern);
+    if (sMatch) return parseInt(sMatch[1]);
+
+    // Check for season in SXXEXX format
+    const seasonFromEpisode = filename.match(/S(\d{1,2})E\d{1,3}/i);
+    if (seasonFromEpisode) return parseInt(seasonFromEpisode[1]);
+
+    // Check for -sXX- pattern with dashes
+    const dashPattern = /-s(\d{1,2})-/i;
+    const dashMatch = filename.match(dashPattern);
+    if (dashMatch) return parseInt(dashMatch[1]);
+
+    return null;
+  };
+
   useEffect(() => {
+
+    if ((!seasons || seasons.length === 0) && seasons2?.length > 0) {
+      const initialSeason = seasons2[0];
+      setSelectedSeason(initialSeason.seasonNumber.toString());
+      setAvailableQualities(['smooth']);
+      setSelectedQuality('smooth');
+
+      if (initialSeason.episodes) {
+        const processedEpisodes = initialSeason.episodes.map(episode => ({
+          ...episode,
+          episodeNumber: detectEpisodeFromUrl(episode.downloadLink) || episode.episodeNumber
+        }));
+        setEpisodes(processedEpisodes);
+        if (processedEpisodes.length > 0) {
+          setSelectedEpisode(processedEpisodes[0].episodeNumber?.toString());
+        }
+      }
+      return;
+    }
+
     if (seasons && seasons.length > 0) {
       const initialSeason = seasons[0];
       setSelectedSeason(initialSeason.seasonNumber.toString());
 
-
       const qualities = new Set();
+      const allowedQualities = [480, 720, 1080]; // Allowed resolutions
 
-      initialSeason.resolutions.forEach(res => {
-
-        const folderQuality = res.resolution.match(/(\d+)[pP]/)?.[1];
-        if (folderQuality) {
-          qualities.add(parseInt(folderQuality));
-        }
-
-
-        res.episodes.forEach(episode => {
-          const filenameQuality = detectQualityFromUrl(episode.downloadLink);
-          if (filenameQuality) {
-            qualities.add(parseInt(filenameQuality));
+      // Handle both season formats
+      if (initialSeason.resolutions) {
+        initialSeason.resolutions.forEach(res => {
+          const folderQuality = res.resolution.match(/(\d+)[pP]/)?.[1];
+          if (folderQuality && allowedQualities.includes(parseInt(folderQuality))) {
+            qualities.add(parseInt(folderQuality));
           }
+
+          res.episodes.forEach(episode => {
+            const filenameQuality = detectQualityFromUrl(episode.downloadLink);
+            if (filenameQuality && allowedQualities.includes(parseInt(filenameQuality))) {
+              qualities.add(parseInt(filenameQuality));
+            }
+          });
         });
+      } else if (initialSeason.episodes) {
+        initialSeason.episodes.forEach(episode => {
+          episode.downloadLinks.forEach(link => {
+            const quality = link.quality.replace('دانلود ', '').replace('P', '');
+            const qualityNum = parseInt(quality);
+            if (allowedQualities.includes(qualityNum)) {
+              qualities.add(qualityNum);
+            }
+          });
+        });
+      }
+
+      // Add "smooth" quality if seasons2 exists
+      if (seasons2 && seasons2.length > 0) {
+        qualities.add('smooth');
+      }
+
+      // Sort qualities with "smooth" as the first option
+      const sortedQualities = Array.from(qualities).sort((a, b) => {
+        if (a === 'smooth') return -1; // Smooth first
+        if (b === 'smooth') return 1;
+        return a - b;
       });
 
-      const sortedQualities = Array.from(qualities).sort((a, b) => a - b);
       setAvailableQualities(sortedQualities);
 
-      if (sortedQualities.length > 0) {
+      // Set default quality to "smooth" if available, otherwise the lowest quality
+      if (seasons2 && seasons2.length > 0) {
+        setSelectedQuality('smooth');
+      } else if (sortedQualities.length > 0) {
         setSelectedQuality(sortedQualities[0].toString());
       }
 
-
-      if (initialSeason.resolutions.length > 0) {
-        const initialEpisodes = initialSeason.resolutions[0].episodes;
-        setEpisodes(initialEpisodes);
-        if (initialEpisodes.length > 0) {
-          setSelectedEpisode(initialEpisodes[0].episodeNumber?.toString());
+      // Handle initial episodes based on the selected quality
+      if (seasons2 && seasons2.length > 0 && selectedQuality === 'smooth') {
+        const initialSeason2 = seasons2[0];
+        if (initialSeason2.episodes) {
+          setEpisodes(initialSeason2.episodes);
+          if (initialSeason2.episodes.length > 0) {
+            setSelectedEpisode(initialSeason2.episodes[0].episodeNumber?.toString());
+          }
+        }
+      } else {
+        // Original initialization logic for non-smooth qualities
+        if (initialSeason.resolutions && initialSeason.resolutions.length > 0) {
+          const initialEpisodes = initialSeason.resolutions[0].episodes;
+          setEpisodes(initialEpisodes);
+          if (initialEpisodes.length > 0) {
+            setSelectedEpisode(initialEpisodes[0].episodeNumber?.toString());
+          }
+        } else if (initialSeason.episodes && initialSeason.episodes.length > 0) {
+          const initialEpisodes = initialSeason.episodes;
+          setEpisodes(initialEpisodes);
+          if (initialEpisodes.length > 0) {
+            setSelectedEpisode('1'); // Default to episode 1
+          }
         }
       }
     }
-  }, [seasons]);
+  }, [seasons, seasons2]); // Add seasons2 to dependency array
 
   const toggleSubtitles = () => {
     setSubtitlesEnabled(!subtitlesEnabled);
@@ -190,7 +300,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
           // If the original subtitle doesn't exist, proceed with download
           const encodedMovie = encodeURIComponent(cleanedTitle);
           const encodedFilename = encodeURIComponent(originalFilename);
-          const downloadUrl = `https://subtitles-jfir.onrender.com/nodejs/download-subtitle-series?movie=${encodedMovie}&type=tv&filename=${encodedFilename}&season=${selectedSeason}`;
+          const downloadUrl = `https://subtitles-production.up.railway.app/nodejs/download-subtitle-series-subsource?movie=${encodedMovie}&type=tv&filename=${encodedFilename}&season=${selectedSeason}`;
 
           await fetch(downloadUrl);
 
@@ -322,113 +432,145 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
   const detectEpisodeFromUrl = (filename) => {
     if (!filename) return null;
 
-    // First check if it has the form S01E01
+    // First check for SXXEXX pattern (case insensitive)
     const sPattern = /S\d{1,2}E(\d{1,3})/i;
     const sMatch = filename.match(sPattern);
-    if (sMatch) {
-      const num = parseInt(sMatch[1]);
-      if (num > 0 && num < 1000) return num;
-    }
+    if (sMatch) return parseInt(sMatch[1]);
 
-    // Then check for dashPattern
-    const dashPattern = /[-\s](\d{1,3})[\.\s\]]/;
+    // Then check for -sXXeXX- pattern with dashes
+    const dashPattern = /-s\d{1,2}e(\d{1,3})-/i;
     const dashMatch = filename.match(dashPattern);
-    if (dashMatch) {
-      const num = parseInt(dashMatch[1]);
-      if (num > 0 && num < 1000) return num;
-    }
+    if (dashMatch) return parseInt(dashMatch[1]);
 
-    // Check for ePattern
+    // Existing detection patterns remain unchanged
     const ePattern = /[Ee](\d{1,3})/i;
     const eMatch = filename.match(ePattern);
-    if (eMatch) {
-      const num = parseInt(eMatch[1]);
-      if (num > 0 && num < 1000) return num;
-    }
+    if (eMatch) return parseInt(eMatch[1]);
 
-    // Lastly check for bracketPattern
     const bracketPattern = /\[(\d{1,3})\]/;
     const bracketMatch = filename.match(bracketPattern);
-    if (bracketMatch) {
-      const num = parseInt(bracketMatch[1]);
-      if (num > 0 && num < 1000) return num;
-    }
+    if (bracketMatch) return parseInt(bracketMatch[1]);
 
     return null;
   };
+
   useEffect(() => {
     const updateEpisodes = () => {
       console.log('Updating episodes for season:', selectedSeason, 'quality:', selectedQuality);
-      if (!selectedSeason || !seasons) return;
+      if (!selectedSeason) return;
 
-      // Reset subtitle state when season changes
-      setSubtitleTracks([]);
-      setSubtitleUrl(null);
-      setSubtitlesEnabled(true);
-      setCurrentSubtitleIndex(0);
+      // Determine which seasons to use based on the selected quality
+      const currentSeasons = selectedQuality === 'smooth' ? seasons2 : seasons;
+      if (!currentSeasons) return;
 
-      const season = seasons.find(s => s.seasonNumber.toString() === selectedSeason);
+      const season = currentSeasons.find(s => s.seasonNumber.toString() === selectedSeason);
       if (!season) return;
 
       const collectedEpisodes = [];
       let hasExplicitEpisodeNumbers = false;
 
-      // First pass: Collect episodes matching selected quality
-      season.resolutions.forEach(resolution => {
-        resolution.episodes.forEach(episode => {
-          const quality = detectQualityFromUrl(episode.downloadLink);
-          console.log(`Episode ${episode.downloadLink} quality: ${quality}`);
-
-          if (quality === selectedQuality) {
-            const filename = episode.downloadLink.split('/').pop();
-
-            // Check if episodeNumber is explicitly provided
-            if (episode.episodeNumber) {
-              hasExplicitEpisodeNumbers = true;
-              collectedEpisodes.push({...episode});
-            } else {
-              // Try to detect episode from filename if episodeNumber is not provided
-              const detectedEpisode = detectEpisodeFromUrl(filename);
-
-              if (detectedEpisode) {
-                 collectedEpisodes.push({...episode, episodeNumber: detectedEpisode});
-              } else {
-                // If the episode is not set, then set it later with index
-                collectedEpisodes.push({...episode});
-              }
+      // Handle episodes for "smooth" quality (using seasons2)
+      if (selectedQuality === 'smooth') {
+        if (season.episodes) {
+          season.episodes.forEach((episode, index) => {
+            if (episode.downloadLink) { // Filter valid episodes
+              collectedEpisodes.push({
+                ...episode,
+                episodeNumber: episode.episodeNumber || index + 1,
+              });
             }
-          }
-        });
-      });
+          });
+        }
+      } else {
+        // Handle episodes for other qualities (using seasons)
+        if (season.resolutions) {
+          season.resolutions.forEach(resolution => {
+            resolution.episodes.forEach(episode => {
+              const quality = detectQualityFromUrl(episode.downloadLink);
+              console.log(`Resolution-based episode ${episode.downloadLink} quality: ${quality}`);
+
+              if (quality === selectedQuality && episode.downloadLink) {
+                const filename = episode.downloadLink.split('/').pop();
+
+                // Check if episodeNumber is explicitly provided
+                if (episode.episodeNumber) {
+                  hasExplicitEpisodeNumbers = true;
+                  collectedEpisodes.push({ ...episode });
+                } else {
+                  // Try to detect episode from filename
+                  const detectedEpisode = detectEpisodeFromUrl(filename);
+                  if (detectedEpisode) {
+                    collectedEpisodes.push({ ...episode, episodeNumber: detectedEpisode });
+                  } else {
+                    collectedEpisodes.push({ ...episode });
+                  }
+                }
+              }
+            });
+          });
+        } else if (season.episodes) {
+          season.episodes.forEach((episode, index) => {
+            episode.downloadLinks.forEach(link => {
+              const quality = link.quality.replace('دانلود ', '').replace('P', '');
+              console.log(`DownloadLinks-based episode ${link.downloadLink} quality: ${quality}`);
+
+              if (quality === selectedQuality) {
+                const filename = link.downloadLink.split('/').pop();
+                const detectedEpisode = detectEpisodeFromUrl(filename);
+
+                collectedEpisodes.push({
+                  ...episode,
+                  downloadLink: link.downloadLink,
+                  episodeNumber: detectedEpisode || index + 1,
+                });
+                hasExplicitEpisodeNumbers = hasExplicitEpisodeNumbers || !!detectedEpisode;
+              }
+            });
+          });
+        }
+      }
 
       // Fallback: If no matches, collect all episodes
       if (collectedEpisodes.length === 0) {
         console.log('No quality matches, falling back to all episodes');
-        season.resolutions.forEach(resolution => {
-          resolution.episodes.forEach(episode => {
-            collectedEpisodes.push({...episode});
+        if (season.resolutions) {
+          season.resolutions.forEach(resolution => {
+            resolution.episodes.forEach(episode => {
+              collectedEpisodes.push({ ...episode });
+            });
           });
-        });
+        } else if (season.episodes) {
+          season.episodes.forEach((episode, index) => {
+            episode.downloadLinks.forEach(link => {
+              collectedEpisodes.push({
+                ...episode,
+                downloadLink: link.downloadLink,
+                episodeNumber: index + 1,
+              });
+            });
+          });
+        }
       }
 
-      // If no explicit episode numbers were provided, assign them sequentially based on order
+      // If no explicit episode numbers were provided, assign them sequentially
       if (!hasExplicitEpisodeNumbers) {
         collectedEpisodes.forEach((episode, index) => {
           if (!episode.episodeNumber) {
             const filename = episode.downloadLink.split('/').pop();
             const detectedEpisode = detectEpisodeFromUrl(filename);
-            episode.episodeNumber = detectedEpisode ?? (index + 1);
+            episode.episodeNumber = detectedEpisode ?? index + 1;
           }
         });
       }
 
       // Sort and update episodes
-      collectedEpisodes.sort((a, b) => a.episodeNumber - b.episodeNumber);
+      const validEpisodes = collectedEpisodes.filter(ep => ep.downloadLink);
+      validEpisodes.sort((a, b) => a.episodeNumber - b.episodeNumber);
 
       // Remove duplicates based on episodeNumber
       const uniqueEpisodes = [];
       const seenEpisodeNumbers = new Set();
-      for (const episode of collectedEpisodes) {
+      for (const episode of validEpisodes) {
         if (!seenEpisodeNumbers.has(episode.episodeNumber)) {
           uniqueEpisodes.push(episode);
           seenEpisodeNumbers.add(episode.episodeNumber);
@@ -450,6 +592,74 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
   }, [selectedSeason, selectedQuality, seasons, selectedEpisode]);
 
 
+  useEffect(() => {
+    const updateAvailableQualities = () => {
+      const allowedQualities = [480, 720, 1080];
+      const qualities = new Set();
+  
+      // Check if the selected season exists in seasons2
+      const isSelectedSeasonInSeasons2 = seasons2?.some(
+        (s) => s.seasonNumber.toString() === selectedSeason
+      );
+  
+      // Collect qualities from the current season in 'seasons'
+      const currentSeason = seasons?.find(
+        (s) => s.seasonNumber.toString() === selectedSeason
+      );
+  
+      if (currentSeason) {
+        if (currentSeason.resolutions) {
+          currentSeason.resolutions.forEach((res) => {
+            const folderQuality = res.resolution.match(/(\d+)[pP]/)?.[1];
+            if (folderQuality && allowedQualities.includes(parseInt(folderQuality))) {
+              qualities.add(parseInt(folderQuality));
+            }
+  
+            res.episodes.forEach((episode) => {
+              const filenameQuality = detectQualityFromUrl(episode.downloadLink);
+              if (filenameQuality && allowedQualities.includes(parseInt(filenameQuality))) {
+                qualities.add(parseInt(filenameQuality));
+              }
+            });
+          });
+        } else if (currentSeason.episodes) {
+          currentSeason.episodes.forEach((episode) => {
+            episode.downloadLinks.forEach((link) => {
+              const quality = link.quality.replace('دانلود ', '').replace('P', '');
+              const qualityNum = parseInt(quality);
+              if (allowedQualities.includes(qualityNum)) {
+                qualities.add(qualityNum);
+              }
+            });
+          });
+        }
+      }
+  
+      // Add 'smooth' quality only if the selected season is in seasons2
+      if (isSelectedSeasonInSeasons2) {
+        qualities.add('smooth');
+      }
+  
+      // Sort qualities with 'smooth' as the first option if present
+      const sortedQualities = Array.from(qualities).sort((a, b) => {
+        if (a === 'smooth') return -1;
+        if (b === 'smooth') return 1;
+        return a - b;
+      });
+  
+      setAvailableQualities(sortedQualities);
+  
+      // Update selected quality if needed
+      if (isSelectedSeasonInSeasons2 && !selectedQuality.includes('smooth')) {
+        setSelectedQuality('smooth');
+      } else if (sortedQualities.length > 0 && !sortedQualities.includes(selectedQuality)) {
+        setSelectedQuality(sortedQualities[0].toString());
+      }
+    };
+  
+    updateAvailableQualities();
+  }, [selectedSeason, seasons, seasons2]); // Add selectedSeason to dependencies
+
   // Process video when quality, season, or episode changes
   useEffect(() => {
     const processSelectedContent = async () => {
@@ -458,11 +668,22 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
         'Quality:', selectedQuality,
         'Episodes count:', episodes.length);
 
-      if (!selectedEpisode || !episodes.length) return;
+      if (!selectedEpisode || !episodes.length) {
+        setProcessingStatus('error');
+        setStreamingUrl(null);
+        return;
+      }
 
       const targetEpisode = episodes.find(e =>
         e.episodeNumber?.toString() === selectedEpisode
       );
+
+      if (!targetEpisode?.downloadLink) {
+        console.error('Invalid episode selected');
+        setProcessingStatus('error');
+        setStreamingUrl(null);
+        return;
+      }
 
       console.log('Found target episode:', targetEpisode);
 
@@ -473,8 +694,10 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
       }
     };
 
-    processSelectedContent();
-  }, [selectedSeason, selectedEpisode, episodes, selectedQuality]);
+    if (isPlayButtonClicked) {
+      processSelectedContent();
+    }
+  }, [selectedSeason, selectedEpisode, episodes, selectedQuality, isPlayButtonClicked]);
 
   const detectQualityFromUrl = (url) => {
     // First check if quality is in folder structure
@@ -483,8 +706,8 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
       return folderQualityMatch[1];
     }
 
-    // If not in folder, check filename
-    const filenameQualityMatch = url.match(/[._](\d+)p[._]/i);
+    // If not in folder, check filename - more flexible pattern to catch various formats like 480P, 480p, 480
+    const filenameQualityMatch = url.match(/[._](\d{3,4})[pP]?([._]|$)/i);
     if (filenameQualityMatch) {
       return filenameQualityMatch[1];
     }
@@ -492,6 +715,9 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
     // Return null if no quality found
     return null;
   };
+
+
+  
 
   const handleRotate = async () => {
     if (isFullscreen && isMobile) {
@@ -605,7 +831,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
 
 
   const checkFileExists = async (filename) => {
-    const url = `https://filmvault2.b-cdn.net/${filename}`;
+    const url = `https://filmvault3.b-cdn.net/${filename}`;
     console.log('Checking file existence for:', url);
 
     try {
@@ -664,6 +890,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
   }, [selectedEpisode]);
 
   // Function to process video through backend
+  // Process video when quality, season, or episode changes
   const processVideo = async (url) => {
     try {
       const cleanedTitle = cleanSeriesTitle(movieTitle);
@@ -673,47 +900,97 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
 
       if (!url) throw new Error('No URL provided for processing');
 
-      const originalFilename = url.split('/').pop() || 'video';
+      // Handle URL processing for smooth quality
+      let processUrl = url;
+      if (selectedQuality === 'smooth') {
+        console.log('Smooth quality selected, fetching actual URL:', url);
+        const actualUrl = await fetchActualUrl(url);
+        if (!actualUrl) {
+          throw new Error('Failed to fetch actual URL for smooth quality');
+        }
+        console.log('Successfully fetched actual URL for smooth quality:', actualUrl);
+        processUrl = actualUrl;
+      }
+
+      const originalFilename = processUrl.split('/').pop() || 'video';
+      console.log('Original filename:', originalFilename);
       setOriginalFilename(originalFilename);
 
       const sanitizedFilename = sanitizeFilename(originalFilename);
+      console.log('Sanitized filename:', sanitizedFilename);
 
       // File existence check
       const initialFileCheck = await checkFileExists(sanitizedFilename);
+      console.log('Initial file check result:', initialFileCheck);
+
       if (initialFileCheck) {
-        const cdnUrl = `https://filmvault2.b-cdn.net/${sanitizedFilename}`;
+        const cdnUrl = `https://filmvault3.b-cdn.net/${sanitizedFilename}`;
+        console.log('File already exists, setting CDN URL:', cdnUrl);
         setStreamingUrl(cdnUrl);
         setProcessingStatus('ready');
         return;
       }
 
       setProcessingStatus('downloading');
-      const encodedUrl = encodeURIComponent(url);
+      const encodedUrl = encodeURIComponent(processUrl);
       const encodedFilename = encodeURIComponent(originalFilename);
 
       // Use cleaned title in API call
       const apiUrl = `https://api4.mp3vault.xyz/download?url=${encodedUrl}&filename=${encodedFilename}&movie=${encodeURIComponent(cleanedTitle)}`;
+      console.log('Initiating download with API URL:', apiUrl);
 
-      await fetch(apiUrl, { method: 'GET', headers: { 'Accept': 'application/json' } , mode: 'no-cors'});
+      // Initiate the download
+      const downloadResponse = await fetch(apiUrl, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+        mode: 'no-cors'
+      });
+      console.log('Download initiated');
 
       // Retry logic with cleaned title
       let retryCount = 0;
-      while (retryCount < 24) {
+      const maxRetries = 24;
+      const retryInterval = 10000; // 10 seconds
+
+      console.log('Starting file existence check retries');
+      while (retryCount < maxRetries) {
+        console.log(`Retry attempt ${retryCount + 1} of ${maxRetries}`);
         const fileExists = await checkFileExists(sanitizedFilename);
+
         if (fileExists) {
-          setStreamingUrl(`https://filmvault2.b-cdn.net/${sanitizedFilename}`);
+          const finalCdnUrl = `https://filmvault3.b-cdn.net/${sanitizedFilename}`;
+          console.log('File processing complete, setting final CDN URL:', finalCdnUrl);
+          setStreamingUrl(finalCdnUrl);
           setProcessingStatus('ready');
           return;
         }
-        await new Promise(resolve => setTimeout(resolve, 10000));
+
+        console.log(`File not ready yet, waiting ${retryInterval / 1000} seconds before next check`);
+        await new Promise(resolve => setTimeout(resolve, retryInterval));
         retryCount++;
       }
 
-      throw new Error('File not available after maximum retries');
+      throw new Error(`File not available after ${maxRetries} retry attempts`);
     } catch (error) {
-      console.error('Video processing error:', error);
-      setProcessingStatus('error');
-      alert(`Error processing video: ${error.message}`);
+      // console.error('Video processing error:', error);
+      // setProcessingStatus('error');
+
+      // Provide more specific error messages based on the error type
+      // let errorMessage = 'Error processing video: ';
+      // if (error.message.includes('Failed to fetch actual URL')) {
+      //   errorMessage += 'Unable to process smooth quality stream. Please try a different quality.';
+      // } else if (error.message.includes('File not available after')) {
+      //   errorMessage += 'Video processing timed out. Please try again.';
+      // } else {
+      //   errorMessage += error.message;
+      // }
+
+      // alert(errorMessage);
+    } finally {
+      // Additional cleanup or state reset if needed
+      if (bufferingTimeoutRef.current) {
+        clearTimeout(bufferingTimeoutRef.current);
+      }
     }
   };
 
@@ -840,6 +1117,12 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
     }
   };
 
+  const handleDoubleClick = () => {
+    if (!isMobile) { // Only trigger on desktop
+      handleFullscreen();
+    }
+  };
+
   const handleBuffer = () => {
     if (isPlayerReady && videoMetadataLoaded) {
       setIsBuffering(true);
@@ -870,24 +1153,61 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
         }, 500);
       }
     }
-  };
 
+    // Episode completion tooltip logic
+    if (duration && state.played > 0.95 && !showNextEpisodeTooltip) {
+      setShowNextEpisodeTooltip(true);
+      nextEpisodeTooltipTimeoutRef.current = setTimeout(() => {
+        setShowNextEpisodeTooltip(false);
+      }, 5000); // Show for 5 seconds
+    } else if (state.played <= 0.95 && showNextEpisodeTooltip) {
+      setShowNextEpisodeTooltip(false);
+      clearTimeout(nextEpisodeTooltipTimeoutRef.current);
+    }
+  };
 
 
   const handleVideoClick = (e) => {
-
+    // Prevent click from triggering if user was dragging/seeking
     if (seeking) return;
-
-
+  
+    // Don't trigger if click was on a control element
     if (controlsRef.current && controlsRef.current.contains(e.target)) return;
-
-    handlePlayPause();
+  
+    const currentTime = new Date().getTime();
+    const timeDiff = currentTime - lastClickTime;
+  
+    // Clear any existing timeout
+    if (clickTimeoutRef.current) {
+      clearTimeout(clickTimeoutRef.current);
+    }
+  
+    if (timeDiff < 300) { // 300ms threshold for double click
+      // Handle double click
+      handleFullscreen();
+      setLastClickTime(0);
+    } else {
+      // Set new timeout for single click
+      clickTimeoutRef.current = setTimeout(() => {
+        // handlePlayPause();
+      }, 200); // Wait 200ms before triggering single click action
+      setLastClickTime(currentTime);
+    }
   };
 
   const handlePlayPause = () => {
-    if (!hasStarted) setHasStarted(true);
+    if (!hasStarted) {
+      setHasStarted(true);
+      setIsPlayButtonClicked(true); // Trigger video processing
+    }
     setPlaying(!playing);
     showControlsWithTimeout();
+    if (!playing && !isFullscreen && !showFullscreenTooltip) {
+      setShowFullscreenTooltip(true);
+      fullscreenTooltipTimeoutRef.current = setTimeout(() => {
+        setShowFullscreenTooltip(false);
+      }, 5000); // Show tooltip for 5 seconds
+    }
   };
 
   const handleError = () => {
@@ -901,19 +1221,60 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
       if (bufferingTimeoutRef.current) {
         clearTimeout(bufferingTimeoutRef.current);
       }
+      if (nextEpisodeTooltipTimeoutRef.current) {
+        clearTimeout(nextEpisodeTooltipTimeoutRef.current);
+      }
+      if (episodeStartTooltipTimeoutRef.current) {
+        clearTimeout(episodeStartTooltipTimeoutRef.current);
+      }
+      if (fullscreenTooltipTimeoutRef.current) {
+        clearTimeout(fullscreenTooltipTimeoutRef.current);
+      }
     };
   }, []);
+
+  // Replace the existing isMobile useEffect with this:
+useEffect(() => {
+  // Proper mobile detection using user agent
+  const userAgent = navigator.userAgent.toLowerCase();
+  const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent);
+  setIsMobile(isMobileDevice);
+
+  // Optional: Handle landscape resize for non-mobile devices
+  const checkWidth = () => {
+    if (!isMobileDevice) {
+      setIsMobile(window.innerWidth <= 768);
+    }
+  };
+  
+  checkWidth();
+  window.addEventListener('resize', checkWidth);
+  return () => window.removeEventListener('resize', checkWidth);
+}, []);
 
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
-    };
+    // Check if subtitles are loaded and there are multiple tracks for tooltip
+    if (subtitleTracks.length > 1) {
+      setShowSubtitleTooltip(true);
+      // Hide tooltip after 5 seconds (adjust as needed)
+      const timer = setTimeout(() => {
+        setShowSubtitleTooltip(false);
+      }, 10000); // 5000 milliseconds = 5 seconds
 
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
+      return () => clearTimeout(timer); // Cleanup timer on unmount or re-render
+    } else {
+      setShowSubtitleTooltip(false); // Ensure tooltip is hidden if no multiple tracks
+    }
+  }, [subtitleTracks]);
 
+  const showSubtitleChangeNotification = (message) => {
+    setSubtitleChangeMessage(message);
+    setShowSubtitleChangeMessage(true);
+    setTimeout(() => {
+      setShowSubtitleChangeMessage(false);
+      setSubtitleChangeMessage(''); // Clear the message after timeout
+    }, 3000); // 3 seconds duration - adjust as needed
+  };
 
 
   const handleSeekMouseDown = () => setSeeking(true);
@@ -941,6 +1302,39 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
     return hh ? `${hh}:${mm}:${ss}` : `${mm}:${ss}`;
   };
 
+  // Episode start tooltip effect
+  useEffect(() => {
+    if (streamingUrl && playing) {
+      setShowEpisodeStartTooltip(true);
+      episodeStartTooltipTimeoutRef.current = setTimeout(() => {
+        setShowEpisodeStartTooltip(false);
+      }, 3000); // Show for 3 seconds
+    } else {
+      setShowEpisodeStartTooltip(false);
+      clearTimeout(episodeStartTooltipTimeoutRef.current);
+    }
+  }, [streamingUrl, playing, selectedSeason, selectedEpisode]);
+
+  // Double tap fullscreen
+  const handleDoubleTap = () => {
+    if ((isAndroid || isMobile) && !isFullscreen) {
+      handleFullscreen();
+    }
+  };
+
+  const handleTouchStart = (e) => {
+    const currentTime = new Date().getTime();
+    const timeDiff = currentTime - lastTapTime;
+
+    if (timeDiff < 300 && timeDiff > 0) { // 300ms is the threshold for double tap
+      handleDoubleTap();
+      setLastTapTime(0); // Reset last tap time after double tap
+    } else {
+      setLastTapTime(currentTime);
+      showControlsWithTimeout(); // Show controls on single tap as well
+    }
+  };
+
 
   return (
     <div className="space-y-4">
@@ -950,7 +1344,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
           onChange={(e) => setSelectedSeason(e.target.value)}
           className="bg-gray-700 text-white px-4 py-2 rounded-md"
         >
-          {seasons.map(season => (
+          {(seasons?.length ? seasons : seasons2 || []).map(season => (
             <option key={`season-select-top-${season.seasonNumber}`} value={season.seasonNumber}>
               Season {season.seasonNumber}
             </option>
@@ -975,8 +1369,23 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
         className="bg-gray-900 rounded-xl overflow-hidden shadow-xl relative group w-full"
         onMouseMove={showControlsWithTimeout}
         onMouseLeave={() => !isFullscreen && hideControls()}
+        onTouchStart={handleTouchStart} // Add touch start for double tap and controls
+        onClick={handleVideoClick}
+        style={isAndroid ? { paddingBottom: '50px' } : {}} // Conditionally apply padding for Android
       >
-        <div className={`relative ${isFullscreen ? 'h-screen w-screen' : 'aspect-video'}`}>
+        <div className={`flex items-center justify-center bg-gray-900 ${isFullscreen ? 'h-screen w-screen' : 'aspect-video'}`}> {/* Removed relative class here */}
+          
+        {!isPlayButtonClicked && (
+    <div className="absolute inset-0 flex items-center justify-center cursor-pointer z-10">
+      <button 
+        onClick={handlePlayPause}
+        className="text-white bg-black/50 rounded-full p-8 hover:bg-black/70 transition-all"
+      >
+        <FaPlay className="text-6xl" />
+      </button>
+    </div>
+  )}
+          
           {processingStatus === 'downloading' && (
             <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-20">
               <FaSpinner className="animate-spin text-white text-4xl mb-4" />
@@ -986,13 +1395,26 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
 
           {processingStatus === 'ready' && streamingUrl && (
             <>
+              {/* Always Show Play Button when not playing or not started */}
               {(!playing || !hasStarted) && (
-                <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
+                <div
+                  className="absolute inset-0 flex items-center justify-center cursor-pointer z-10"
+                  onClick={handlePlayPause}
+                >
+                  {/* Enhanced Play Button Design with Pulsating Outline */}
                   <button
-                    onClick={handlePlayPause}
-                    className="text-white text-4xl hover:scale-110 transition-transform"
+                    className="group relative"
+                    aria-label="Play video"
                   >
-                    <FaPlay />
+                    {/* Pulsating Outline */}
+                    {!hasStarted && (
+                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform -scale-110 group-hover:scale-125 rounded-full bg-blue-500 opacity-75 animate-pulse-fast"
+                        style={{ padding: 'calc(48px * 0.6)' }} // Adjust padding to match icon size
+                      ></div>
+                    )}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/50 rounded-full p-4 transition-transform group-hover:scale-110">
+                      <FaPlay className="text-white text-4xl" />
+                    </div>
                   </button>
                 </div>
               )}
@@ -1107,6 +1529,37 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
             </>
           )}
 
+          {showSubtitleChangeMessage && subtitleChangeMessage && (
+            <div className="absolute top-2 left-2 bg-black/60 text-white text-sm p-2 rounded-md z-20">
+              {subtitleChangeMessage}
+            </div>
+          )}
+
+          {showSubtitleTooltip && subtitleTracks.length > 1 && (
+            <div className="absolute top-2 right-2 bg-gray-800 text-white text-sm p-2 rounded-md z-20">
+              Subtitles out of sync? Use arrow buttons to switch versions.
+            </div>
+          )}
+
+          {showNextEpisodeTooltip && (
+            <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 bg-black/60 text-white text-sm p-2 rounded-md z-20">
+              Episode about to end. Use episode dropdown to select next episode.
+            </div>
+          )}
+
+          {showEpisodeStartTooltip && (
+            <div className="absolute top-10 left-1/2 transform -translate-x-1/2 bg-black/60 text-white text-sm p-2 rounded-md z-20">
+              Playing Season {selectedSeason}, Episode {selectedEpisode}
+            </div>
+          )}
+
+          {showFullscreenTooltip && !isFullscreen && hasStarted && (
+            <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2 bg-black/60 text-white text-sm p-2 rounded-md z-20">
+              Double tap for fullscreen
+            </div>
+          )}
+
+
           {isSubtitleLoading && (
             <div className="absolute bottom-20 left-4 text-white text-sm bg-black/50 px-2 py-1 rounded">
               Loading subtitles...
@@ -1177,10 +1630,16 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
             </div>
 
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
+              <div className="relative flex items-center space-x-2">
+
+
                 {subtitleTracks.length > 1 && (
                   <button
-                    onClick={() => setCurrentSubtitleIndex(prev => Math.max(prev - 1, 0))}
+                    onClick={() => {
+                      const newIndex = Math.max(currentSubtitleIndex - 1, 0);
+                      setCurrentSubtitleIndex(newIndex);
+                      showSubtitleChangeNotification(`Subtitles: ${subtitleTracks[newIndex]?.label || `Track ${newIndex + 1}`}`);
+                    }}
                     disabled={currentSubtitleIndex === 0}
                     className="text-white hover:text-gray-300 disabled:opacity-50 transition"
                     aria-label="Previous subtitle version"
@@ -1201,7 +1660,11 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
 
                 {subtitleTracks.length > 1 && (
                   <button
-                    onClick={() => setCurrentSubtitleIndex(prev => Math.min(prev + 1, subtitleTracks.length - 1))}
+                    onClick={() => {
+                      const newIndex = Math.min(currentSubtitleIndex + 1, subtitleTracks.length - 1);
+                      setCurrentSubtitleIndex(newIndex);
+                      showSubtitleChangeNotification(`Subtitles: ${subtitleTracks[newIndex]?.label || `Track ${newIndex + 1}`}`);
+                    }}
                     disabled={currentSubtitleIndex === subtitleTracks.length - 1}
                     className="text-white hover:text-gray-300 disabled:opacity-50 transition"
                     aria-label="Next subtitle version"
@@ -1217,7 +1680,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
                   onChange={(e) => setSelectedSeason(e.target.value)}
                   className="bg-gray-700 text-white px-4 py-2 rounded-md mr-1"
                 >
-                  {seasons.map(season => (
+                  {(seasons?.length ? seasons : seasons2 || []).map(season => (
                     <option key={`season-select-control-${season.seasonNumber}`} value={season.seasonNumber}>
                       Season {season.seasonNumber}
                     </option>
@@ -1242,8 +1705,8 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle }) => {
                   className="bg-gray-700 text-white px-4 py-2 rounded-md"
                 >
                   {availableQualities.map(quality => (
-                    <option key={`quality-select-control-${quality}`} value={quality}>
-                      {quality}p
+                    <option key={quality} value={quality}>
+                      {quality === 'smooth' ? 'Smooth' : `${quality}p`}
                     </option>
                   ))}
                 </select>

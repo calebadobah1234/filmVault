@@ -56,6 +56,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle, seasons2 }) => 
   const [currentSubtitleIndex, setCurrentSubtitleIndex] = useState(0);
   const [isPlayButtonClicked, setIsPlayButtonClicked] = useState(false);
   const [lastClickTime, setLastClickTime] = useState(0);
+  const [mergedSeasons, setMergedSeasons] = useState([]);
 const clickTimeoutRef = useRef(null);
 
   const playerRef = useRef(null);
@@ -407,6 +408,36 @@ const clickTimeoutRef = useRef(null);
     }
   }, [subtitleTracks, currentSubtitleIndex, subtitlesEnabled]);
 
+
+  useEffect(() => {
+    const mergeSeasons = () => {
+      const seasonMap = new Map();
+  
+      // Add seasons2 first to prioritize them
+      if (seasons2 && seasons2.length > 0) {
+        seasons2.forEach(season => {
+          seasonMap.set(season.seasonNumber, season);
+        });
+      }
+  
+      // Add seasons, overwriting only if not already exists
+      if (seasons && seasons.length > 0) {
+        seasons.forEach(season => {
+          if (!seasonMap.has(season.seasonNumber)) {
+            seasonMap.set(season.seasonNumber, season);
+          }
+        });
+      }
+  
+      const sorted = Array.from(seasonMap.values()).sort((a, b) => 
+        a.seasonNumber - b.seasonNumber
+      );
+      setMergedSeasons(sorted);
+    };
+  
+    mergeSeasons();
+  }, [seasons, seasons2]);
+
   useEffect(() => {
     if (!isFullscreen) {
       if (screen.orientation && screen.orientation.unlock) {
@@ -463,7 +494,7 @@ const clickTimeoutRef = useRef(null);
       const currentSeasons = selectedQuality === 'smooth' ? seasons2 : seasons;
       if (!currentSeasons) return;
 
-      const season = currentSeasons.find(s => s.seasonNumber.toString() === selectedSeason);
+      const season = currentSeasons?.find(s => s.seasonNumber.toString() === selectedSeason);
       if (!season) return;
 
       const collectedEpisodes = [];
@@ -1339,17 +1370,17 @@ useEffect(() => {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-4 mb-4 mt-5">
-        <select
-          value={selectedSeason}
-          onChange={(e) => setSelectedSeason(e.target.value)}
-          className="bg-gray-700 text-white px-4 py-2 rounded-md"
-        >
-          {(seasons?.length ? seasons : seasons2 || []).map(season => (
-            <option key={`season-select-top-${season.seasonNumber}`} value={season.seasonNumber}>
-              Season {season.seasonNumber}
-            </option>
-          ))}
-        </select>
+      <select
+  value={selectedSeason}
+  onChange={(e) => setSelectedSeason(e.target.value)}
+  className="bg-gray-700 text-white px-4 py-2 rounded-md"
+>
+  {mergedSeasons.map(season => (
+    <option key={`season-select-top-${season.seasonNumber}`} value={season.seasonNumber}>
+      Season {season.seasonNumber}
+    </option>
+  ))}
+</select>
 
         <select
           value={selectedEpisode}
