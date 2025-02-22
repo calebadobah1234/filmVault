@@ -89,14 +89,14 @@ const clickTimeoutRef = useRef(null);
 
   
   useEffect(() => {
-    if (isTelegram) {
+    if (isTelegram && hasStarted) {
       setShowTelegramTooltip(true);
       const timer = setTimeout(() => {
         setShowTelegramTooltip(false);
-      }, 5000);
+      }, 8000); // Show for 8 seconds
       return () => clearTimeout(timer);
     }
-  }, [isTelegram]);
+  }, [isTelegram, hasStarted]);
 
   useEffect(() => {
     if (hasStarted && isIOS) {
@@ -952,6 +952,15 @@ const clickTimeoutRef = useRef(null);
       .replace(/%5B/g, '[')      // Keep square brackets
       .replace(/%5D/g, ']');     // Keep square brackets
   };
+
+  useEffect(() => {
+    // Method 1: Check for Telegram's specific WebView proxy
+    const isTgWebView = typeof window.TelegramWebViewProxy !== 'undefined';
+    // Method 2: Check user agent as fallback
+    const isTgUserAgent = navigator.userAgent.toLowerCase().includes('telegram');
+    
+    setIsTelegram(isTgWebView || isTgUserAgent);
+  }, []);
 
   useEffect(() => {
     setSubtitleTracks([]);
