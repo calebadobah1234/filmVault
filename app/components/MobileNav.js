@@ -337,7 +337,6 @@ const MobileNav = () => {
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
   const toggleCategoryType = (type) => setActiveType(activeType === type ? null : type);
 
-  // Lock body scroll when sidebar is open
   useEffect(() => {
     if (sidebarOpen) {
       document.body.style.overflow = 'hidden';
@@ -349,7 +348,6 @@ const MobileNav = () => {
     };
   }, [sidebarOpen]);
 
-  // Handle escape key to close sidebar
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === 'Escape') {
@@ -383,36 +381,32 @@ const MobileNav = () => {
 
   return (
     <>
-    <div className="md:hidden">
-      <button
-        className="relative p-3 text-gray-100 hover:text-white hover:bg-gray-700/50 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 focus:ring-offset-gray-800 rounded-lg transition-all duration-200"
-        onClick={toggleSidebar}
-        aria-label="Open menu"
-        aria-expanded={sidebarOpen}
-      >
-        <Menu size={28} />
-      </button>
-
-      {/* Backdrop */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+      <div className="md:hidden">
+        <button
+          className="relative p-3 text-gray-100 hover:text-white hover:bg-gray-700/50 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 focus:ring-offset-gray-800 rounded-lg transition-all duration-200"
           onClick={toggleSidebar}
-          aria-hidden="true"
-        />
-      )}
+          aria-label="Open menu"
+          aria-expanded={sidebarOpen}
+        >
+          <Menu size={28} />
+        </button>
 
-      {/* Sidebar */}
-      <div
-        className={`fixed inset-y-0 right-0 z-50 w-80 max-w-[100vw] bg-gray-800/95 backdrop-blur-md shadow-2xl transform ${
-          sidebarOpen ? 'translate-x-0' : 'translate-x-full'
-        } transition-all duration-300 ease-out`}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Navigation menu"
-      >
-        <div className="flex flex-col h-full">
-          {/* Header */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+            onClick={toggleSidebar}
+            aria-hidden="true"
+          />
+        )}
+
+        <div
+          className={`fixed inset-y-0 right-0 z-50 w-80 max-w-[100vw] bg-gray-800/95 backdrop-blur-md shadow-2xl transform ${
+            sidebarOpen ? 'translate-x-0' : 'translate-x-full'
+          } transition-all duration-300 ease-out flex flex-col`}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Navigation menu"
+        >
           <div className="flex justify-between items-center p-4 border-b border-gray-700/50">
             <h2 className="text-xl font-bold text-white">Menu</h2>
             <button
@@ -424,85 +418,89 @@ const MobileNav = () => {
             </button>
           </div>
 
-          {/* Navigation */}
-          <nav className="flex-grow overflow-y-auto overscroll-contain">
-            <ul className="p-3 space-y-1">
-              <NavLink href="/">Home</NavLink>
-              <NavLink href="/category-page?category=all&limit=30&skip=1&currentPage=1">
-                Movies
-              </NavLink>
-              <NavLink href="/category-page-series?category=all&limit=30&skip=1&currentPage=1">
-                Series
-              </NavLink>
-              <NavLink href="/category-page-anime?category=all&limit=30&skip=1&currentPage=1">
-                Anime
-              </NavLink>
-              <NavLink href="/category-page-kdrama?category=all&limit=30&skip=1&currentPage=1">
-                Korean Series
-              </NavLink>
-            </ul>
+          <div className="flex-grow overflow-y-auto">
+            <nav className="h-full">
+              <ul className="p-3 space-y-1">
+                <NavLink href="/">Home</NavLink>
+                <NavLink href="/category-page?category=all&limit=30&skip=1&currentPage=1">
+                  Movies
+                </NavLink>
+                <NavLink href="/category-page-series?category=all&limit=30&skip=1&currentPage=1">
+                  Series
+                </NavLink>
+                <NavLink href="/category-page-anime?category=all&limit=30&skip=1&currentPage=1">
+                  Anime
+                </NavLink>
+                <NavLink href="/category-page-kdrama?category=all&limit=30&skip=1&currentPage=1">
+                  Korean Series
+                </NavLink>
+              </ul>
 
-            {/* Categories */}
-            <div className="px-3 py-4">
-              <h3 className="px-2 text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
-                Categories
-              </h3>
-              {Object.entries(categoryTypes).map(([type, categories]) => (
-                <div key={type} className="mb-2">
-                  <button
-                    onClick={() => toggleCategoryType(type)}
-                    className="flex justify-between items-center w-full py-2.5 px-3 text-gray-100 hover:text-white hover:bg-gray-700/50 rounded-lg transition-all duration-200"
-                    aria-expanded={activeType === type}
-                  >
-                    <span className="font-medium">
-                      {type.charAt(0).toUpperCase() + type.slice(1)}
-                    </span>
-                    <span className="transform transition-transform duration-200">
-                      {activeType === type ? (
-                        <ChevronUp size={18} />
-                      ) : (
-                        <ChevronDown size={18} />
-                      )}
-                    </span>
-                  </button>
-                  <div
-                    className={`mt-1 overflow-hidden transition-all duration-200 ${
-                      activeType === type ? 'max-h-96' : 'max-h-0'
-                    }`}
-                  >
-                    <ul className="pl-4 py-1 space-y-1">
-                      {categories.map((category) => (
-                        <li key={category}>
-                          <Link
-                            href={`/category-page${
-                              type === "movies" ? "" : "-"
-                            }${
-                              type === "korean Series"
-                                ? "kdrama"
-                                : type === "movies"
-                                ? ""
-                                : type
-                            }?category=${encodeURIComponent(
-                              category
-                            )}&limit=30&skip=1&currentPage=1`}
-                            className="block py-2 px-3 text-sm text-gray-300 hover:text-white hover:bg-gray-700/50 rounded-lg transition-colors duration-200"
-                            onClick={toggleSidebar}
-                          >
-                            {category}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
+              <div className="px-3 py-4">
+                <h3 className="px-2 text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                  Categories
+                </h3>
+                {Object.entries(categoryTypes).map(([type, categories]) => (
+                  <div key={type} className="mb-2">
+                    <button
+                      onClick={() => toggleCategoryType(type)}
+                      className="flex justify-between items-center w-full py-2.5 px-3 text-gray-100 hover:text-white hover:bg-gray-700/50 rounded-lg transition-all duration-200"
+                      aria-expanded={activeType === type}
+                    >
+                      <span className="font-medium">
+                        {type.charAt(0).toUpperCase() + type.slice(1)}
+                      </span>
+                      <span className="transform transition-transform duration-200">
+                        {activeType === type ? (
+                          <ChevronUp size={18} />
+                        ) : (
+                          <ChevronDown size={18} />
+                        )}
+                      </span>
+                    </button>
+                    <div
+                      className={`mt-1 overflow-hidden transition-all duration-200 ${
+                        activeType === type ? 'max-h-64' : 'max-h-0'
+                      }`}
+                    >
+                      <div className="pl-4 py-1 overflow-y-auto max-h-64 scrollbar-thin scrollbar-thumb-gray-600 scrollbar-track-gray-800">
+                        <ul className="space-y-1">
+                          {categories.map((category) => (
+                            <li key={category}>
+                              <Link
+                                href={`/category-page${
+                                  type === "movies" ? "" : "-"
+                                }${
+                                  type === "korean Series"
+                                    ? "kdrama"
+                                    : type === "movies"
+                                    ? ""
+                                    : type
+                                }?category=${encodeURIComponent(
+                                  category
+                                )}&limit=30&skip=1&currentPage=1`}
+                                className="block py-2 px-3 text-sm text-gray-300 hover:text-white hover:bg-gray-700/50 rounded-lg transition-colors duration-200"
+                                onClick={toggleSidebar}
+                              >
+                                {category}
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </nav>
+                ))}
+              </div>
+            </nav>
+          </div>
         </div>
-      </div></div>
+      </div>
     </>
   );
 };
 
 export default MobileNav;
+
+
 

@@ -101,6 +101,14 @@ console.log(`actionMovies`,actionMovies)
       <div className="mt-5 flex justify-center">
       <div className="w-full">
         <div >
+
+        <TrendingItems
+            data={moviesData}
+            title="Latest Movies"
+            flex={false}
+            itemsToShow={30}
+          />
+
           <TrendingItems
             data={trendingMovies}
             title="Trending Movies"
@@ -127,12 +135,7 @@ console.log(`actionMovies`,actionMovies)
             itemsToShow={30}
           />
           
-          <TrendingItems
-            data={moviesData}
-            title="Latest Movies"
-            flex={false}
-            itemsToShow={30}
-          />
+          
           <TrendingItems
             data={seriesData}
             title="Series"
