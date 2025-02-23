@@ -339,7 +339,7 @@ const page = async ({ params }) => {
     })}
   </div>
 </div>
-        <AdScript />
+        {/* <AdScript /> */}
         <div className="mt-12">
           <LatestItems
             title="You May Also Like"
