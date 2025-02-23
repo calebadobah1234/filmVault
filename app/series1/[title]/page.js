@@ -234,7 +234,7 @@ const page = async ({ params }) => {
             <DownloadSection seasons={normalizedSeasons} seasons2={normalizedSeasons2}/>
           </div>
         </div>
-        <AdScript />
+        {/* <AdScript /> */}
         <div className="mt-12">
           <LatestItems
             title="You May Also Like"
