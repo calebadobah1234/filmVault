@@ -911,7 +911,7 @@ const clickTimeoutRef = useRef(null);
 
 
   const checkFileExists = async (filename) => {
-    const url = `https://filmvault3.b-cdn.net/${filename}`;
+    const url = `https://filmvault4.b-cdn.net/${filename}`;
     console.log('Checking file existence for:', url);
 
     try {
@@ -1013,7 +1013,7 @@ const clickTimeoutRef = useRef(null);
       console.log('Initial file check result:', initialFileCheck);
 
       if (initialFileCheck) {
-        const cdnUrl = `https://filmvault3.b-cdn.net/${sanitizedFilename}`;
+        const cdnUrl = `https://filmvault4.b-cdn.net/${sanitizedFilename}`;
         console.log('File already exists, setting CDN URL:', cdnUrl);
         setStreamingUrl(cdnUrl);
         setProcessingStatus('ready');
@@ -1047,7 +1047,7 @@ const clickTimeoutRef = useRef(null);
         const fileExists = await checkFileExists(sanitizedFilename);
 
         if (fileExists) {
-          const finalCdnUrl = `https://filmvault3.b-cdn.net/${sanitizedFilename}`;
+          const finalCdnUrl = `https://filmvault4.b-cdn.net/${sanitizedFilename}`;
           console.log('File processing complete, setting final CDN URL:', finalCdnUrl);
           setStreamingUrl(finalCdnUrl);
           setProcessingStatus('ready');
@@ -1666,7 +1666,7 @@ useEffect(() => {
 
 {showTelegramTooltip && (
   <div className="absolute top-2 left-2 bg-black/60 text-white text-sm p-2 rounded-md z-20">
-    Fullscreen might not work in Telegram browser. Switch to another browser if going fullscreen does not work.
+    Fullscreen might not work if using Telegram browser. Switch to another browser if going fullscreen does not work.
   </div>
 )}
 
