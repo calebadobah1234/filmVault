@@ -36,21 +36,21 @@ async function fetchAllData() {
       key: "seriesData",
       options: { next: { revalidate: 21600 } },
     },
-    {
-      url: `${BASE_URL}/get-20-itemsAiome`,
-      key: "animeData",
-      options: { next: { revalidate: 21600 } },
-    },
-    {
-      url: `${BASE_URL}/get-20-itemsAiokd`,
-      key: "kdramaData",
-      options: { next: { revalidate: 21600 } },
-    },
-    {
-      url: `${BASE_URL}/get-highest-rated-moviesAm`,
-      key: "highestRatedData",
-      options: { next: { revalidate: 21600 } },
-    },
+    // {
+    //   url: `${BASE_URL}/get-20-itemsAiome`,
+    //   key: "animeData",
+    //   options: { next: { revalidate: 21600 } },
+    // },
+    // {
+    //   url: `${BASE_URL}/get-20-itemsAiokd`,
+    //   key: "kdramaData",
+    //   options: { next: { revalidate: 21600 } },
+    // },
+    // {
+    //   url: `${BASE_URL}/get-highest-rated-moviesAm`,
+    //   key: "highestRatedData",
+    //   options: { next: { revalidate: 21600 } },
+    // },
     {
       url: `${BASE_URL}/get-category-dataAm?category=action&limit=30&skip=0`,
       key: "actionMovies",
@@ -94,7 +94,7 @@ export default function Home() {
     return <div>Error loading data. Please try again later.</div>;
   }
 
-  const { moviesData, animeData, seriesData, actionMovies, kdramaData,trendingMovies,trendingSeries,comedySeries,comedyMovies } = data;
+  const { moviesData, seriesData, actionMovies, trendingMovies,trendingSeries,comedySeries,comedyMovies } = data;
 console.log(`actionMovies`,actionMovies)
   return (
     <div>
@@ -150,20 +150,7 @@ console.log(`actionMovies`,actionMovies)
             itemsToShow={20}
             series={true}
           />
-          <TrendingItems
-            data={animeData}
-            title="Anime"
-            flex={false}
-            itemsToShow={20}
-            anime={true}
-          />
-          <TrendingItems
-            data={kdramaData}
-            title="Korean Series"
-            flex={false}
-            itemsToShow={20}
-            kdrama={true}
-          />
+          
           
 
           </div>
