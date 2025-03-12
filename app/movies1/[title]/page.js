@@ -157,7 +157,7 @@ const page = async ({ params }) => {
     data.title
   );
 
-  console.log(`pagapaga :${data.downloadPageUrl}`)
+  console.log(`pagapaga :${data.downloadPageUrl}`);
   
 
   return (
@@ -280,65 +280,91 @@ const page = async ({ params }) => {
         </div>
 
         <div className="mt-8">
-  <h2 className="text-2xl font-bold text-gray-800 mb-4">Stream Now</h2>
-  <ClientOnly>
-    <StreamingComponent 
-    movieTitle={data.title}
-      sources={data.episodesData.filter(item => 
-        !["buy-subscription", "Duble", "Dubbed"].some(term => 
-          item.downloadLink.includes(term)
-        )
-      )}
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">Stream Now</h2>
+          <ClientOnly>
+            <StreamingComponent 
+              movieTitle={data.title}
+              sources={data.episodesData.filter(item => 
+                !["buy-subscription", "Duble", "Dubbed"].some(term => 
+                  item.downloadLink.includes(term)
+                )
+              )}
+              sources2={data.episodesData2?.filter(item => 
+                !["buy-subscription", "Duble", "Dubbed"].some(term => 
+                  item.downloadLink.includes(term)
+                )
+              )}
+              mainSource={data.downloadPageUrl}
+              naijaRocks={data.downloadLinksNaija?.[0]?.url}
+            />
+          </ClientOnly>
+        </div>
 
-      sources2={data.episodesData2?.filter(item => 
-        !["buy-subscription", "Duble", "Dubbed"].some(term => 
-          item.downloadLink.includes(term)
-        )
-      )}
+        <div className="mt-12 text-center">
+          <h2 className="text-2xl font-bold text-gray-800">Download Links</h2>
+          <div className="flex flex-wrap justify-center mt-6 gap-4">
+            {/* Main download link if actualDownloadUrl exists */}
+            {(data.downloadPageUrl || data.downloadLinksNaija) && (
+              <a
+                href={data.downloadPageUrl ? data.downloadPageUrl : data.downloadLinksNaija[0].url}
+                download={`${data.title}.mp4`}
+                className="max-md:min-w-[100%] bg-gray-800 text-white py-4 px-8 rounded-lg shadow-lg hover:bg-gray-700 transition duration-200"
+              >
+                Download {data.title}  {data.fileSize ? `| ${data.fileSize}` : ""}
+              </a>
+            )}
+            
+            {/* Episode download links */}
+            {data.episodesData && data.episodesData.map((item, index) => {
+              const blockedTerms = ["buy-subscription", "Duble", "Dubbed"];
+              const isValidLink = !blockedTerms.some((term) =>
+                item.downloadLink.includes(term)
+              );
 
-      mainSource={data.downloadPageUrl}
-      naijaRocks={data.downloadLinksNaija?.[0]?.url}
-    />
-  </ClientOnly>
-</div>
+              return (
+                isValidLink && (
+                  <a
+                    href={item.downloadLink}
+                    key={index}
+                    download={`${data.title}_${item.quality}.mp4`}
+                    className="max-md:min-w-[100%] bg-gray-800 text-white py-4 px-8 rounded-lg shadow-lg hover:bg-gray-700 transition duration-200"
+                  >
+                    {item.quality} | {item.size}
+                  </a>
+                )
+              );
+            })}
+          </div>
+        </div>
 
-<div className="mt-12 text-center">
-  <h2 className="text-2xl font-bold text-gray-800">Download Links</h2>
-  <div className="flex flex-wrap justify-center mt-6 gap-4">
-    {/* Main download link if actualDownloadUrl exists */}
-    {(data.downloadPageUrl || data.downloadLinksNaija) && (
-      <a
-        href={data.downloadPageUrl?data.downloadPageUrl:data.downloadLinksNaija[0].url}
-        download={`${data.title}.mp4`}
-        className="max-md:min-w-[100%] bg-gray-800 text-white py-4 px-8 rounded-lg shadow-lg hover:bg-gray-700 transition duration-200"
-      >
-        Download {data.title}  {data.fileSize?`| ${data.fileSize}`:""}
-      </a>
-    )}
-    
-    {/* Episode download links */}
-    {data.episodesData.map((item, index) => {
-      const blockedTerms = ["buy-subscription", "Duble", "Dubbed"];
-      const isValidLink = !blockedTerms.some((term) =>
-        item.downloadLink.includes(term)
-      );
-      console.log(`itama:${item}`);
+        {/* Server 2 (episodesDataBC) Section */}
+        {data.episodesDataBC && data.episodesDataBC.length > 0 && (
+          <div className="mt-12 text-center">
+            <h2 className="text-2xl font-bold text-gray-800">Server 99 (Fast Download)</h2>
+            <div className="flex flex-wrap justify-center mt-6 gap-4">
+              {data.episodesDataBC.map((item, index) => {
+                const blockedTerms = ["buy-subscription", "Duble", "Dubbed"];
+                const isValidLink = !blockedTerms.some((term) =>
+                  item.downloadLink.includes(term)
+                );
 
-      return (
-        isValidLink && (
-          <a
-            href={item.downloadLink}
-            key={index}
-            download={`${data.title}_${item.quality}.mp4`}
-            className="max-md:min-w-[100%] bg-gray-800 text-white py-4 px-8 rounded-lg shadow-lg hover:bg-gray-700 transition duration-200"
-          >
-            {item.quality} | {item.size}
-          </a>
-        )
-      );
-    })}
-  </div>
-</div>
+                return (
+                  isValidLink && (
+                    <a
+                      href={item.downloadLink}
+                      key={index}
+                      download={`${data.title}_${item.quality}.mp4`}
+                      className="max-md:min-w-[100%] bg-gray-700 text-white py-4 px-8 rounded-lg shadow-lg hover:bg-gray-600 transition duration-200"
+                    >
+                      {item.quality} | {item.size}
+                    </a>
+                  )
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* <AdScript /> */}
         <div className="mt-12">
           <LatestItems
