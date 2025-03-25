@@ -553,7 +553,7 @@ const [showIosTooltip, setShowIosTooltip] = useState(false);
   // Function to check if file exists in Wasabi using a range request
   const checkFileExists = async (filename, signal) => {
     const encodedFilename = sanitizeFilename(filename);
-    const url = `https://filmvault5.b-cdn.net/${encodedFilename}`;
+    const url = `https://filmvault6.b-cdn.net/${encodedFilename}`;
 
     console.log('Checking existence with URL:', url);
     console.log('URL components:', {
@@ -684,7 +684,7 @@ const [showIosTooltip, setShowIosTooltip] = useState(false);
         console.log('Initial file check result:', initialFileCheck);
 
         if (initialFileCheck) {
-          const cdnUrl = `https://filmvault5.b-cdn.net/${sanitizedFilename}`;
+          const cdnUrl = `https://filmvault6.b-cdn.net/${sanitizedFilename}`;
           console.log('File found, setting CDN URL:', cdnUrl);
           setStreamingUrl(cdnUrl);
           setProcessingStatus('ready');
@@ -705,7 +705,7 @@ const [showIosTooltip, setShowIosTooltip] = useState(false);
               // Check if alternative file exists in CDN
               const altFileExists = await checkFileExists(altFilename, signal);
               if (altFileExists) {
-                const altCdnUrl = `https://filmvault5.b-cdn.net/${altSanitizedFilename}`;
+                const altCdnUrl = `https://filmvault6.b-cdn.net/${altSanitizedFilename}`;
                 console.log('Alternative file found in CDN:', altCdnUrl);
                 setStreamingUrl(altCdnUrl);
                 setProcessingStatus('ready');
@@ -734,7 +734,7 @@ const [showIosTooltip, setShowIosTooltip] = useState(false);
               // Check if naija file exists in CDN
               const naijaFileExists = await checkFileExists(naijaFilename, signal);
               if (naijaFileExists) {
-                const naijaCdnUrl = `https://filmvault5.b-cdn.net/${naijaSanitizedFilename}`;
+                const naijaCdnUrl = `https://filmvault6.b-cdn.net/${naijaSanitizedFilename}`;
                 console.log('Naija file found in CDN:', naijaCdnUrl);
                 setStreamingUrl(naijaCdnUrl);
                 setProcessingStatus('ready');
@@ -788,7 +788,7 @@ const [showIosTooltip, setShowIosTooltip] = useState(false);
               console.log(`File check result for attempt ${attempts + 1}:`, fileExists);
 
               if (fileExists) {
-                const cdnUrl = `https://filmvault5.b-cdn.net/${sanitizedFilename}`;
+                const cdnUrl = `https://filmvault6.b-cdn.net/${sanitizedFilename}`;
                 console.log('File found, setting final CDN URL:', cdnUrl);
                 setStreamingUrl(cdnUrl);
                 setProcessingStatus('ready');

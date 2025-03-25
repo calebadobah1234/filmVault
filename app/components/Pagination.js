@@ -134,7 +134,7 @@ const Pagination = (props) => {
           </Link>
         ))}
 
-        {paginationArray[paginationArray.length - 1] < totalPages && (
+        {/* {paginationArray[paginationArray.length - 1] < totalPages && (
           <>
             {paginationArray[paginationArray.length - 1] < totalPages - 1 && (
               <li className="text-gray-500 font-bold">...</li>
@@ -158,7 +158,7 @@ const Pagination = (props) => {
               </li>
             </Link>
           </>
-        )}
+        )} */}
 
         {currentPage < totalPages && (
           <Link
