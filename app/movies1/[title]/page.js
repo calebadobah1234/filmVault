@@ -280,9 +280,9 @@ const page = async ({ params }) => {
         </div>
 
         <div className="mt-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Stream Now</h2>
+          {/* <h2 className="text-2xl font-bold text-gray-800 mb-4">Stream Now</h2> */}
           <ClientOnly>
-            <StreamingComponent 
+            {/* <StreamingComponent 
               movieTitle={data.title}
               sources={data.episodesData.filter(item => 
                 !["buy-subscription", "Duble", "Dubbed"].some(term => 
@@ -296,7 +296,7 @@ const page = async ({ params }) => {
               )}
               mainSource={data.downloadPageUrl}
               naijaRocks={data.downloadLinksNaija?.[0]?.url}
-            />
+            /> */}
           </ClientOnly>
         </div>
 

@@ -89,7 +89,7 @@ const Navbar = ({ isHomePage }) => {
                 // { href: "/category-page-kdrama?category=all&limit=30=&skip=1&currentPage=1", label: "Korean Series" },
                 { href: "https://www.mp3vault.xyz/", label: "Music", external: true },
                 { href: "https://www.cracksoft.xyz/", label: "PC Games & Software", external: true },
-                { href: "https://t.me/pc_gs", label: "Telegram Channel", external: true }
+                { href: "https://t.me/+l4x6T0ByASdjOGE0", label: "Telegram Channel", external: true }
               ].map((item) => (
                 <li key={item.label} className="relative group">
                   {item.external ? (
