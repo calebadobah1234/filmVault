@@ -107,7 +107,7 @@ export default function AdScript({
   // Determine appropriate dimensions based on ad type
   const adStyle = type === 'banner' 
     ? { minWidth: '300px', minHeight: '250px' }
-    : { minWidth: '468px', minHeight: '60px' };
+    : { minWidth: '1px', minHeight: '60px' };
 
   return (
     <div 
