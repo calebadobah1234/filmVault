@@ -8,6 +8,8 @@ import ImageWithFallback from "@/app/components/ImageWithFallback";
 import Script from "next/script";
 import AdScript from "@/app/components/Adscript";
 import EnhancedSeriesStreamingComponent from "@/app/components/StreamingComponentSeries";
+import BannerScript from "@/app/components/BannerScript";
+import BannerScript2 from "@/app/components/BannerScript2";
 import ViewCounter from "@/app/components/ViewCounter";
 // Normalize seasons data function
 const normalizeSeasons = (seasons) => {
@@ -228,13 +230,14 @@ const page = async ({ params }) => {
         </div>
 
         {/* <EnhancedSeriesStreamingComponent seasons={normalizedSeasons} seasons2={normalizedSeasons2} movieTitle={data.title} /> */}
-
+<BannerScript />
         <div className="mt-12 text-center">
           <div className="flex flex-col flex-wrap justify-center mt-6 gap-4">
             <DownloadSection seasons={normalizedSeasons} seasons2={normalizedSeasons2}/>
           </div>
         </div>
         {/* <AdScript /> */}
+        <BannerScript />
         <div className="mt-12">
           <LatestItems
             title="You May Also Like"
@@ -245,6 +248,7 @@ const page = async ({ params }) => {
             series={true}
           />
         </div>
+        <BannerScript />
         <CommentSection itemId={data._id} linkIdentifier="Aiom" />
       </div>
     </>

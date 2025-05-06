@@ -428,11 +428,14 @@ const MobileNav = () => {
                 <NavLink href="/category-page-series?category=all&limit=30&skip=1&currentPage=1">
                   Series
                 </NavLink>
-                <NavLink href="/category-page-anime?category=all&limit=30&skip=1&currentPage=1">
-                  Anime
+                <NavLink href="https://www.mp3vault.xyz/">
+                  Music
                 </NavLink>
-                <NavLink href="/category-page-kdrama?category=all&limit=30&skip=1&currentPage=1">
-                  Korean Series
+                <NavLink href="https://www.cracksoft.xyz/">
+                  PC Games & Software
+                </NavLink>
+                <NavLink href="https://t.me/+l4x6T0ByASdjOGE0">
+                  Telegram Channel
                 </NavLink>
               </ul>
 
