@@ -7,6 +7,7 @@ import { JsonLd } from "react-schemaorg";
 import CommentSection from "@/app/components/CommentSection";
 import ImageWithFallback from "@/app/components/ImageWithFallback";
 import ViewCounter from "@/app/components/ViewCounter";
+import BannerScript from "@/app/components/BannerScript";
 import Script from "next/script";
 // import StreamingComponent from "@/app/components/StreamingComponent"
 import dynamic from 'next/dynamic';
@@ -278,7 +279,7 @@ const page = async ({ params }) => {
             </div>
           </div>
         </div>
-
+{/* <BannerScript /> */}
         <div className="mt-8">
           {/* <h2 className="text-2xl font-bold text-gray-800 mb-4">Stream Now</h2> */}
           <ClientOnly>
@@ -364,7 +365,7 @@ const page = async ({ params }) => {
             </div>
           </div>
         )}
-
+<BannerScript />
         {/* <AdScript /> */}
         <div className="mt-12">
           <LatestItems
