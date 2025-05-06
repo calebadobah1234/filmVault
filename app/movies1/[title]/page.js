@@ -9,6 +9,7 @@ import ImageWithFallback from "@/app/components/ImageWithFallback";
 import ViewCounter from "@/app/components/ViewCounter";
 import BannerScript from "@/app/components/BannerScript";
 import BannerScript2 from "@/app/components/BannerScript2";
+import NativeScript from "@/app/components/NativeScript";
 import Script from "next/script";
 // import StreamingComponent from "@/app/components/StreamingComponent"
 import dynamic from 'next/dynamic';
@@ -280,8 +281,8 @@ const page = async ({ params }) => {
             </div>
           </div>
         </div>
-{/* <BannerScript /> */}
-<BannerScript2/>
+{/* <BannerScript2/> */}
+<AdScript type="native" className="my-banner-class"/>
         <div className="mt-8">
           {/* <h2 className="text-2xl font-bold text-gray-800 mb-4">Stream Now</h2> */}
           <ClientOnly>
@@ -367,8 +368,10 @@ const page = async ({ params }) => {
             </div>
           </div>
         )}
-<BannerScript />
+{/* <BannerScript /> */}
         {/* <AdScript /> */}
+        
+        <NativeScript />
         <div className="mt-12">
           <LatestItems
             title="You May Also Like"
@@ -378,7 +381,7 @@ const page = async ({ params }) => {
             hide={true}
           />
         </div>
-        <BannerScript />
+        {/* <BannerScript /> */}
         <CommentSection itemId={data._id} linkIdentifier="Am" />
       </div>
     </>

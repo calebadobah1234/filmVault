@@ -1,74 +1,121 @@
-"use client";
+'use client';
+import { useEffect, useRef, useState } from 'react';
+import { v4 as uuidv4 } from 'uuid'; // You'll need to install this package
 
-import Script from "next/script";
-import { useEffect, useRef } from "react";
-import { usePathname } from "next/navigation";
-
-export default function AdScript() {
-  const pathname = usePathname();
-  const initialized = useRef(false);
-  const containerId = "container-a2ec5d29f1060455d67da23054ccb38b";
-  const adScriptUrl =
-    "//pl25046019.profitablecpmrate.com/a2ec5d29f1060455d67da23054ccb38b/invoke.js";
-
-  const initializeAd = () => {
-    // Clear existing container
-    const container = document.getElementById(containerId);
-    if (container) {
-      container.innerHTML = "";
+export default function AdScript({ 
+  type = 'banner', // 'banner' or 'native'
+  className = '',
+  position = 'default'
+}) {
+  // Generate a unique ID for each ad instance
+  const [uniqueId] = useState(() => uuidv4().substring(0, 8));
+  const containerRef = useRef(null);
+  
+  useEffect(() => {
+    if (!containerRef.current) return;
+    
+    // Clear any existing content in the container
+    containerRef.current.innerHTML = '';
+    
+    // Configure the ad based on type
+    if (type === 'banner') {
+      // Banner ad setup
+      const script = document.createElement('script');
+      script.async = true;
+      script.setAttribute('data-cfasync', 'false');
+      script.src = '//pl25046019.profitableratecpm.com/a2ec5d29f1060455d67da23054ccb38b/invoke.js';
+      
+      // Create container with dynamic ID
+      const adContainer = document.createElement('div');
+      const containerId = `container-a2ec5d29f1060455d67da23054ccb38b-${uniqueId}`;
+      adContainer.id = containerId;
+      
+      // Modify the script to target the specific container
+      // This is the key part - we need to tell the ad script which container to use
+      const targetScript = document.createElement('script');
+      targetScript.innerHTML = `
+        document.addEventListener('DOMContentLoaded', function() {
+          window.adsbygoogle = window.adsbygoogle || [];
+          var adInit = function() {
+            try {
+              // This redirects the original script to use our specific container
+              var originalAppendChild = document.body.appendChild;
+              document.body.appendChild = function(element) {
+                if (element.tagName === 'DIV' && element.id && element.id.startsWith('container-a2ec5d29f1060455d67da23054ccb38b')) {
+                  document.getElementById('${containerId}').innerHTML = element.innerHTML;
+                  return element;
+                }
+                return originalAppendChild.call(this, element);
+              };
+              
+              // Execute the original script in our context
+              setTimeout(() => {
+                document.body.appendChild = originalAppendChild;
+              }, 1000);
+            } catch (e) {
+              console.error('Ad init error:', e);
+            }
+          };
+          adInit();
+        });
+      `;
+      
+      // Add the elements to the ref container
+      containerRef.current.appendChild(targetScript);
+      containerRef.current.appendChild(script);
+      containerRef.current.appendChild(adContainer);
+    } else if (type === 'native') {
+      // Native ad setup (for your other ad type)
+      // Similar approach but with different script/container IDs
+      const script = document.createElement('script');
+      script.async = true;
+      script.setAttribute('data-cfasync', 'false');
+      script.src = '//www.highperformanceformat.com/5a9384d1525384473dd0becafd870903/invoke.js';
+      
+      // Create atOptions script
+      const configScript = document.createElement('script');
+      configScript.type = 'text/javascript';
+      configScript.innerHTML = `
+        atOptions = {
+          'key': '5a9384d1525384473dd0becafd870903',
+          'format': 'iframe',
+          'height': 60,
+          'width': 468,
+          'params': {}
+        };
+      `;
+      
+      // Create container with dynamic ID
+      const adContainer = document.createElement('div');
+      const containerId = `native-ad-container-${uniqueId}`;
+      adContainer.id = containerId;
+      
+      // Add the elements to the ref container
+      containerRef.current.appendChild(configScript);
+      containerRef.current.appendChild(script);
+      containerRef.current.appendChild(adContainer);
     }
-
-    // Remove any existing ad scripts to prevent duplicates
-    const existingScripts = document.querySelectorAll(
-      `script[src="${adScriptUrl}"]`
-    );
-    existingScripts.forEach((script) => script.remove());
-
-    // Create and append new script
-    const script = document.createElement("script");
-    script.src = adScriptUrl;
-    script.async = true;
-    script.setAttribute("data-cfasync", "false");
-    document.body.appendChild(script);
-
-    // Track initialization
-    initialized.current = true;
-  };
-
-  useEffect(() => {
-    // Cleanup function to remove script on unmount
+    
+    // Cleanup function
     return () => {
-      const existingScripts = document.querySelectorAll(
-        `script[src="${adScriptUrl}"]`
-      );
-      existingScripts.forEach((script) => script.remove());
-      initialized.current = false;
+      if (containerRef.current) {
+        containerRef.current.innerHTML = '';
+      }
     };
-  }, []);
+  }, [type, uniqueId]);
 
-  useEffect(() => {
-    // Wait a short delay to ensure DOM is ready
-    const timer = setTimeout(() => {
-      initializeAd();
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [pathname]);
+  // Determine appropriate dimensions based on ad type
+  const adStyle = type === 'banner' 
+    ? { minWidth: '300px', minHeight: '250px' }
+    : { minWidth: '468px', minHeight: '60px' };
 
   return (
-    <>
-      <Script
-        src={adScriptUrl}
-        data-cfasync="false"
-        async
-        strategy="afterInteractive"
-        onLoad={() => {
-          if (!initialized.current) {
-            initializeAd();
-          }
-        }}
-      />
-      <div id={containerId}></div>
-    </>
+    <div 
+      ref={containerRef} 
+      className={`ad-container ${className} my-4 flex justify-center`}
+      style={adStyle}
+      data-position={position}
+      data-ad-type={type}
+    ></div>
   );
 }
