@@ -12,10 +12,10 @@ export default function AdsScript({ position = 'body', className = '' }) {
     configScript.type = 'text/javascript';
     configScript.innerHTML = `
       atOptions = {
-        'key': 'db2206c1070f56974805612fc96f6ba4',
+        'key': '5a9384d1525384473dd0becafd870903',
         'format': 'iframe',
-        'height': 250,
-        'width': 300,
+        'height': 60,
+        'width': 468,
         'params': {}
       };
     `;
@@ -23,7 +23,7 @@ export default function AdsScript({ position = 'body', className = '' }) {
     // Then create and add the invoke script
     const invokeScript = document.createElement('script');
     invokeScript.type = 'text/javascript';
-    invokeScript.src = '//www.highperformanceformat.com/db2206c1070f56974805612fc96f6ba4/invoke.js';
+    invokeScript.src = '//www.highperformanceformat.com/5a9384d1525384473dd0becafd870903/invoke.js';
     invokeScript.async = true;
     
     // Clear any existing content in the container
@@ -46,7 +46,7 @@ export default function AdsScript({ position = 'body', className = '' }) {
     <div 
       ref={adContainerRef} 
       className={`adsterra-container ${className} mt-5 flex justify-center`}
-      style={{ minHeight: '250px', minWidth: '300px' }}
+      style={{ minHeight: '60px', minWidth: '468px' }}
       data-position={position}
     ></div>
   );

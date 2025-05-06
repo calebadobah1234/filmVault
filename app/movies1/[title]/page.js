@@ -281,7 +281,7 @@ const page = async ({ params }) => {
           </div>
         </div>
 {/* <BannerScript /> */}
-<BannerScript/>
+<BannerScript2/>
         <div className="mt-8">
           {/* <h2 className="text-2xl font-bold text-gray-800 mb-4">Stream Now</h2> */}
           <ClientOnly>
@@ -367,7 +367,7 @@ const page = async ({ params }) => {
             </div>
           </div>
         )}
-<BannerScript2 />
+<BannerScript />
         {/* <AdScript /> */}
         <div className="mt-12">
           <LatestItems
@@ -378,7 +378,7 @@ const page = async ({ params }) => {
             hide={true}
           />
         </div>
-        <BannerScript2 />
+        <BannerScript />
         <CommentSection itemId={data._id} linkIdentifier="Am" />
       </div>
     </>
