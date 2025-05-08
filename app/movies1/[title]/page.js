@@ -14,6 +14,8 @@ import Script from "next/script";
 // import StreamingComponent from "@/app/components/StreamingComponent"
 import dynamic from 'next/dynamic';
 import ClientOnly from '@/app/components/ClientOnly';
+import AdsteraScript from "@/app/components/SocialScript";
+import AdportScript from "@/app/components/AdportBanner";
 
 export async function generateMetadata({ params }) {
   const res = await fetch(
@@ -197,7 +199,7 @@ const page = async ({ params }) => {
           },
         }}
       />
-
+<AdportScript />
       <div className="container mx-auto p-4 ">
         <div className="flex flex-col md:flex-row bg-gray-50 rounded-lg shadow-md overflow-hidden py-4">
           <div className="md:w-1/3 flex max-md:justify-start max-md:ml-6 lg:justify-end items-center">
@@ -372,6 +374,7 @@ const page = async ({ params }) => {
         {/* <AdScript /> */}
         
         <NativeScript />
+        {/* <AdsteraScript /> */}
         <div className="mt-12">
           <LatestItems
             title="You May Also Like"
@@ -383,7 +386,9 @@ const page = async ({ params }) => {
         </div>
         {/* <BannerScript /> */}
         <CommentSection itemId={data._id} linkIdentifier="Am" />
+        
       </div>
+      
     </>
   );
 };
