@@ -16,6 +16,7 @@ import dynamic from 'next/dynamic';
 import ClientOnly from '@/app/components/ClientOnly';
 import AdsteraScript from "@/app/components/SocialScript";
 import AdportScript from "@/app/components/AdportBanner";
+import AdportRichMedia from "@/app/components/AdportRichMedia";
 
 export async function generateMetadata({ params }) {
   const res = await fetch(
@@ -284,6 +285,7 @@ const page = async ({ params }) => {
           </div>
         </div>
 {/* <BannerScript2/> */}
+<AdportRichMedia />
 <AdScript type="native" className="my-banner-class"/>
         <div className="mt-8">
           {/* <h2 className="text-2xl font-bold text-gray-800 mb-4">Stream Now</h2> */}
