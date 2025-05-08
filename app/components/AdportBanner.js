@@ -4,13 +4,14 @@ import { useEffect, useRef } from 'react';
 export default function AdportScript({ className = '' }) {
   const adContainerRef = useRef(null);
   
+
   useEffect(() => {
     if (!adContainerRef.current) return;
     
     // Create and add the Adport script
     const adportScript = document.createElement('script');
     adportScript.type = 'text/javascript';
-    adportScript.src = 'https://cdn.diclotrans.com/sdk/v1/50439/09048bf12d0299e91638b4b9233cef636225384f/lib.js';
+    adportScript.src = 'https://cdn.diclotrans.com/sdk/v1/50456/701ce987f3b09ca950d70b01cf620147cf0d93f5/lib.js';
     adportScript.async = true;
     
     // Clear any existing content in the container
