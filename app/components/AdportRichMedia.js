@@ -1,17 +1,16 @@
 'use client';
 import { useEffect, useRef } from 'react';
 
-export default function AdportScript({ className = '' }) {
+export default function AdportRichMedia({ className = '' }) {
   const adContainerRef = useRef(null);
   
-
   useEffect(() => {
     if (!adContainerRef.current) return;
     
-    // Create and add the Adport script
+    // Create and add the Adport rich media script
     const adportScript = document.createElement('script');
     adportScript.type = 'text/javascript';
-    adportScript.src = 'https://cdn.diclotrans.com/sdk/v1/50456/701ce987f3b09ca950d70b01cf620147cf0d93f5/lib.js';
+    adportScript.src = 'https://cdn.diclotrans.com/sdk/v1/50458/b9a6883adb042814d5285de5989bff5e6ae16733/lib.js';
     adportScript.async = true;
     
     // Clear any existing content in the container
@@ -31,7 +30,7 @@ export default function AdportScript({ className = '' }) {
   return (
     <div 
       ref={adContainerRef} 
-      className={`adport-container ${className} flex justify-center`}
+      className={`adport-rich-media ${className}`}
     ></div>
   );
 }
