@@ -170,7 +170,9 @@ const page = async ({ params }) => {
           },
         }}
       />
-<AdportScript />
+<AdScript type="native" className="my-banner-class flex justify-center"/>
+        <AdScript type="native" className="my-banner-class flex justify-center"/>
+        <AdScript type="native" className="my-banner-class flex justify-center"/>
       <div className="container mx-auto p-4">
         <div className="flex flex-col md:flex-row bg-gray-50 rounded-lg shadow-md overflow-hidden py-4">
           <div className="md:w-1/3 flex max-md:justify-start max-md:ml-6 lg:justify-end items-center">
@@ -234,8 +236,8 @@ const page = async ({ params }) => {
 
         {/* <EnhancedSeriesStreamingComponent seasons={normalizedSeasons} seasons2={normalizedSeasons2} movieTitle={data.title} /> */}
         {/* <BannerScript2 /> */}
-        <AdportRichMedia />
-        <AdScript type="native" className="my-banner-class"/>
+        {/* <AdportRichMedia /> */}
+        <AdScript type="custom"/>
         <div className="mt-12 text-center">
           <div className="flex flex-col flex-wrap justify-center mt-6 gap-4">
             <DownloadSection seasons={normalizedSeasons} seasons2={normalizedSeasons2}/>
@@ -256,7 +258,9 @@ const page = async ({ params }) => {
           />
         </div>
         {/* <BannerScript /> */}
-         <NativeScript />
+          <AdScript type="custom-2"/>
+         <AdScript type="custom-2"/>
+         <AdScript type="custom-2"/>
         <CommentSection itemId={data._id} linkIdentifier="Aiom" />
       </div>
     </>

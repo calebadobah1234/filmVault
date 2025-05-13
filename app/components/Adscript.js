@@ -1,121 +1,122 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { v4 as uuidv4 } from 'uuid'; // You'll need to install this package
+import { v4 as uuidv4 } from 'uuid';
 
 export default function AdScript({ 
-  type = 'banner', // 'banner' or 'native'
+  type = 'banner',
   className = '',
-  position = 'default'
+  position = 'default',
+  adFormat = 'standard'
 }) {
-  // Generate a unique ID for each ad instance
   const [uniqueId] = useState(() => uuidv4().substring(0, 8));
   const containerRef = useRef(null);
-  
+  const [dimensions] = useState(() => ({
+    banner: { width: 300, height: 250 },
+    native: { width: 468, height: 60 },
+    custom: { width: 300, height: 250 },
+    'custom-2': { width: 320, height: 50 }
+  }[type]));
+
   useEffect(() => {
     if (!containerRef.current) return;
-    
-    // Clear any existing content in the container
-    containerRef.current.innerHTML = '';
-    
-    // Configure the ad based on type
-    if (type === 'banner') {
-      // Banner ad setup
-      const script = document.createElement('script');
-      script.async = true;
-      script.setAttribute('data-cfasync', 'false');
-      script.src = '//pl25046019.profitableratecpm.com/a2ec5d29f1060455d67da23054ccb38b/invoke.js';
-      
-      // Create container with dynamic ID
-      const adContainer = document.createElement('div');
-      const containerId = `container-a2ec5d29f1060455d67da23054ccb38b-${uniqueId}`;
-      adContainer.id = containerId;
-      
-      // Modify the script to target the specific container
-      // This is the key part - we need to tell the ad script which container to use
-      const targetScript = document.createElement('script');
-      targetScript.innerHTML = `
-        document.addEventListener('DOMContentLoaded', function() {
-          window.adsbygoogle = window.adsbygoogle || [];
-          var adInit = function() {
-            try {
-              // This redirects the original script to use our specific container
-              var originalAppendChild = document.body.appendChild;
-              document.body.appendChild = function(element) {
-                if (element.tagName === 'DIV' && element.id && element.id.startsWith('container-a2ec5d29f1060455d67da23054ccb38b')) {
-                  document.getElementById('${containerId}').innerHTML = element.innerHTML;
-                  return element;
-                }
-                return originalAppendChild.call(this, element);
-              };
-              
-              // Execute the original script in our context
-              setTimeout(() => {
-                document.body.appendChild = originalAppendChild;
-              }, 1000);
-            } catch (e) {
-              console.error('Ad init error:', e);
-            }
-          };
-          adInit();
-        });
-      `;
-      
-      // Add the elements to the ref container
-      containerRef.current.appendChild(targetScript);
-      containerRef.current.appendChild(script);
-      containerRef.current.appendChild(adContainer);
-    } else if (type === 'native') {
-      // Native ad setup (for your other ad type)
-      // Similar approach but with different script/container IDs
-      const script = document.createElement('script');
-      script.async = true;
-      script.setAttribute('data-cfasync', 'false');
-      script.src = '//www.highperformanceformat.com/5a9384d1525384473dd0becafd870903/invoke.js';
-      
-      // Create atOptions script
-      const configScript = document.createElement('script');
-      configScript.type = 'text/javascript';
-      configScript.innerHTML = `
-        atOptions = {
-          'key': '5a9384d1525384473dd0becafd870903',
-          'format': 'iframe',
-          'height': 60,
-          'width': 468,
-          'params': {}
-        };
-      `;
-      
-      // Create container with dynamic ID
-      const adContainer = document.createElement('div');
-      const containerId = `native-ad-container-${uniqueId}`;
-      adContainer.id = containerId;
-      
-      // Add the elements to the ref container
-      containerRef.current.appendChild(configScript);
-      containerRef.current.appendChild(script);
-      containerRef.current.appendChild(adContainer);
-    }
-    
-    // Cleanup function
-    return () => {
-      if (containerRef.current) {
-        containerRef.current.innerHTML = '';
+
+    const iframe = document.createElement('iframe');
+    iframe.style.width = `${dimensions.width}px`;
+    iframe.style.height = `${dimensions.height}px`;
+    iframe.style.border = 'none';
+    iframe.style.overflow = 'hidden';
+    iframe.style.margin = '0 auto';
+    iframe.style.display = 'block';
+
+    const cleanup = () => {
+      if (iframe.parentNode === containerRef.current) {
+        containerRef.current.removeChild(iframe);
       }
     };
-  }, [type, uniqueId]);
 
-  // Determine appropriate dimensions based on ad type
-  const adStyle = type === 'banner' 
-    ? { minWidth: '300px', minHeight: '250px' }
-    : { minWidth: '1px', minHeight: '60px' };
+    iframe.onload = () => {
+      try {
+        const doc = iframe.contentDocument || iframe.contentWindow.document;
+        doc.open();
+        doc.write(`
+          <html>
+            <head>
+              <style>body { margin: 0; }</style>
+            </head>
+            <body>
+              ${
+                type === 'banner' ? bannerAdMarkup() : 
+                type === 'native' ? nativeAdMarkup() : 
+                type === 'custom' ? customAdMarkup() :
+                custom2AdMarkup()
+              }
+            </body>
+          </html>
+        `);
+        doc.close();
+      } catch (error) {
+        console.error('Error loading ad iframe:', error);
+        cleanup();
+      }
+    };
+
+    containerRef.current.appendChild(iframe);
+
+    return cleanup;
+  }, [type, uniqueId, dimensions]);
+
+  const bannerAdMarkup = () => `
+    <div id="container-${uniqueId}"></div>
+    <script data-cfasync="false" async src="//pl25046019.profitableratecpm.com/a2ec5d29f1060455d67da23054ccb38b/invoke.js"></script>
+  `;
+
+  const nativeAdMarkup = () => `
+    <script type="text/javascript">
+      atOptions = {
+        'key': '5a9384d1525384473dd0becafd870903',
+        'format': 'iframe',
+        'height': ${dimensions.height},
+        'width': ${dimensions.width},
+        'params': {}
+      };
+    </script>
+    <script data-cfasync="false" async src="//www.highperformanceformat.com/5a9384d1525384473dd0becafd870903/invoke.js"></script>
+  `;
+
+  const customAdMarkup = () => `
+    <script type="text/javascript">
+      atOptions = {
+        'key': 'db2206c1070f56974805612fc96f6ba4',
+        'format': 'iframe',
+        'height': 250,
+        'width': 300,
+        'params': {}
+      };
+    </script>
+    <script type="text/javascript" src="//attendedlickhorizontally.com/db2206c1070f56974805612fc96f6ba4/invoke.js"></script>
+  `;
+
+  const custom2AdMarkup = () => `
+    <script type="text/javascript">
+      atOptions = {
+        'key': '5b248f388dd1725b2d078a9ea603f96f',
+        'format': 'iframe',
+        'height': 50,
+        'width': 320,
+        'params': {}
+      };
+    </script>
+    <script type="text/javascript" src="//attendedlickhorizontally.com/5b248f388dd1725b2d078a9ea603f96f/invoke.js"></script>
+  `;
 
   return (
     <div 
       ref={containerRef} 
-      className={`ad-container ${className} my-4 flex justify-center`}
-      style={adStyle}
-      data-position={position}
-      data-ad-type={type}
-    ></div>
+      className={`ad-container ${className}`}
+      style={{
+        
+        margin: '1rem auto'
+      }}
+    />
   );
 }
