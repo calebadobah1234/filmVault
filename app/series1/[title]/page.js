@@ -171,7 +171,7 @@ const page = async ({ params }) => {
         }}
       />
 <AdScript type="native" className="my-banner-class flex justify-center"/>
-        <AdScript type="native" className="my-banner-class flex justify-center"/>
+        {/* <AdScript type="native" className="my-banner-class flex justify-center"/> */}
         {/* <AdScript type="native" className="my-banner-class flex justify-center"/> */}
       <div className="container mx-auto p-4">
         <div className="flex flex-col md:flex-row bg-gray-50 rounded-lg shadow-md overflow-hidden py-4">
@@ -259,8 +259,8 @@ const page = async ({ params }) => {
         </div>
         {/* <BannerScript /> */}
           <AdScript type="custom-2"/>
-         <AdScript type="custom-2"/>
-         <AdScript type="custom-2"/>
+         {/* <AdScript type="custom-2"/>
+         <AdScript type="custom-2"/> */}
         <CommentSection itemId={data._id} linkIdentifier="Aiom" />
       </div>
     </>
