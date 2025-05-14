@@ -149,6 +149,7 @@ const DownloadSection = ({ seasons, seasons2 }) => {
                             className="flex items-center justify-between p-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors duration-200"
                             target="_blank"
                             rel="noopener noreferrer"
+                            download // Added download attribute for DirectLinkScript compatibility
                           >
                             <span className="truncate mr-2">
                               {getDisplayText(episode)}

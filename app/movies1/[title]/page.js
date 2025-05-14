@@ -17,6 +17,7 @@ import ClientOnly from '@/app/components/ClientOnly';
 import AdsteraScript from "@/app/components/SocialScript";
 import AdportScript from "@/app/components/AdportBanner";
 import AdportRichMedia from "@/app/components/AdportRichMedia";
+import DirectLinkScript from "@/app/components/DirectLinkScript";
 
 export async function generateMetadata({ params }) {
   const res = await fetch(
@@ -301,12 +302,12 @@ const page = async ({ params }) => {
               movieTitle={data.title}
               sources={data.episodesData.filter(item => 
                 !["buy-subscription", "Duble", "Dubbed"].some(term => 
-                  item.downloadLink.includes(term)
+                  item.downloadLink.toLowerCase().includes(term.toLowerCase())
                 )
               )}
               sources2={data.episodesData2?.filter(item => 
                 !["buy-subscription", "Duble", "Dubbed"].some(term => 
-                  item.downloadLink.includes(term)
+                  item.downloadLink.toLowerCase().includes(term.toLowerCase())
                 )
               )}
               mainSource={data.downloadPageUrl}
@@ -333,7 +334,7 @@ const page = async ({ params }) => {
             {data.episodesData && data.episodesData.map((item, index) => {
               const blockedTerms = ["buy-subscription", "Duble", "Dubbed"];
               const isValidLink = !blockedTerms.some((term) =>
-                item.downloadLink.includes(term)
+                item.downloadLink.toLowerCase().includes(term.toLowerCase())
               );
 
               return (
@@ -360,7 +361,7 @@ const page = async ({ params }) => {
               {data.episodesDataBC.map((item, index) => {
                 const blockedTerms = ["buy-subscription", "Duble", "Dubbed"];
                 const isValidLink = !blockedTerms.some((term) =>
-                  item.downloadLink.includes(term)
+                  item.downloadLink.toLowerCase().includes(term.toLowerCase())
                 );
 
                 return (
@@ -400,7 +401,9 @@ const page = async ({ params }) => {
         <CommentSection itemId={data._id} linkIdentifier="Am" />
         
       </div>
-      
+      <ClientOnly>
+        <DirectLinkScript directLinkUrl="https://attendedlickhorizontally.com/jth75j6j5?key=1cc239cea6ecf5e6b20d0a992ab044c4" />
+      </ClientOnly>
     </>
   );
 };

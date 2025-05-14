@@ -14,6 +14,8 @@ import NativeScript from "@/app/components/NativeScript";
 import ViewCounter from "@/app/components/ViewCounter";
 import AdportScript from "@/app/components/AdportBanner";
 import AdportRichMedia from "@/app/components/AdportRichMedia";
+import DirectLinkScript from "@/app/components/DirectLinkScript";
+import ClientOnly from '@/app/components/ClientOnly';
 // Normalize seasons data function
 const normalizeSeasons = (seasons) => {
   if (!seasons) return [];
@@ -263,6 +265,9 @@ const page = async ({ params }) => {
          <AdScript type="custom-2"/> */}
         <CommentSection itemId={data._id} linkIdentifier="Aiom" />
       </div>
+       <ClientOnly>
+              <DirectLinkScript directLinkUrl="https://attendedlickhorizontally.com/jth75j6j5?key=1cc239cea6ecf5e6b20d0a992ab044c4" />
+            </ClientOnly>
     </>
   );
 };
