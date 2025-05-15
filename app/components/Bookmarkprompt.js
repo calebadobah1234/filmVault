@@ -1,35 +1,40 @@
-
 "use client"
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 
 const BookmarkPrompt = () => {
   const [showPrompt, setShowPrompt] = useState(false);
+  const [shortcut, setShortcut] = useState(''); // State for the shortcut
 
   useEffect(() => {
     // Check if user has seen the prompt before
     const hasSeenPrompt = localStorage.getItem('bookmarkPromptSeen');
     
-    // Show prompt after 10 seconds if user hasn't seen it before
+    // Determine the shortcut only on the client-side
+    if (typeof navigator !== 'undefined') {
+      const isMacPlatform = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      setShortcut(isMacPlatform ? '⌘+D' : 'Ctrl+D');
+    } else {
+      // Default shortcut or handle server-side (though it won't be shown)
+      setShortcut('Ctrl+D'); 
+    }
+
+    // Show prompt after 30 seconds if user hasn't seen it before
     if (!hasSeenPrompt) {
       const timer = setTimeout(() => {
         setShowPrompt(true);
-      }, 30000);
+      }, 30000); // 30 seconds
       
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, []); // Empty dependency array means this runs once on mount
 
   const dismissPrompt = () => {
     setShowPrompt(false);
     localStorage.setItem('bookmarkPromptSeen', 'true');
   };
 
-  // Get the correct keyboard shortcut based on platform
-  const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-  const shortcut = isMac ? '⌘+D' : 'Ctrl+D';
-
-  if (!showPrompt) return null;
+  if (!showPrompt || !shortcut) return null; // Don't render if not showing or shortcut not set
 
   return (
     <div className="fixed bottom-4 right-4 max-w-sm bg-gray-900 text-white p-4 rounded-lg shadow-lg border border-gray-700 animate-fade-in">
