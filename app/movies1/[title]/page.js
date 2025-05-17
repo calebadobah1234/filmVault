@@ -204,7 +204,7 @@ const page = async ({ params }) => {
 {/* <AdportScript /> */}
 
 
-{/* <AdScript type="native" className="my-banner-class flex justify-center"/> */}
+<AdScript type="native" className="my-banner-class flex justify-center"/>
         {/* <AdScript type="native" className="my-banner-class flex justify-center"/> */}
         {/* <AdScript type="native" className="my-banner-class flex justify-center"/> */}
 
@@ -294,7 +294,7 @@ const page = async ({ params }) => {
 {/* <BannerScript2/> */}
 {/* <AdportRichMedia /> */}
 
-{/* <AdScript type="custom" /> */}
+<AdScript type="custom" />
         <div className="mt-8">
           {/* <h2 className="text-2xl font-bold text-gray-800 mb-4">Stream Now</h2> */}
           <ClientOnly>
@@ -383,7 +383,7 @@ const page = async ({ params }) => {
 {/* <BannerScript /> */}
         {/* <AdScript /> */}
         
-        {/* <NativeScript /> */}
+        <NativeScript />
         {/* <AdsteraScript /> */}
         <div className="mt-12">
           <LatestItems
@@ -395,7 +395,7 @@ const page = async ({ params }) => {
           />
         </div>
         {/* <BannerScript /> */}
-        {/* <AdScript type="custom-2"/> */}
+        <AdScript type="custom-2"/>
 {/* <AdScript type="custom-2"/>
 <AdScript type="custom-2"/> */}
         <CommentSection itemId={data._id} linkIdentifier="Am" />

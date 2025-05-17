@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
-export default function AdScript({ 
+export default function AdScript({
   type = 'banner',
   className = '',
   position = 'default',
@@ -12,7 +12,7 @@ export default function AdScript({
   const containerRef = useRef(null);
   const iframeRef = useRef(null);
   const hasInitializedRef = useRef(false);
-  
+ 
   const [dimensions] = useState(() => ({
     banner: { width: 300, height: 250 },
     native: { width: 468, height: 60 },
@@ -23,13 +23,13 @@ export default function AdScript({
   useEffect(() => {
     // Only initialize once
     if (!containerRef.current || hasInitializedRef.current) return;
-    
+   
     hasInitializedRef.current = true;
-    
+   
     // Create iframe only once
     const iframe = document.createElement('iframe');
     iframeRef.current = iframe;
-    
+   
     iframe.style.width = `${dimensions.width}px`;
     iframe.style.height = `${dimensions.height}px`;
     iframe.style.border = 'none';
@@ -37,20 +37,43 @@ export default function AdScript({
     iframe.style.margin = '0 auto';
     iframe.style.display = 'block';
     
+    // Add sandbox attribute to restrict behaviors that could trigger pop-ups
+    iframe.sandbox = 'allow-scripts allow-same-origin allow-popups-to-escape-sandbox';
+   
     // Determine which ad content to use
-    const adContent = 
-      type === 'banner' ? bannerAdMarkup() : 
-      type === 'native' ? nativeAdMarkup() : 
+    const adContent =
+      type === 'banner' ? bannerAdMarkup() :
+      type === 'native' ? nativeAdMarkup() :
       type === 'custom' ? customAdMarkup() :
       custom2AdMarkup();
-    
+   
     // Write content directly when creating the iframe
-    // This avoids cross-origin issues with contentWindow.document
     iframe.srcdoc = `
       <!DOCTYPE html>
       <html>
         <head>
           <style>body { margin: 0; padding: 0; overflow: hidden; }</style>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <!-- Add anti-popup script -->
+          <script>
+            // Block attempts to open new windows
+            window.open = function() { 
+              console.log('Popup blocked');
+              return null; 
+            };
+            
+            // Prevent other ways of opening popups
+            window.addEventListener('DOMContentLoaded', function() {
+              // Override any attempts to modify window.open after load
+              Object.defineProperty(window, 'open', {
+                writable: false,
+                value: function() { 
+                  console.log('Popup blocked');
+                  return null; 
+                }
+              });
+            });
+          </script>
         </head>
         <body>
           ${adContent}
@@ -84,6 +107,14 @@ export default function AdScript({
         'width': ${dimensions.width},
         'params': {}
       };
+      
+      // Add popup blocker
+      if (atOptions.params) {
+        atOptions.params.popunder = false;
+        atOptions.params.popups = false;
+      } else {
+        atOptions.params = { popunder: false, popups: false };
+      }
     </script>
     <script data-cfasync="false" async src="//www.highperformanceformat.com/5a9384d1525384473dd0becafd870903/invoke.js"></script>
   `;
@@ -95,7 +126,7 @@ export default function AdScript({
         'format': 'iframe',
         'height': 250,
         'width': 300,
-        'params': {}
+        'params': { popunder: false, popups: false }
       };
     </script>
     <script type="text/javascript" src="//attendedlickhorizontally.com/db2206c1070f56974805612fc96f6ba4/invoke.js"></script>
@@ -108,15 +139,15 @@ export default function AdScript({
         'format': 'iframe',
         'height': 50,
         'width': 320,
-        'params': {}
+        'params': { popunder: false, popups: false }
       };
     </script>
     <script type="text/javascript" src="//attendedlickhorizontally.com/5b248f388dd1725b2d078a9ea603f96f/invoke.js"></script>
   `;
 
   return (
-    <div 
-      ref={containerRef} 
+    <div
+      ref={containerRef}
       className={`ad-container ${className}`}
       style={{
         margin: '1rem auto'
