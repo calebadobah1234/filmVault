@@ -1,70 +1,39 @@
 "use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 const DirectLinkScript = ({ directLinkUrl }) => {
+  const [adLinkReady, setAdLinkReady] = useState(false);
+  
   useEffect(() => {
     // Create a flag in sessionStorage to track if redirect has happened on this page
     const hasRedirected = sessionStorage.getItem('adsterraRedirectOccurred');
     
     if (!hasRedirected) {
-      // Function to create and open the pop-under ad
-      const createPopUnder = () => {
-        // First focus the current window (main window)
-        window.focus();
-        
-        // Create the popup window with minimal features - this will be our pop-under
-        const adWindow = window.open(
-          directLinkUrl,
-          '_blank',
-          'width=1,height=1,left=200,top=200,menubar=0,toolbar=0,location=0,status=0'
-        );
-        
-        // If popup was successfully created
-        if (adWindow) {
-          // Move it behind the current window
-          adWindow.blur();
-          window.focus();
-          
-          // Resize it to full size after it's behind the main window
-          setTimeout(() => {
-            if (!adWindow.closed) {
-              adWindow.resizeTo(screen.availWidth, screen.availHeight);
-            }
-          }, 500);
-        }
-        
-        // Set flag to prevent multiple pop-unders
-        sessionStorage.setItem('adsterraRedirectOccurred', 'true');
-        
-        // Reset the flag after 30 minutes to allow future pop-unders
-        setTimeout(() => {
-          sessionStorage.removeItem('adsterraRedirectOccurred');
-        }, 0 * 60 * 1000);
-      };
-      
-      // Delayed pop-under function - wait 10 seconds then show ad
-      const delayedPopUnder = () => {
-        setTimeout(() => {
-          createPopUnder();
-        }, 10000); // 10 seconds
-      };
-      
       // Set up click handlers for all download links
       const downloadLinks = document.querySelectorAll('a[download]');
       
-      const handleDownloadClick = (e) => {
+      const handleDownloadClick = () => {
         // Only proceed if we haven't already set up a redirect
         if (!sessionStorage.getItem('adsterraRedirectOccurred')) {
-          // Important: Don't prevent default behavior
-          // Let the download start or new tab open normally
+          // Set flag to prevent multiple redirects
+          sessionStorage.setItem('adsterraRedirectOccurred', 'true');
           
-          // Initialize the delayed pop-under
-          delayedPopUnder();
+          // Set state to render the link after timeout
+          console.log("Download clicked, waiting 10 seconds...");
+          setTimeout(() => {
+            console.log("10 seconds passed, setting adLinkReady to true");
+            setAdLinkReady(true);
+          }, 10000); // 10 seconds
+          
+          // Reset the flag after some time to allow future redirects
+          setTimeout(() => {
+            sessionStorage.removeItem('adsterraRedirectOccurred');
+          }, 30 * 60 * 1000); // 30 minutes
         }
       };
       
-      // Track all download links, including those that might open in new tabs
+      // Track all download links
       downloadLinks.forEach(link => {
         link.addEventListener('click', handleDownloadClick);
       });
@@ -79,6 +48,7 @@ const DirectLinkScript = ({ directLinkUrl }) => {
           href.includes('.pdf') || 
           href.includes('.mp3') || 
           href.includes('.mp4') ||
+          href.includes('.mkv') ||
           href.includes('download') ||
           href.includes('blob:')
         )) {
@@ -108,7 +78,29 @@ const DirectLinkScript = ({ directLinkUrl }) => {
         });
       };
     }
-  }, [directLinkUrl]); // Don't forget the dependency array and closing bracket for useEffect
+  }, [directLinkUrl]);
+
+  // When the ad is ready to show, we create an invisible link and click it
+  useEffect(() => {
+    if (adLinkReady) {
+      console.log("adLinkReady is true, creating and clicking link");
+      const clickElement = document.createElement('a');
+      clickElement.href = directLinkUrl;
+      clickElement.target = '_blank';
+      clickElement.rel = 'noopener noreferrer';
+      clickElement.style.display = 'none';
+      document.body.appendChild(clickElement);
+      
+      // This simulates a user click, which browsers allow
+      clickElement.click();
+      
+      // Clean up the element
+      document.body.removeChild(clickElement);
+      
+      // Reset state
+      setAdLinkReady(false);
+    }
+  }, [adLinkReady, directLinkUrl]);
 
   return null;
 };
