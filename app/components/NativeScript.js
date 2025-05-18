@@ -7,23 +7,23 @@ export default function BannerAdScript({ className = '' }) {
   useEffect(() => {
     if (!containerRef.current) return;
     
-    // Create a sandbox iframe to contain the ad
+    // Create an iframe with more permissive settings
     const iframe = document.createElement('iframe');
-    iframe.style.width = '300px';
-    iframe.style.height = '250px';
+    iframe.style.width = '100%';
+    iframe.style.height = '280px'; // Slightly taller to accommodate multiple ads
     iframe.style.border = 'none';
     iframe.style.overflow = 'hidden';
     iframe.style.margin = '0 auto';
     iframe.style.display = 'block';
     
-    // Add sandbox attribute to restrict behaviors that could trigger pop-ups
-    iframe.sandbox = 'allow-scripts allow-same-origin allow-popups-to-escape-sandbox';
+    // Allow scripts and pop-ups but in a controlled way
+    iframe.sandbox = 'allow-scripts allow-same-origin allow-popups allow-top-navigation-by-user-activation';
     
-    // Clear any existing content in the container
+    // Clear container and add iframe
     containerRef.current.innerHTML = '';
     containerRef.current.appendChild(iframe);
     
-    // Write content to the iframe that will safely load the ad
+    // Write content to the iframe
     iframe.srcdoc = `
       <!DOCTYPE html>
       <html>
@@ -32,45 +32,54 @@ export default function BannerAdScript({ className = '' }) {
             body { 
               margin: 0; 
               padding: 0; 
-              overflow: hidden; 
+              overflow: hidden;
+            }
+            #container-a2ec5d29f1060455d67da23054ccb38b {
+              width: 100%;
               display: flex;
+              flex-wrap: wrap;
               justify-content: center;
+              gap: 10px;
             }
           </style>
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <!-- Add anti-popup script -->
           <script>
-            // Block attempts to open new windows
-            window.open = function() { 
-              console.log('Popup blocked');
-              return null; 
+            // Controlled popup handling - only allow one popup per user click
+            let lastClickTime = 0;
+            let popupCount = 0;
+            
+            // Override window.open with a more nuanced version
+            const originalWindowOpen = window.open;
+            window.open = function(url, name, specs) {
+              const now = Date.now();
+              
+              // Allow popup if it's within 1 second of a user click and less than 2 popups per click
+              if (now - lastClickTime < 1000 && popupCount < 1) {
+                popupCount++;
+                return originalWindowOpen.call(window, url, name, specs);
+              }
+              
+              console.log('Excessive popup blocked');
+              return null;
             };
             
-            // Prevent other ways of opening popups
-            window.addEventListener('DOMContentLoaded', function() {
-              // Override any attempts to modify window.open after load
-              Object.defineProperty(window, 'open', {
-                writable: false,
-                value: function() { 
-                  console.log('Popup blocked');
-                  return null; 
-                }
-              });
-            });
+            // Track user clicks
+            document.addEventListener('click', function() {
+              lastClickTime = Date.now();
+              popupCount = 0;
+            }, true);
           </script>
         </head>
         <body>
           <div id="container-a2ec5d29f1060455d67da23054ccb38b"></div>
           <script>
-            // Add configuration to prevent popups if possible
+            // Allow the ad to format multiple units
             var atOptions = {
+              'key': 'a2ec5d29f1060455d67da23054ccb38b',
               'format': 'iframe',
               'height': 250,
               'width': 300,
-              'params': { 
-                'popunder': false, 
-                'popups': false 
-              }
+              'params': {}
             };
           </script>
           <script data-cfasync="false" async src="//pl25046019.profitableratecpm.com/a2ec5d29f1060455d67da23054ccb38b/invoke.js"></script>
@@ -90,7 +99,7 @@ export default function BannerAdScript({ className = '' }) {
     <div 
       ref={containerRef} 
       className={`banner-ad-container ${className} my-4 flex justify-center`}
-      style={{ minWidth: '300px', minHeight: '250px' }}
+      style={{ minWidth: '300px', minHeight: '280px' }}
     ></div>
   );
 }
