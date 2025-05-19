@@ -1,6 +1,48 @@
 "use client"
 import React, { useState } from "react";
 
+// Domain to CDN mapping function
+const replaceDomainWithCDN = (url) => {
+  if (!url) return url;
+  
+  // Map of domains to their CDN equivalents
+  const domainMappings = {
+    "http://ds10.30namachi.com": "https://namachi10.b-cdn.net",
+    "http://ds11.30namachi.com": "https://namachi11.b-cdn.net",
+    "http://ds12.30namachi.com": "https://namachi12.b-cdn.net",
+    "http://ds14.30namachi.com": "https://namachi14.b-cdn.net",
+    "http://ds15.30namachi.com": "https://namachi15.b-cdn.net",
+    "http://ds16.30namachi.com": "https://namachi16.b-cdn.net",
+    "http://ds17.30namachi.com": "https://namachi17.b-cdn.net",
+    "http://ds3.30namachi.co": "https://namachi3.b-cdn.net",
+    "http://dl4.30namcahi.com": "https://namachi4.b-cdn.net",
+    "http://ds5.30namachi.com": "https://namachi5.b-cdn.net",
+    "http://ds7.30namachi.com": "https://namachi7.b-cdn.net",
+    "http://d10.30namachi.com": "https://namachid10.b-cdn.net",
+    "https://dl11.sermoviedown.pw": "https://sermovie11.b-cdn.net",
+    "https://dl12.sermoviedown.pw": "https://sermovie12.b-cdn.net",
+    "https://dl3.sermoviedown.pw": "https://sermovie3.b-cdn.net",
+    "https://dl4.sermoviedown.pw": "https://sermovie4.b-cdn.net",
+    "https://dl5.sermoviedown.pw": "https://sermovie5.b-cdn.net",
+    "https://dl2.sermoviedown.pw": "https://servmovie2.b-cdn.net",
+    "http://dl.vinadl.xyz": "https://vinadl1.b-cdn.net",
+    "http://dl2.vinadl.xyz": "https://vinadl2.b-cdn.net",
+    "http://dl3.vinadl.xyz": "https://vinadl3.b-cdn.net",
+    "http://dl8.vinadl.xyz": "https://vinadl8.b-cdn.net",
+    "http://dl9.vinadl.xyz": "https://vinadl9.b-cdn.net",
+    "https://dl1.dl-bcmovie1.xyz": "https://bcmovie1.b-cdn.net"
+  };
+
+  // Check each domain pattern and replace if found
+  for (const [oldDomain, newDomain] of Object.entries(domainMappings)) {
+    if (url.startsWith(oldDomain)) {
+      return url.replace(oldDomain, newDomain);
+    }
+  }
+
+  return url;
+};
+
 const DownloadSection = ({ seasons, seasons2 }) => {
   const [openSeasons, setOpenSeasons] = useState({ server1: null, server2: null });
 
@@ -41,6 +83,51 @@ const DownloadSection = ({ seasons, seasons2 }) => {
 
     return displayText.trim() || "Unknown Episode";
   };
+
+  // Process the seasons data to replace download links with CDN links
+  const processSeasons = (seasonsArray) => {
+    if (!seasonsArray) return [];
+    
+    return seasonsArray.map(season => {
+      // Deep copy to avoid mutating props
+      const processedSeason = {...season};
+      
+      // Handle the structure with episodes that have downloadLinks
+      if (season.episodes && season.episodes[0]?.downloadLinks) {
+        processedSeason.episodes = season.episodes.map(episode => {
+          const processedEpisode = {...episode};
+          if (episode.downloadLinks) {
+            processedEpisode.downloadLinks = episode.downloadLinks.map(link => ({
+              ...link,
+              downloadLink: replaceDomainWithCDN(link.downloadLink)
+            }));
+          }
+          return processedEpisode;
+        });
+      }
+      
+      // Handle the structure with resolutions that have episodes
+      if (season.resolutions) {
+        processedSeason.resolutions = season.resolutions.map(resolution => {
+          const processedResolution = {...resolution};
+          if (resolution.episodes) {
+            processedResolution.episodes = resolution.episodes.map(episode => ({
+              ...episode,
+              downloadLink: replaceDomainWithCDN(episode.downloadLink),
+              link: episode.link ? replaceDomainWithCDN(episode.link) : episode.link
+            }));
+          }
+          return processedResolution;
+        });
+      }
+      
+      return processedSeason;
+    });
+  };
+
+  // Process both server seasons
+  const processedSeasons = processSeasons(seasons);
+  const processedSeasons2 = processSeasons(seasons2);
 
   const normalizeSeasons = (seasonsArray) => {
     return seasonsArray.map(season => {
@@ -186,8 +273,8 @@ const DownloadSection = ({ seasons, seasons2 }) => {
       <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center">
         Download Links
       </h2>
-      {renderSeasonList(seasons, 'server1', 'Server 1')}
-      {renderSeasonList(seasons2, 'server2', 'Server 2')}
+      {renderSeasonList(processedSeasons, 'server1', 'Server 1')}
+      {renderSeasonList(processedSeasons2, 'server2', 'Server 2')}
     </div>
   );
 };
