@@ -31,7 +31,7 @@ const replaceDomainWithCDN = (url) => {
     "http://dl8.vinadl.xyz": "https://vinadl8.b-cdn.net",
     "http://dl9.vinadl.xyz": "https://vinadl9.b-cdn.net",
     "https://dl1.dl-bcmovie1.xyz": "https://bcmovie1.b-cdn.net",
-    "https://dl.vinadl.xyz":"vinadl0.b-cdn.net"
+    "https://dl.vinadl.xyz":"https://vinadl0.b-cdn.net"
   };
 
   // Check each domain pattern and replace if found
