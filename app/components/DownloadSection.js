@@ -64,7 +64,7 @@ const replaceDomainWithCDN = (url) => {
 
     "https://dl1.dl-bcmovie1.xyz": "https://bcmovie1.b-cdn.net",
 
-    "https://dl.vinadl.xyz":"vinadl0.b-cdn.net"
+    "https://dl.vinadl.xyz":"https://vinadl0.b-cdn.net"
 
   };
 
