@@ -470,9 +470,9 @@ const page = async ({ params }) => {
         <CommentSection itemId={data._id} linkIdentifier="Am" />
         
       </div>
-      <ClientOnly>
+      {/* <ClientOnly>
         <DirectLinkScript directLinkUrl="https://attendedlickhorizontally.com/jth75j6j5?key=1cc239cea6ecf5e6b20d0a992ab044c4" />
-      </ClientOnly>
+      </ClientOnly> */}
     </>
   );
 };
