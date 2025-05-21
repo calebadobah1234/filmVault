@@ -266,7 +266,7 @@ const page = async ({ params }) => {
         <CommentSection itemId={data._id} linkIdentifier="Aiom" />
       </div>
        <ClientOnly>
-              <DirectLinkScript directLinkUrl="https://defenseless-effect.com/bn3.V/0tP/3ppkv/bfmgVWJPZKDA0i2kM/z/YCwLMKD/Et2_LwTfYNzENWjsA/wZMvTGcu" />
+              <DirectLinkScript directLinkUrl="https://attendedlickhorizontally.com/jth75j6j5?key=1cc239cea6ecf5e6b20d0a992ab044c4" />
             </ClientOnly>
     </>
   );
