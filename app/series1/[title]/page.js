@@ -172,7 +172,7 @@ const page = async ({ params }) => {
           },
         }}
       />
-<AdScript type="native" className="my-banner-class flex justify-center"/>
+{/* <AdScript type="native" className="my-banner-class flex justify-center"/> */}
         {/* <AdScript type="native" className="my-banner-class flex justify-center"/> */}
         {/* <AdScript type="native" className="my-banner-class flex justify-center"/> */}
       <div className="container mx-auto p-4">
@@ -236,10 +236,10 @@ const page = async ({ params }) => {
           </div>
         </div>
 
-        {/* <EnhancedSeriesStreamingComponent seasons={normalizedSeasons} seasons2={normalizedSeasons2} movieTitle={data.title} /> */}
+        <EnhancedSeriesStreamingComponent seasons={normalizedSeasons} seasons2={normalizedSeasons2} movieTitle={data.title} />
         {/* <BannerScript2 /> */}
         {/* <AdportRichMedia /> */}
-        <AdScript type="custom"/>
+        {/* <AdScript type="custom"/> */}
         <div className="mt-12 text-center">
           <div className="flex flex-col flex-wrap justify-center mt-6 gap-4">
             <DownloadSection seasons={normalizedSeasons} seasons2={normalizedSeasons2}/>
@@ -260,14 +260,14 @@ const page = async ({ params }) => {
           />
         </div>
         {/* <BannerScript /> */}
-          <AdScript type="custom-2"/>
+          {/* <AdScript type="custom-2"/> */}
          {/* <AdScript type="custom-2"/>
          <AdScript type="custom-2"/> */}
         <CommentSection itemId={data._id} linkIdentifier="Aiom" />
       </div>
-       {/* <ClientOnly>
+       <ClientOnly>
               <DirectLinkScript directLinkUrl="https://attendedlickhorizontally.com/jth75j6j5?key=1cc239cea6ecf5e6b20d0a992ab044c4" />
-            </ClientOnly> */}
+            </ClientOnly>
     </>
   );
 };

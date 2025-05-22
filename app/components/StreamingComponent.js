@@ -16,7 +16,7 @@ const GLOBAL_DOMAIN_MAPPINGS = {
   "https://ds16.30namachi.com": "https://namachi16.b-cdn.net",
   "https://ds17.30namachi.com": "https://namachi17.b-cdn.net",
   "https://ds3.30namachi.co": "https://namachi3.b-cdn.net",
-  "https://dl4.30namcahi.com": "https://namachi4.b-cdn.net", // Note: Typo in original "30namcahi.com"?
+  "https://dl4.30namachi.com": "https://namachi4.b-cdn.net", // Note: Typo in original "30namcahi.com"?
   "https://ds5.30namachi.com": "https://namachi5.b-cdn.net",
   "https://ds7.30namachi.com": "https://namachi7.b-cdn.net",
   "https://d10.30namachi.com": "https://namachid10.b-cdn.net",
@@ -1657,10 +1657,11 @@ const onFullscreenChange = useCallback(() => {
   }, [isMobile, hasStarted, playing, isFullscreen, showControls]);
 
 
-  return (
+  return (<>
+    <h2 className="text-2xl font-bold p-4 text-center">Stream Now</h2>
      <div
       ref={containerRef}
-      className="bg-black rounded-xl overflow-hidden shadow-xl relative group"
+      className="bg-black rounded-xl overflow-hidden shadow-xl relative group lg:max-w-4xl mx-auto"
       onMouseMove={isMobile ? undefined : showControlsWithTimeout} // This is correct for desktop
       onMouseLeave={isMobile ? undefined : () => { if (!isFullscreen && playing && !seeking) hideControls();}}
       onTouchStart={handleTouchStart}
@@ -1764,55 +1765,75 @@ const onFullscreenChange = useCallback(() => {
               style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'black', transition: 'transform 0.3s ease' }}
             >
               <ReactPlayer
-              key={streamingUrl || 'no-url'} 
-                ref={playerRef}
-                url={streamingUrl}
-                playing={playing}
-                volume={volume}
-                muted={isMuted}
-                width="100%"
-                height="100%"
-                style={{ maxWidth: '100%', maxHeight: '100%', margin: 'auto', objectFit: 'contain', backgroundColor: 'black' }}
-                className={`react-player ${isFullscreen ? 'fullscreen-video-player' : ''}`}
-                onProgress={handleProgress}
-                onDuration={(d) => { if (d > 0 && duration !== d) setDuration(d);}} // Only set if valid and changed
-                onBuffer={handleBuffer}
-                onBufferEnd={handleBufferEnd}
-                onReady={handlePlayerReady}
-                onError={handleError}
-                onEnded={() => setPlaying(false)} // Set playing to false when video ends
-                config={{
-                  file: {
-                    attributes: {
-                        controlsList: 'nodownload',
-                        crossOrigin: 'anonymous',
-                        playsInline: true, // Important for iOS inline play
-                        'webkit-playsinline': true, // iOS specific
-                        style: { width: '100%', height: '100%', objectFit: 'contain', backgroundColor: 'black' }
-                    },
-                    forceVideo: true, // Ensure it's treated as a video file
-                    // tracks: subtitleTracks.filter(t => t.src).map(track => ({ // Dynamically build tracks for ReactPlayer
-                    //     kind: track.kind || 'subtitles',
-                    //     src: track.src,
-                    //     srcLang: track.srcLang || 'en',
-                    //     label: track.label || 'Subtitle',
-                    //     default: track.default && subtitlesEnabled
-                    // })),
-                    hlsOptions: {
-                        maxMaxBufferLength: 120, // seconds
-                        maxBufferLength: 60,    // seconds
-                        startPosition: -1,      // Default, start from beginning or live point
-                        backBufferLength: 30,  // seconds of buffer to keep behind current time for HLS
-                        liveSyncDurationCount: 3, // for live streams
-                        fragLoadingMaxRetry: 4,
-                        manifestLoadingMaxRetry: 2,
-                        levelLoadingMaxRetry: 3,
-                        enableWorker: true, // Use web workers for HLS.js if available
-                    }
-                  },
-                }}
-                playsinline // Direct prop for playsinline
-              />
+                              ref={playerRef}
+                              url={streamingUrl}
+                              playing={playing}
+                              volume={volume}
+                              muted={isMuted}
+                              width="100%"
+                              height="100%"
+                              style={{
+                                maxWidth: '100%',
+                                maxHeight: '100%',
+                                margin: 'auto',
+                                objectFit: 'contain',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backgroundColor: 'black'
+                              }}
+                              className={`react-player ${isFullscreen ? 'fullscreen' : ''}`}
+                              onProgress={handleProgress}
+                              onClick={handleVideoClick}
+                              onDuration={setDuration}
+                              onBuffer={handleBuffer}
+                              onBufferEnd={handleBufferEnd}
+                              onReady={handlePlayerReady}
+                              onError={handleError} // Use the enhanced error handler
+                              config={{
+                                file: {
+                                  attributes: {
+                                    controlsList: 'nodownload',
+                                    crossOrigin: 'anonymous',
+                                    playsInline: true,
+                                    'webkit-playsinline': true,
+                                    muted: false,
+                                    style: {
+                                      width: '100%',
+                                      height: '100%',
+                                      objectFit: 'contain',
+                                      backgroundColor: 'black'
+                                    }
+                                  },
+                                  forceVideo: true,
+                                  hlsOptions: {
+                                    // More robust HLS.js configuration for wider compatibility
+                                    maxMaxBufferLength: 600, // Increased max buffer
+                                    maxBufferLength: 30,      // Reduced buffer length to start playback faster
+                                    startPosition: -1,
+                                    backBufferLength: 30,
+                                    liveSyncDurationCount: 3, // Reduced for potentially lower latency
+                                    maxLoadingDelay: 4,
+                                    manifestLoadingTimeOut: 10000, // Reduced timeouts for faster error detection
+                                    manifestLoadingMaxRetry: 3,   // Reduced retries
+                                    fragLoadingTimeOut: 15000,
+                                    fragLoadingMaxRetry: 3,
+                                    levelLoadingTimeOut: 10000,
+                                    levelLoadingMaxRetry: 3,
+                                    abrEwmaDefaultEstimate: 500000, // Reduced default bitrate estimate
+                                    abrBandWidthFactor: 0.9,     // Slightly more conservative ABR
+                                    abrBandWidthUpFactor: 0.7,
+                                    abrMaxWithRealBitrate: true,
+                                    enableWorker: true, // Keep worker enabled for performance, but monitor if issues arise
+                                    autoStartLoad: true,
+                                    startPosition: -1,
+                                    // Experimental settings - use with caution and testing
+                                    // lowLatencyMode: true, // Consider for low latency streams if applicable
+                                    // liveDurationInfinity: true, // If stream is truly live and infinite
+                                  }
+                                },
+                              }}
+                            />
             </div>
           </>
         )}
@@ -1966,7 +1987,7 @@ const onFullscreenChange = useCallback(() => {
           </div>
         )}
       </div>
-    </div>
+    </div></>
   );
 };
 export default EnhancedStreamingComponent;
