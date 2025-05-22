@@ -15,6 +15,7 @@ const GLOBAL_DOMAIN_MAPPINGS = {
   "https://ds15.30namachi.com": "https://namachi15.b-cdn.net",
   "https://ds16.30namachi.com": "https://namachi16.b-cdn.net",
   "https://ds17.30namachi.com": "https://namachi17.b-cdn.net",
+  "https://storage.googleapis.com/fvmoviesbucket":"https://fvsrv1.b-cdn.net",
   "https://ds3.30namachi.co": "https://namachi3.b-cdn.net",
   "https://dl4.30namachi.com": "https://namachi4.b-cdn.net",
   "https://ds5.30namachi.com": "https://namachi5.b-cdn.net",

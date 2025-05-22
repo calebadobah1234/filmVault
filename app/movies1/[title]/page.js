@@ -49,6 +49,7 @@ const replaceDomainWithCDN = (url) => {
     "http://dl8.vinadl.xyz": "https://vinadl8.b-cdn.net",
     "http://dl9.vinadl.xyz": "https://vinadl9.b-cdn.net",
     "https://dl1.dl-bcmovie1.xyz": "https://bcmovie1.b-cdn.net",
+    "https://storage.googleapis.com/fvmoviesbucket":"https://fvsrv1.b-cdn.net",
     "https://dl.vinadl.xyz":"https://vinadl0.b-cdn.net",
     "https://silverangel.000f.fastbytes.org":"https://silverangel.b-cdn.net"
   };

@@ -8,6 +8,7 @@ const replaceDomainWithCDN = (url) => {
   // Map of domains to their CDN equivalents
   const domainMappings = {
     "http://ds10.30namachi.com": "https://namachi10.b-cdn.net",
+    "https://storage.googleapis.com/fvmoviesbucket":"https://fvsrv1.b-cdn.net",
     "http://ds11.30namachi.com": "https://namachi11.b-cdn.net",
     "http://ds12.30namachi.com": "https://namachi12.b-cdn.net",
     "http://ds14.30namachi.com": "https://namachi14.b-cdn.net",
