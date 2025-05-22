@@ -1,6 +1,4 @@
 import React from "react";
-import Head from "next/head";
-import Script from "next/script";
 
 import AdScript from "@/app/components/Adscript";
 import LatestItems from "@/app/components/LatestItems";
@@ -12,6 +10,7 @@ import ViewCounter from "@/app/components/ViewCounter";
 import BannerScript from "@/app/components/BannerScript";
 import BannerScript2 from "@/app/components/BannerScript2";
 import NativeScript from "@/app/components/NativeScript";
+import Script from "next/script";
 // import StreamingComponent from "@/app/components/StreamingComponent"
 import dynamic from 'next/dynamic';
 import ClientOnly from '@/app/components/ClientOnly';
@@ -239,132 +238,7 @@ const page = async ({ params }) => {
 
   return (
     <>
-      <Head>
-        {/* Meta tags to force external browser opening */}
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="format-detection" content="telephone=no" />
-        <meta name="theme-color" content="#000000" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-        
-        {/* Telegram-specific meta tags */}
-        <meta property="telegram:channel" content="@your_channel" />
-        <meta name="telegram-webapp" content="false" />
-      </Head>
-
-      {/* JavaScript to detect and redirect from Telegram browser */}
-      <Script
-        id="telegram-browser-detection"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: `
-            (function() {
-              // Check if we're in Telegram's in-app browser
-              function isTelegramBrowser() {
-                const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-                return /Telegram/i.test(userAgent) || 
-                       /TelegramBot/i.test(userAgent) || 
-                       window.TelegramWebviewProxy !== undefined ||
-                       window.Telegram !== undefined;
-              }
-
-              // Check if we're in any in-app browser
-              function isInAppBrowser() {
-                const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-                return /FBAN|FBAV|Instagram|Twitter|LinkedIn|WhatsApp|Telegram/i.test(userAgent) ||
-                       /WebView/i.test(userAgent) ||
-                       (window.navigator.standalone === false && /Safari/i.test(userAgent));
-              }
-
-              // Function to show a message to open in external browser
-              function showOpenInBrowserMessage() {
-                const message = document.createElement('div');
-                message.innerHTML = \`
-                  <div style="
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    background: rgba(0,0,0,0.8);
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    z-index: 9999;
-                    color: white;
-                    font-family: Arial, sans-serif;
-                  ">
-                    <div style="
-                      background: #333;
-                      padding: 20px;
-                      border-radius: 10px;
-                      text-align: center;
-                      max-width: 300px;
-                      margin: 20px;
-                    ">
-                      <h3 style="margin-top: 0;">Open in Browser</h3>
-                      <p>For the best experience, please open this link in your default browser:</p>
-                      <p style="font-size: 12px; margin: 10px 0;">
-                        Tap the three dots (⋯) in the top right corner and select "Open in Browser" or "Open in Chrome/Safari"
-                      </p>
-                      <button onclick="this.parentElement.parentElement.remove()" style="
-                        background: #007bff;
-                        color: white;
-                        border: none;
-                        padding: 10px 20px;
-                        border-radius: 5px;
-                        cursor: pointer;
-                        margin-top: 10px;
-                      ">Continue Anyway</button>
-                    </div>
-                  </div>
-                \`;
-                document.body.appendChild(message);
-              }
-
-              // Try to redirect to external browser
-              function redirectToExternalBrowser() {
-                const currentUrl = window.location.href;
-                
-                // Try different methods to open in external browser
-                if (navigator.userAgent.includes('Android')) {
-                  // For Android
-                  window.location.href = 'googlechrome://navigate?url=' + encodeURIComponent(currentUrl);
-                  setTimeout(() => {
-                    window.location.href = 'intent://navigate?url=' + encodeURIComponent(currentUrl) + '#Intent;scheme=http;package=com.android.chrome;end';
-                  }, 100);
-                } else if (navigator.userAgent.includes('iPhone') || navigator.userAgent.includes('iPad')) {
-                  // For iOS
-                  window.location.href = 'safari-https://' + currentUrl.replace('https://', '');
-                  setTimeout(() => {
-                    window.location.href = 'googlechrome-https://' + currentUrl.replace('https://', '');
-                  }, 100);
-                }
-                
-                // Fallback: show message after a short delay
-                setTimeout(showOpenInBrowserMessage, 500);
-              }
-
-              // Check and redirect if in Telegram or other in-app browser
-              if (isTelegramBrowser()) {
-                console.log('Detected Telegram browser');
-                redirectToExternalBrowser();
-              } else if (isInAppBrowser()) {
-                console.log('Detected in-app browser');
-                setTimeout(showOpenInBrowserMessage, 1000);
-              }
-
-              // Additional check for Telegram Web App
-              if (window.Telegram && window.Telegram.WebApp) {
-                window.Telegram.WebApp.openLink(window.location.href);
-              }
-            })();
-          `
-        }}
-      />
-
-      <ViewCounter itemId={data._id} specifier="Am" />
+    <ViewCounter itemId={data._id} specifier="Am" />
       <JsonLd
         item={{
           "@context": "https://schema.org",
@@ -396,6 +270,12 @@ const page = async ({ params }) => {
           },
         }}
       />
+{/* <AdportScript /> */}
+
+
+{/* <AdScript type="native" className="my-banner-class flex justify-center"/> */}
+        {/* <AdScript type="native" className="my-banner-class flex justify-center"/> */}
+        {/* <AdScript type="native" className="my-banner-class flex justify-center"/> */}
 
       <div className="container mx-auto p-4 ">
         <div className="flex flex-col md:flex-row bg-gray-50 rounded-lg shadow-md overflow-hidden py-4">
@@ -480,8 +360,12 @@ const page = async ({ params }) => {
             </div>
           </div>
         </div>
+{/* <BannerScript2/> */}
+{/* <AdportRichMedia /> */}
 
+{/* <AdScript type="custom" /> */}
         <div className="mt-8">
+          {/* <h2 className="text-2xl font-bold text-gray-800 mb-4">Stream Now</h2> */}
           <ClientOnly>
             <StreamingComponent 
               movieTitle={data.title}
@@ -565,9 +449,11 @@ const page = async ({ params }) => {
             </div>
           </div>
         )}
-
-        <NativeScript />
+{/* <BannerScript /> */}
+        {/* <AdScript /> */}
         
+        <NativeScript />
+        {/* <AdsteraScript /> */}
         <div className="mt-12">
           <LatestItems
             title="You May Also Like"
@@ -577,7 +463,10 @@ const page = async ({ params }) => {
             hide={true}
           />
         </div>
-        
+        {/* <BannerScript /> */}
+        {/* <AdScript type="custom-2"/> */}
+{/* <AdScript type="custom-2"/>
+<AdScript type="custom-2"/> */}
         <CommentSection itemId={data._id} linkIdentifier="Am" />
         
       </div>
