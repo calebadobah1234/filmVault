@@ -248,7 +248,7 @@ const page = async ({ params }) => {
         {/* <AdScript /> */}
         
         {/* <BannerScript /> */}
-        <NativeScript />
+        {/* <NativeScript /> */}
         <div className="mt-12">
           <LatestItems
             title="You May Also Like"

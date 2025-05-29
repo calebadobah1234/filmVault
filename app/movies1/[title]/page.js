@@ -454,7 +454,7 @@ const page = async ({ params }) => {
 {/* <BannerScript /> */}
         {/* <AdScript /> */}
         
-        <NativeScript />
+        {/* <NativeScript /> */}
         {/* <AdsteraScript /> */}
         <div className="mt-12">
           <LatestItems
