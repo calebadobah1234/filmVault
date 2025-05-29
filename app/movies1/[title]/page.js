@@ -18,6 +18,7 @@ import AdsteraScript from "@/app/components/SocialScript";
 import AdportScript from "@/app/components/AdportBanner";
 import AdportRichMedia from "@/app/components/AdportRichMedia";
 import DirectLinkScript from "@/app/components/DirectLinkScript";
+import SocialBarScript from "@/app/components/Socialbarscript";
 
 // Domain to CDN mapping function
 const replaceDomainWithCDN = (url) => {
@@ -468,6 +469,11 @@ const page = async ({ params }) => {
         {/* <AdScript type="custom-2"/> */}
 {/* <AdScript type="custom-2"/>
 <AdScript type="custom-2"/> */}
+{/* <SocialBarScript 
+        delay={15000} 
+        sessionKey="customSocialBarKeyhhyy" 
+        className="my-custom-classhggyy" 
+      /> */}
         <CommentSection itemId={data._id} linkIdentifier="Am" />
         
       </div>

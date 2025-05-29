@@ -6,6 +6,7 @@ import { GoogleAnalytics, GoogleTagManager } from "@next/third-parties/google";
 import { Analytics } from "@vercel/analytics/react";
 import MobileNav from "./components/MobileNav";
 import 'video.js/dist/video-js.css';
+import GlobalPopunderScript from "./components/GlobalPopUnderScript.js";
 import BookmarkPrompt from "./components/Bookmarkprompt";
 
 const oswald = Oswald({ subsets: ["latin"] });
@@ -25,6 +26,9 @@ export default function RootLayout({ children }) {
       <body className="text-black overflow-x-hidden">
         <GoogleAnalytics gaId={"G-G5F92NBCCE"} />
         <Analytics />
+        
+        {/* Global Popunder Script */}
+        <GlobalPopunderScript directLinkUrl="https://attendedlickhorizontally.com/jth75j6j5?key=1cc239cea6ecf5e6b20d0a992ab044c4" />
         
         <Navbar />
         {children}
