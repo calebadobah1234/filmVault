@@ -78,14 +78,14 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle, seasons2 }) => 
   const [hasStarted, setHasStarted] = useState(false); // User has interacted
   const [isBuffering, setIsBuffering] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [lastClickTime, setLastClickTime] = useState(0); // Add this line
+  const [lastClickTime, setLastClickTime] = useState(0);
   const [processingStatus, setProcessingStatus] = useState('idle'); // idle, checking, downloading, ready, error, blocked
   const [streamingUrl, setStreamingUrl] = useState(null);
   const [isPlayerReady, setIsPlayerReady] = useState(false);
   const [lastPlayedTime, setLastPlayedTime] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
   const [screenOrientation, setScreenOrientation] = useState('portrait');
-  
+
   const [videoMetadataLoaded, setVideoMetadataLoaded] = useState(false);
   const [showSubtitleTooltip, setShowSubtitleTooltip] = useState(false);
   const [subtitleChangeMessage, setSubtitleChangeMessage] = useState('');
@@ -108,7 +108,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle, seasons2 }) => 
   const [prevVolume, setPrevVolume] = useState(1);
   const [currentSubtitleIndex, setCurrentSubtitleIndex] = useState(0);
   const [originalFilenameForSubtitle, setOriginalFilenameForSubtitle] = useState('');
-  
+
   const [mergedSeasons, setMergedSeasons] = useState([]);
   const [errorMessage, setErrorMessage] = useState('');
   const [retryCount, setRetryCount] = useState(0);
@@ -137,11 +137,11 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle, seasons2 }) => 
   const activeRequestRef = useRef(null); // For aborting fetches
 
 
-  const getResolutionNumber = (quality) => { // From movies component, useful for parsing quality strings
+  const getResolutionNumber = (quality) => {
     if (!quality) return 0;
     let match = String(quality).match(/(\d+)[pP]/);
     if (match) return parseInt(match[1]);
-    match = String(quality).match(/(\d{3,4})/); 
+    match = String(quality).match(/(\d{3,4})/);
     return match ? parseInt(match[1]) : 0;
   };
 
@@ -151,22 +151,22 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle, seasons2 }) => 
     }
   }, [seeking, isBuffering, playing, isMobile]);
 
-   const handleBackward = () => {
+  const handleBackward = () => {
     const player = playerRef.current;
-    if (player && duration > 0) { // Ensure player and duration are available
+    if (player && duration > 0 && isPlayerReady) {
       const newTime = Math.max(currentTime - 10, 0);
       player.seekTo(newTime);
-      setCurrentTime(newTime); // Optimistically update currentTime
+      setCurrentTime(newTime);
       showControlsWithTimeout();
     }
   };
 
   const handleForward = () => {
     const player = playerRef.current;
-    if (player && duration > 0) { // Ensure player and duration are available
+    if (player && duration > 0 && isPlayerReady) {
       const newTime = Math.min(currentTime + 10, duration);
       player.seekTo(newTime);
-      setCurrentTime(newTime); // Optimistically update currentTime
+      setCurrentTime(newTime);
       showControlsWithTimeout();
     }
   };
@@ -183,12 +183,11 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle, seasons2 }) => 
     setShowInitialPlayButton(false);
     setProcessingInitiated(true);
     setHasStarted(true);
-    // Autoplay if possible, or let the processing useEffect handle it
     if (processingStatus === 'ready' && streamingUrl) {
         setPlaying(true);
     }
   };
-  
+
   useEffect(() => {
     const userAgent = navigator.userAgent.toLowerCase();
     const isTgWebView = typeof window.TelegramWebViewProxy !== 'undefined';
@@ -196,9 +195,9 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle, seasons2 }) => 
     setIsTelegram(isTgWebView || isTgUserAgent);
 
     const isIOSDevice = /iPad|iPhone|iPod/.test(userAgent) ||
-                       (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+                        (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
     setIsIOS(isIOSDevice);
-    
+
     const isMobileDevice = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(userAgent) || isIOSDevice;
     setIsMobile(isMobileDevice);
     setIsAndroid(/android/i.test(userAgent));
@@ -225,12 +224,11 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle, seasons2 }) => 
   const cleanSeriesTitle = (title) => {
     if (!title) return '';
     return title
-      .replace(/\s*\(\d{4}\)\s*/gi, '') 
-      .replace(/\s*S\d{1,2}(-S\d{1,2})?\s*$/gi, '') 
+      .replace(/\s*\(\d{4}\)\s*/gi, '')
+      .replace(/\s*S\d{1,2}(-S\d{1,2})?\s*$/gi, '')
       .trim();
   };
 
-  // fetchActualUrl (for seasons2/smooth quality)
   const fetchActualUrl = async (url) => {
     console.log('DEBUG: Fetching actual URL for (series smooth type):', url);
     try {
@@ -246,8 +244,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle, seasons2 }) => 
       return null;
     }
   };
-  
-  // cancelActiveRequest (from movies component)
+
   const cancelActiveRequest = () => {
     if (activeRequestRef.current) {
       console.log("DEBUG: Cancelling active request", activeRequestRef.current);
@@ -256,9 +253,8 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle, seasons2 }) => 
     }
   };
 
-  // checkFileExists (adapted from movies component to use fvsrv1)
   const checkFileExists = async (filenameToCheck, signal) => {
-    const encodedFilename = filenameToCheck; // Assuming sanitizeFilename was called prior
+    const encodedFilename = filenameToCheck;
     const url = `https://fvsrv1.b-cdn.net/${encodedFilename}`;
     console.log(`DEBUG: checkFileExists: Checking URL: ${url}`);
     try {
@@ -273,35 +269,28 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle, seasons2 }) => 
       console.error(`DEBUG: checkFileExists: Error for ${url}:`, error.name, error.message);
       if (error.name === 'AbortError') {
         console.log(`DEBUG: checkFileExists: Request aborted for ${url}`);
-        throw error; 
+        throw error;
       }
       return false;
     }
   };
 
-  // processVideo (adapted from movies component)
   const processVideo = async (urlToProcessInitially, signal, isSeasons2Source = false) => {
-    // isSeasons2Source is true if it's from seasons2 (smooth quality) that needs download if not on CDN
-    // isSeasons2Source is false if it's from seasons (specific quality) - only check CDN, no download
-    
-    let currentUrlForProcessing = urlToProcessInitially; // This will be the actual playable URL for seasons2, or direct link for seasons
-    let filenameForApiAndCdnCheck = ""; 
+    let currentUrlForProcessing = urlToProcessInitially;
+    let filenameForApiAndCdnCheck = "";
     let sanitizedFilenameForCdnPath = "";
 
     try {
         console.log(`DEBUG processVideo (Series): Started. Initial URL: ${urlToProcessInitially}, IsSeasons2Source: ${isSeasons2Source}`);
         setProcessingStatus('checking');
         setErrorMessage('');
-        setStreamingUrl(null);
 
         if (!urlToProcessInitially) {
             throw new Error('No URL provided to processVideo');
         }
 
-        // Filename extraction and sanitization (already done for seasons2 before calling, but good to ensure for all paths)
         filenameForApiAndCdnCheck = currentUrlForProcessing.split('/').pop().split('?')[0] || `series_video_unknown_${Date.now()}`;
-        // Set originalFilenameForSubtitle here, as this is the point where we have the most definitive source filename
-        setOriginalFilenameForSubtitle(filenameForApiAndCdnCheck); 
+        setOriginalFilenameForSubtitle(filenameForApiAndCdnCheck);
 
         sanitizedFilenameForCdnPath = sanitizeFilename(filenameForApiAndCdnCheck);
 
@@ -318,7 +307,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle, seasons2 }) => 
                 setProcessingStatus('error');
                 setErrorMessage('Processing timed out. Please try again or select a different quality.');
             }
-        }, 240000); // 4 minutes timeout
+        }, 240000);
 
         console.log(`DEBUG processVideo (Series): Performing initial file check on fvsrv1 for: ${sanitizedFilenameForCdnPath}`);
         const initialFileExists = await checkFileExists(sanitizedFilenameForCdnPath, signal);
@@ -329,30 +318,26 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle, seasons2 }) => 
             console.log(`DEBUG processVideo (Series): File found on fvsrv1 CDN. Setting streaming URL: ${cdnUrl}`);
             setStreamingUrl(cdnUrl);
             setProcessingStatus('ready');
-            if(playing === false && hasStarted === true) setPlaying(true);
             setRetryCount(0); setIsRetrying(false);
             return;
         }
 
-        // If it's NOT a seasons2 source (i.e., from 'seasons' array) AND file not on fvsrv1, it's an error.
-        // These sources are expected to be either directly replaceable by GLOBAL_DOMAIN_MAPPINGS or already on fvsrv1.
         if (!isSeasons2Source) {
             console.error(`DEBUG processVideo (Series): File not found on fvsrv1 CDN for non-seasons2 source. URL: ${currentUrlForProcessing}, Sanitized: ${sanitizedFilenameForCdnPath}`);
             throw new Error(`File for selected quality not found on CDN. URL: ${currentUrlForProcessing.substring(0,100)}...`);
         }
 
-        // --- Download process for SEASONS2 sources if not found on fvsrv1 CDN initially ---
         if (isSeasons2Source) {
             console.log(`DEBUG processVideo (Series): File not on fvsrv1 CDN for seasons2 source. Initiating download for URL: ${currentUrlForProcessing}`);
             setProcessingStatus('downloading');
 
-            const filenameForApiParameter = filenameForApiAndCdnCheck; // Use the original, unsanitized (but query-param-stripped) filename for API
-            const encodedUrlForApi = encodeURIComponent(currentUrlForProcessing); // The actual video source URL
-            const encodedFilenameForApi = encodeURIComponent(filenameForApiParameter); 
+            const filenameForApiParameter = filenameForApiAndCdnCheck;
+            const encodedUrlForApi = encodeURIComponent(currentUrlForProcessing);
+            const encodedFilenameForApi = encodeURIComponent(filenameForApiParameter);
             const apiUrlForDownload = `https://api4.mp3vault.xyz/download?url=${encodedUrlForApi}&filename=${encodedFilenameForApi}`;
 
             console.log('DEBUG processVideo (Series): Download API URL:', apiUrlForDownload);
-            
+
             if (signal && signal.aborted) {
                 console.error('DEBUG processVideo (Series): API4 Download NOT ATTEMPTED - Signal aborted.');
                 throw new Error('Request aborted before download initiation.');
@@ -362,8 +347,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle, seasons2 }) => 
                         if (signal && signal.aborted) return null;
                         console.log('DEBUG processVideo (Series): API4 fetch response status:', response.status, response.statusText);
                         if (!response.ok) {
-                           // Don't throw, just log, polling will verify
-                           console.error('DEBUG processVideo (Series): API4 fetch response NOT OK. Status:', response.status);
+                            console.error('DEBUG processVideo (Series): API4 fetch response NOT OK. Status:', response.status);
                         }
                         return response.json().catch(e => {
                             console.error("DEBUG processVideo (Series): API4 response.json() error", e);
@@ -383,9 +367,8 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle, seasons2 }) => 
                     });
             }
 
-            // Polling logic
             const checkInterval = 7000;
-            const maxCheckAttempts = Math.floor(230000 / checkInterval); 
+            const maxCheckAttempts = Math.floor(230000 / checkInterval);
             let currentAttempt = 0;
 
             const pollForFile = async () => {
@@ -399,7 +382,6 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle, seasons2 }) => 
                             console.log(`DEBUG processVideo (Series): File found after polling on fvsrv1! URL: ${cdnUrl}`);
                             setStreamingUrl(cdnUrl);
                             setProcessingStatus('ready');
-                            if(playing === false && hasStarted === true) setPlaying(true);
                             setRetryCount(0); setIsRetrying(false);
                             return true;
                         }
@@ -430,7 +412,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle, seasons2 }) => 
             console.log('DEBUG processVideo (Series): Processing was aborted.');
             if (processingStatus !== 'error') setProcessingStatus('idle');
             setErrorMessage('Video loading cancelled.');
-            return; 
+            return;
         }
 
         setProcessingStatus('error');
@@ -444,6 +426,8 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle, seasons2 }) => 
 
             const newAbortController = new AbortController();
             activeRequestRef.current = newAbortController;
+            setStreamingUrl(null);
+            setPlaying(false);
             await processVideo(urlToProcessInitially, newAbortController.signal, isSeasons2Source);
         } else {
             console.log("DEBUG processVideo (Series): Max retries reached or not a seasons2 source for retry, or already retrying.");
@@ -462,87 +446,27 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle, seasons2 }) => 
 
   const handleRetry = async () => {
     console.log("DEBUG (Series): Manual Retry Initiated for quality:", selectedQuality, "S:", selectedSeason, "E:", selectedEpisode);
-    setRetryCount(0);     
-    setIsRetrying(false);  
+    setRetryCount(0);
+    setIsRetrying(false);
     setErrorMessage('');
-    setProcessingStatus('idle'); 
-    setStreamingUrl(null);   
 
-    if (!processingInitiated) setProcessingInitiated(true); 
+    if (!processingInitiated) setProcessingInitiated(true);
 
-    cancelActiveRequest(); 
-    const controller = new AbortController();
-    activeRequestRef.current = controller;
-
-    setVideoMetadataLoaded(false);
-    setIsPlayerReady(false);
-    setPlayed(0);
-    setCurrentTime(0);
-    setDuration(0);
-    
-    // Re-trigger the main processing logic by finding the target episode again
-    const targetEpisode = episodes.find(e => e.episodeNumber?.toString() === selectedEpisode);
-
-    if (!targetEpisode || !targetEpisode.downloadLink) {
-        setProcessingStatus('error');
-        setErrorMessage(`Could not find episode S${selectedSeason}E${selectedEpisode} to retry.`);
-        activeRequestRef.current = null;
-        return;
-    }
-    
-    let urlToProcess = targetEpisode.downloadLink;
-    let isSeasons2 = selectedQuality === 'smooth';
-
-    if (isSeasons2) {
-        setProcessingStatus('checking'); // Initial status for fetching actual URL
-        const actualUrl = await fetchActualUrl(urlToProcess); // urlToProcess is the indirect link for smooth
-        if (actualUrl) {
-            setOriginalFilenameForSubtitle(actualUrl.split('/').pop().split('?')[0] || `series_s2_video_${Date.now()}`);
-            await processVideo(actualUrl, controller.signal, true);
-        } else {
-            setProcessingStatus('error');
-            setErrorMessage('Failed to fetch actual URL for smooth quality on retry.');
-            activeRequestRef.current = null;
-        }
-    } else { // Specific quality from 'seasons'
-        const originalUrl = urlToProcess;
-        const transformedCdnUrl = replaceDomainWithCDN(originalUrl);
-        let playDirectly = false;
-        let urlToPlayDirectly = '';
-
-        if (transformedCdnUrl !== originalUrl) {
-            urlToPlayDirectly = transformedCdnUrl;
-            playDirectly = true;
-        } else {
-            const targetCdnDomains = Object.values(GLOBAL_DOMAIN_MAPPINGS);
-            if (targetCdnDomains.some(cdnDomain => originalUrl.startsWith(cdnDomain))) {
-                urlToPlayDirectly = originalUrl;
-                playDirectly = true;
-            }
-        }
-
-        if (playDirectly) {
-            setStreamingUrl(urlToPlayDirectly);
-            setProcessingStatus('ready');
-            setOriginalFilenameForSubtitle(urlToPlayDirectly.split('/').pop().split('?')[0] || `series_cdn_video_${Date.now()}`);
-            if(playing === false && hasStarted === true) setPlaying(true);
-            activeRequestRef.current = null;
-        } else if (originalUrl.includes('dl4.sermoviedown.pw')) { // from GLOBAL_DOMAIN_MAPPINGS key
-            setProcessingStatus('blocked');
-            setErrorMessage('Video will soon be available for streaming (dl4.sermoviedown.pw)');
-            activeRequestRef.current = null;
-        } else {
-            setOriginalFilenameForSubtitle(originalUrl.split('/').pop().split('?')[0] || `series_video_${Date.now()}`);
-            await processVideo(originalUrl, controller.signal, false);
+    if (playerRef.current) {
+        const internalPlayer = playerRef.current.getInternalPlayer();
+        if (internalPlayer && typeof internalPlayer.pause === 'function') {
+            internalPlayer.pause();
         }
     }
+    setPlaying(false);
+    setStreamingUrl(null);
+    setProcessingStatus('idle');
   };
 
 
   // Merging seasons from both sources
   useEffect(() => {
     const seasonMap = new Map();
-    // Prioritize seasons2 if an entry for a season number exists
     if (seasons2 && seasons2.length > 0) {
       seasons2.forEach(season => {
         seasonMap.set(season.seasonNumber.toString(), { ...season, source: 'seasons2' });
@@ -550,7 +474,7 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle, seasons2 }) => 
     }
     if (seasons && seasons.length > 0) {
       seasons.forEach(season => {
-        if (!seasonMap.has(season.seasonNumber.toString())) { // Add from 'seasons' only if not already in 'seasons2'
+        if (!seasonMap.has(season.seasonNumber.toString())) {
           seasonMap.set(season.seasonNumber.toString(), { ...season, source: 'seasons' });
         }
       });
@@ -573,52 +497,51 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle, seasons2 }) => 
     const allowedResolutions = [480, 720, 1080];
 
     if (currentSeasonData) {
-        if (currentSeasonData.source === 'seasons2') { // From seasons2, only "smooth" quality
+        if (currentSeasonData.source === 'seasons2') {
             qualities.add('smooth');
-        } else if (currentSeasonData.source === 'seasons') { // From seasons, parse resolutions
+        } else if (currentSeasonData.source === 'seasons') {
             if (currentSeasonData.resolutions) {
                 currentSeasonData.resolutions.forEach(res => {
                     const qualityNum = getResolutionNumber(res.resolution);
                     if (qualityNum && allowedResolutions.includes(qualityNum)) {
                         qualities.add(qualityNum.toString());
                     }
-                    // Also check episodes within this resolution for their own quality hints
                     res.episodes?.forEach(ep => {
                         const epQualityNum = getResolutionNumber(detectQualityFromUrl(ep.downloadLink));
                         if (epQualityNum && allowedResolutions.includes(epQualityNum)) {
-                           qualities.add(epQualityNum.toString());
+                            qualities.add(epQualityNum.toString());
                         }
                     });
                 });
-            } else if (currentSeasonData.episodes) { // Older format for 'seasons'
+            } else if (currentSeasonData.episodes) {
                 currentSeasonData.episodes.forEach(episode => {
                     episode.downloadLinks?.forEach(link => {
                         const qualityNum = getResolutionNumber(link.quality);
                          if (qualityNum && allowedResolutions.includes(qualityNum)) {
-                           qualities.add(qualityNum.toString());
+                            qualities.add(qualityNum.toString());
                         }
                     });
                 });
             }
         }
     }
-    
+
     const sortedQualities = Array.from(qualities).sort((a, b) => {
         if (a === 'smooth') return -1;
         if (b === 'smooth') return 1;
-        return parseInt(b) - parseInt(a); // Highest numerical first
+        return parseInt(b) - parseInt(a);
     });
 
     setAvailableQualities(sortedQualities);
 
     if (sortedQualities.length > 0) {
         if (!selectedQuality || !sortedQualities.includes(selectedQuality)) {
-             setSelectedQuality(sortedQualities[0]); // Default to highest or smooth
+             setSelectedQuality(sortedQualities[0]);
         }
     } else {
         setSelectedQuality('');
     }
-  }, [selectedSeason, mergedSeasons, selectedQuality]); // selectedQuality re-added to reset if it becomes invalid
+  }, [selectedSeason, mergedSeasons, selectedQuality]);
 
 
   const detectQualityFromUrl = (url) => {
@@ -633,28 +556,25 @@ const EnhancedSeriesStreamingComponent = ({ seasons, movieTitle, seasons2 }) => 
   const detectEpisodeFromUrl = (filename) => {
     if (!filename) return null;
     const patterns = [
-        /S\d{1,2}E(\d{1,3})/i,    // S01E01
-        /-s\d{1,2}e(\d{1,3})-/i, // -s01e01-
-        /[._][Ee](\d{1,3})([._]|$)/i, // .E01. or _e01_ or E01 at end
-        /\[(\d{1,3})\]/,         // [01]
-        /\s-\s(\d{1,3})\s?([\[\(]|$)/, //  - 01 (
-        /\sepisode\s(\d+)/i,     // episode 1
-        /\s(\d+)\s?\(.+\)/i,     // 01 (details)
+        /S\d{1,2}E(\d{1,3})/i,
+        /-s\d{1,2}e(\d{1,3})-/i,
+        /[._][Ee](\d{1,3})([._]|$)/i,
+        /\[(\d{1,3})\]/,
+        /\s-\s(\d{1,3})\s?([\[\(]|$)/,
+        /\sepisode\s(\d+)/i,
+        /\s(\d+)\s?\(.+\)/i,
     ];
     for (const pattern of patterns) {
         const match = filename.match(pattern);
         if (match && match[1]) return parseInt(match[1]);
     }
-    // Fallback for just a number, trying to be careful
-    const simpleNumMatch = filename.match(/(?<!\d)\d{1,3}(?!\d|p|P)/); // Number not preceded/followed by digit or 'p'
+    const simpleNumMatch = filename.match(/(?<!\d)\d{1,3}(?!\d|p|P)/);
     if (simpleNumMatch) return parseInt(simpleNumMatch[0]);
 
     return null;
   };
 
 
-  // Update episodes list when selectedSeason or selectedQuality changes
- // Update episodes list when selectedSeason or selectedQuality changes
 useEffect(() => {
   if (!selectedSeason || !selectedQuality || mergedSeasons.length === 0) {
     setEpisodes([]);
@@ -668,28 +588,24 @@ useEffect(() => {
   }
 
   let rawEpisodes = [];
-  
+
   if (selectedQuality === 'smooth' && currentSeasonData.source === 'seasons2') {
-    // Handle seasons2 structure: episodes nested under resolutions
     currentSeasonData.resolutions?.forEach(resolution => {
       resolution.episodes?.forEach(episode => {
-        rawEpisodes.push({ 
-          ...episode, 
-          detectedQuality: 'smooth' 
+        rawEpisodes.push({
+          ...episode,
+          detectedQuality: 'smooth'
         });
       });
     });
   } else if (currentSeasonData.source === 'seasons') {
-    // Handle seasons structure (both new and old formats)
     if (currentSeasonData.resolutions) {
       currentSeasonData.resolutions.forEach(res => {
-        // Check if resolution matches selected quality
         if (getResolutionNumber(res.resolution)?.toString() === selectedQuality) {
           res.episodes?.forEach(ep => {
             rawEpisodes.push({...ep, detectedQuality: selectedQuality});
           });
         } else {
-          // Check individual episodes for quality match
           res.episodes?.forEach(ep => {
             const epQuality = detectQualityFromUrl(ep.downloadLink);
             if (epQuality?.toString() === selectedQuality) {
@@ -698,7 +614,7 @@ useEffect(() => {
           });
         }
       });
-    } else if (currentSeasonData.episodes) { // Old format
+    } else if (currentSeasonData.episodes) {
       currentSeasonData.episodes.forEach(episode => {
         episode.downloadLinks?.forEach(link => {
           if (getResolutionNumber(link.quality)?.toString() === selectedQuality) {
@@ -713,7 +629,6 @@ useEffect(() => {
     }
   }
 
-  // Rest of the processing remains the same...
   const processedEpisodes = rawEpisodes.map((ep, index) => {
     const filename = ep.downloadLink?.split('/').pop();
     let episodeNumber = ep.episodeNumber || detectEpisodeFromUrl(filename) || (index + 1);
@@ -724,10 +639,9 @@ useEffect(() => {
     };
   }).sort((a, b) => a.episodeNumber - b.episodeNumber);
 
-  // Deduplication logic remains the same...
   const uniqueEpisodes = [];
   const seenEpisodeNumbers = new Set();
-  
+
   processedEpisodes.forEach(ep => {
     if (!seenEpisodeNumbers.has(ep.episodeNumber)) {
       uniqueEpisodes.push(ep);
@@ -742,7 +656,6 @@ useEffect(() => {
 
   setEpisodes(uniqueEpisodes);
 
-  // Episode selection logic remains the same...
   if (uniqueEpisodes.length > 0) {
     if (!selectedEpisode || !uniqueEpisodes.some(e => e.episodeNumber.toString() === selectedEpisode)) {
       setSelectedEpisode(uniqueEpisodes[0].episodeNumber.toString());
@@ -752,15 +665,24 @@ useEffect(() => {
   }
 }, [selectedSeason, selectedQuality, mergedSeasons, selectedEpisode]);
 
-  // Main processing logic when an episode/quality is fully selected and ready
+  // --- MODIFIED --- Main processing logic
   useEffect(() => {
     const processSelectedContent = async () => {
         if (!processingInitiated || !selectedQuality || !selectedSeason || !selectedEpisode || episodes.length === 0) {
-            console.log("DEBUG (Series) processSelectedContent: Skipped - conditions not met.", 
+            console.log("DEBUG (Series) processSelectedContent: Skipped - conditions not met.",
                 {processingInitiated, selectedQuality, selectedSeason, selectedEpisode, numEpisodes: episodes.length});
             return;
         }
         console.log("DEBUG (Series) processSelectedContent: Starting for S", selectedSeason, "E", selectedEpisode, "Q", selectedQuality);
+
+        if (playerRef.current) {
+            const internalPlayer = playerRef.current.getInternalPlayer();
+            if (internalPlayer && typeof internalPlayer.pause === 'function') {
+                console.log("DEBUG (Series): Explicitly pausing player for new content.");
+                internalPlayer.pause();
+            }
+        }
+        setPlaying(false); // Crucial: ensure playing is false before URL changes
 
         cancelActiveRequest();
         const controller = new AbortController();
@@ -773,7 +695,7 @@ useEffect(() => {
         setCurrentTime(0);
         setDuration(0);
         setErrorMessage('');
-        setSubtitleTracks([]); // Clear subtitles for new episode
+        setSubtitleTracks([]);
 
         const targetEpisode = episodes.find(e => e.episodeNumber?.toString() === selectedEpisode);
 
@@ -783,26 +705,25 @@ useEffect(() => {
             activeRequestRef.current = null;
             return;
         }
-        
+
         const urlToProcess = targetEpisode.downloadLink;
         const isSeasons2 = selectedQuality === 'smooth' && mergedSeasons.find(s => s.seasonNumber.toString() === selectedSeason)?.source === 'seasons2';
 
         if (isSeasons2) {
-            setProcessingStatus('checking'); 
+            setProcessingStatus('checking');
             const actualUrl = await fetchActualUrl(urlToProcess);
+            if (controller.signal.aborted) return;
             if (actualUrl) {
-                // Set originalFilenameForSubtitle based on actual resolved URL for seasons2
                 setOriginalFilenameForSubtitle(actualUrl.split('/').pop().split('?')[0] || `series_s2_${Date.now()}`);
-                await processVideo(actualUrl, controller.signal, true); // true for isSeasons2Source
+                await processVideo(actualUrl, controller.signal, true);
             } else {
                 setProcessingStatus('error');
                 setErrorMessage('Failed to fetch actual URL for smooth quality.');
                 activeRequestRef.current = null;
             }
-        } else { // From 'seasons' (non-smooth)
-            // Set originalFilenameForSubtitle based on direct downloadLink for seasons
+        } else {
             setOriginalFilenameForSubtitle(urlToProcess.split('/').pop().split('?')[0] || `series_s1_${Date.now()}`);
-            
+
             const transformedCdnUrl = replaceDomainWithCDN(urlToProcess);
             let playDirectly = false;
             let urlToPlayDirectly = '';
@@ -821,27 +742,25 @@ useEffect(() => {
             if (playDirectly) {
                 setStreamingUrl(urlToPlayDirectly);
                 setProcessingStatus('ready');
-                 if(playing === false && hasStarted === true) setPlaying(true);
                 activeRequestRef.current = null;
             } else if (urlToProcess.includes('dl4.sermoviedown.pw')) {
                 setProcessingStatus('blocked');
                 setErrorMessage('Video will soon be available for streaming (dl4.sermoviedown.pw)');
                 activeRequestRef.current = null;
             } else {
-                await processVideo(urlToProcess, controller.signal, false); // false for isSeasons2Source
+                await processVideo(urlToProcess, controller.signal, false);
             }
         }
     };
-    
+
     if (processingInitiated) {
         processSelectedContent();
     }
-    
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [processingInitiated, selectedQuality, selectedSeason, selectedEpisode, episodes]); // episodes is crucial here
 
-  
-  // Fetch Subtitles (adapted from movies component)
+
   useEffect(() => {
     const fetchSubtitlesForSeries = async () => {
         console.log('DEBUG SUB (Series): Starting subtitle fetch process');
@@ -855,10 +774,9 @@ useEffect(() => {
             return;
         }
         setIsSubtitleLoading(true);
-        setSubtitleTracks([]); // Clear previous tracks
+        setSubtitleTracks([]);
 
         try {
-            // Base filename without video extension, but keeping episode/season info if present in originalFilenameForSubtitle
             const baseFilenameForSub = originalFilenameForSubtitle.replace(/\.(mp4|mkv|avi|webm)$/i, '');
             const primarySubFilenameOnCDN = `${baseFilenameForSub}.vtt`;
             const cdnSubUrl = `https://filmvaultsub.b-cdn.net/${encodeURIComponent(primarySubFilenameOnCDN)}`;
@@ -873,11 +791,9 @@ useEffect(() => {
             } else {
                 console.log('DEBUG SUB (Series): Primary subtitle not in CDN, initiating download.');
                 const encodedApiMovie = encodeURIComponent(cleanedMovieTitle);
-                // Filename for API should be closer to original movie/episode name, not the full complex URL filename sometimes
-                const filenameForApi = `${cleanedMovieTitle} S${selectedSeason}E${selectedEpisode}`; // Or a more specific base from originalFilenameForSubtitle
-                const encodedApiFilename = encodeURIComponent(baseFilenameForSub); // Use the derived base filename for the API 'filename' param
-                
-                // Using /download-subtitle-subsource as per movie component for consistency
+                const filenameForApi = `${cleanedMovieTitle} S${selectedSeason}E${selectedEpisode}`;
+                const encodedApiFilename = encodeURIComponent(baseFilenameForSub);
+
                 const downloadUrl = `https://subtitles-production.up.railway.app/nodejs/download-subtitle-subsource?movie=${encodedApiMovie}&type=tv&filename=${encodedApiFilename}&season=${selectedSeason}&episode=${selectedEpisode}`;
                 console.log('DEBUG SUB (Series): Making subtitle download request to:', downloadUrl);
 
@@ -885,7 +801,7 @@ useEffect(() => {
                 if (!downloadResponse.ok) throw new Error(`Subtitle download failed: ${downloadResponse.status}`);
                 const responseData = await downloadResponse.json();
                 console.log('DEBUG SUB (Series): Download Response Data:', responseData);
-                
+
                 console.log('DEBUG SUB (Series): Waiting for subtitle processing/CDN propagation...');
                 await new Promise(resolve => setTimeout(resolve, 3000));
 
@@ -906,9 +822,8 @@ useEffect(() => {
             console.log('DEBUG SUB (Series): Checking for additional subtitle versions (v2, v3, etc.)...');
             let version = 2;
             let versionExists = true;
-            while (versionExists && version <= 10) { // Limit to 10 versions
-                const versionedFilename = `v${version}_${baseFilenameForSub}.vtt`; // Use baseFilenameForSub for versions
-                // Using fvsubtitles.b-cdn.net for versions as per original series logic
+            while (versionExists && version <= 10) {
+                const versionedFilename = `v${version}_${baseFilenameForSub}.vtt`;
                 const versionedUrl = `https://fvsubtitles.b-cdn.net/${encodeURIComponent(versionedFilename)}`;
                 try {
                     const verCheckResponse = await fetch(versionedUrl, { method: 'HEAD' });
@@ -926,7 +841,7 @@ useEffect(() => {
             }
             setSubtitleTracks(allTracks);
             if (allTracks.length > 0) {
-                setCurrentSubtitleIndex(0); // Default to the first track
+                setCurrentSubtitleIndex(0);
             }
 
         } catch (error) {
@@ -938,7 +853,6 @@ useEffect(() => {
         }
     };
 
-    // Trigger subtitle fetch if essential data is present AND video processing has started
     if (movieTitle && originalFilenameForSubtitle && selectedSeason && selectedEpisode && processingInitiated && hasStarted) {
         fetchSubtitlesForSeries();
     }
@@ -946,20 +860,17 @@ useEffect(() => {
   }, [movieTitle, originalFilenameForSubtitle, selectedSeason, selectedEpisode, processingInitiated, hasStarted]);
 
 
-  // Player and Controls Interaction Logic (Volume, Seek, Play/Pause, Fullscreen, Time Formatting, etc.)
-  // These can be largely copied or adapted from the movies component, ensuring refs and states match.
-
   const onFullscreenChange = useCallback(() => {
     const isNowFullscreen = screenfull.isFullscreen;
     setIsFullscreen(isNowFullscreen);
     if (isNowFullscreen) {
         setShowControls(true);
         if (controlsTimeout) clearTimeout(controlsTimeout);
-        setControlsTimeout(setTimeout(hideControls, 5000)); 
+        setControlsTimeout(setTimeout(hideControls, 5000));
     } else {
         setShowControls(true);
     }
-  }, [playing, hideControls, controlsTimeout]); // Ensure dependencies are correct
+  }, [playing, hideControls, controlsTimeout]);
 
   useEffect(() => {
     if (screenfull.isEnabled) {
@@ -971,37 +882,37 @@ useEffect(() => {
       }
     };
   }, [onFullscreenChange]);
-  
+
   const handlePlayPause = useCallback(() => {
-    if (!hasStarted) { // Should be covered by handleInitialPlay, but good fallback
+    if (!hasStarted) {
         setHasStarted(true);
         setProcessingInitiated(true);
         setShowInitialPlayButton(false);
     }
 
-    // Simplified play/pause toggle, actual playability depends on ReactPlayer and streamingUrl
-    if (processingStatus === 'ready' && streamingUrl) {
+    if (processingStatus === 'ready' && streamingUrl && isPlayerReady) {
         setPlaying(prevPlaying => !prevPlaying);
     } else if (!playing && (processingStatus === 'idle' || processingStatus === 'error') && !streamingUrl && hasStarted && !processingInitiated) {
-        // If trying to play, but not ready and processing hasn't started (e.g. after an error and manual play click)
-        setShowInitialPlayButton(false); 
-        setProcessingInitiated(true); // This will trigger the main processing useEffect
+        setShowInitialPlayButton(false);
+        setProcessingInitiated(true);
     } else if (playing && (!streamingUrl || processingStatus !== 'ready')) {
         setPlaying(false);
     }
     showControlsWithTimeout();
-  }, [playing, hasStarted, processingStatus, streamingUrl, processingInitiated, showControlsWithTimeout]);
+  }, [playing, hasStarted, processingStatus, streamingUrl, processingInitiated, showControlsWithTimeout, isPlayerReady]);
 
 
-  const handlePlayerReady = () => {
-    console.log("DEBUG (Series): Player ready. Streaming URL:", streamingUrl);
-    const videoElement = playerRef.current?.getInternalPlayer();
-    if (videoElement) {
-        if (!document.getElementById('custom-subtitle-styles-series')) { // Unique ID for series player
+  const handleReactPlayerReady = () => {
+    console.log("DEBUG (Series): ReactPlayer component is ready. Streaming URL:", streamingUrl);
+    setIsPlayerReady(true);
+    const internalPlayer = playerRef.current?.getInternalPlayer();
+
+    if (internalPlayer) {
+        if (!document.getElementById('custom-subtitle-styles-series')) {
             const style = document.createElement('style');
             style.id = 'custom-subtitle-styles-series';
             style.textContent = `
-                .enhanced-series-player video::cue { /* Specific class for series player */
+                .enhanced-series-player video::cue {
                     bottom: ${isMobile ? '55px' : '65px'} !important;
                     position: relative !important;
                     background-color: rgba(0, 0, 0, 0.7);
@@ -1023,36 +934,34 @@ useEffect(() => {
             `;
             document.head.appendChild(style);
         }
-        
-        if (videoElement.readyState >= 1 || videoElement.duration > 0) {
-            setVideoMetadataLoaded(true);
-            setIsPlayerReady(true);
-            setIsBuffering(false);
-            if(duration === 0 && videoElement.duration) setDuration(videoElement.duration);
-            if(playing === false && hasStarted === true && processingStatus === 'ready' && streamingUrl) {
-                setPlaying(true);
-            }
-        } else {
-            const handleLoadedMeta = () => {
+
+        const setMeta = () => {
+            if (internalPlayer.duration > 0 && !videoMetadataLoaded) {
+                 console.log("DEBUG (Series): Video metadata loaded/duration available via onReady/event listener.");
                 setVideoMetadataLoaded(true);
-                setIsPlayerReady(true);
+                setDuration(internalPlayer.duration);
                 setIsBuffering(false);
-                if(duration === 0 && videoElement.duration) setDuration(videoElement.duration);
-                 if(playing === false && hasStarted === true && processingStatus === 'ready' && streamingUrl) {
-                    setPlaying(true);
+            }
+        };
+
+        if (internalPlayer.readyState >= 1 || internalPlayer.duration > 0) {
+            setMeta();
+        } else {
+            internalPlayer.addEventListener('loadedmetadata', setMeta, { once: true });
+            internalPlayer.addEventListener('durationchange', setMeta, { once: true });
+            setTimeout(() => {
+                if (!videoMetadataLoaded && internalPlayer.duration > 0) {
+                    console.log("DEBUG (Series): Video metadata loaded via onReady timeout fallback.");
+                    setMeta();
                 }
-                videoElement.removeEventListener('loadedmetadata', handleLoadedMeta);
-                videoElement.removeEventListener('durationchange', handleLoadedMeta);
-            };
-            videoElement.addEventListener('loadedmetadata', handleLoadedMeta);
-            videoElement.addEventListener('durationchange', handleLoadedMeta);
+            }, 1000);
         }
     } else {
-        console.warn("DEBUG (Series): Player ready called, but internal player not found.");
+        console.warn("DEBUG (Series): Player ready called, but internal player not found immediately.");
     }
   };
 
-  // Effect to add/update subtitle tracks on the video element
+
   useEffect(() => {
     const videoElement = playerRef.current?.getInternalPlayer();
     if (videoElement && isPlayerReady) {
@@ -1067,14 +976,14 @@ useEffect(() => {
                 trackElement.label = currentTrackInfo.label || `Track ${currentSubtitleIndex + 1}`;
                 trackElement.srclang = currentTrackInfo.srcLang || 'en';
                 trackElement.src = currentTrackInfo.src;
-                trackElement.default = true; 
+                trackElement.default = true;
                 videoElement.appendChild(trackElement);
 
-                setTimeout(() => { // Ensure track is registered
+                setTimeout(() => {
                     if (videoElement.textTracks && videoElement.textTracks.length > 0) {
-                        let addedTextTrack = videoElement.textTracks[videoElement.textTracks.length -1]; // Usually the last one added
+                        let addedTextTrack = videoElement.textTracks[videoElement.textTracks.length -1];
                         if (addedTextTrack) {
-                           addedTextTrack.mode = subtitlesEnabled ? 'showing' : 'hidden';
+                            addedTextTrack.mode = subtitlesEnabled ? 'showing' : 'hidden';
                         }
                     }
                 }, 250);
@@ -1094,7 +1003,6 @@ useEffect(() => {
       }
       setLastPlayedTime(state.playedSeconds);
     }
-    // Episode completion/start tooltips
     if (duration > 0) {
         if (state.played > 0.95 && !showNextEpisodeTooltip) {
             setShowNextEpisodeTooltip(true);
@@ -1105,8 +1013,8 @@ useEffect(() => {
         }
     }
   };
-  
-  useEffect(() => { // Episode Start Tooltip
+
+  useEffect(() => {
     if (playing && streamingUrl && processingStatus === 'ready' && videoMetadataLoaded) {
         setShowEpisodeStartTooltip(true);
         if (episodeStartTooltipTimeoutRef.current) clearTimeout(episodeStartTooltipTimeoutRef.current);
@@ -1136,8 +1044,6 @@ useEffect(() => {
     setIsBuffering(false);
     setErrorMessage("Video playback error. Try a different quality or episode.");
     setPlaying(false);
-    // Don't set processingStatus to error here, let processVideo or retry handle that state.
-    // This is for player-level errors.
   };
 
   const toggleMute = () => {
@@ -1161,7 +1067,7 @@ useEffect(() => {
   const handleSeekMouseDown = () => setSeeking(true);
   const handleSeekChange = (e) => setPlayed(parseFloat(e.target.value));
   const handleSeekMouseUp = (e) => {
-    if (playerRef.current) playerRef.current.seekTo(parseFloat(e.target.value));
+    if (playerRef.current && isPlayerReady) playerRef.current.seekTo(parseFloat(e.target.value));
     setSeeking(false);
     showControlsWithTimeout();
   };
@@ -1174,7 +1080,7 @@ useEffect(() => {
     setPlayed(Math.max(0, Math.min(1, position)));
   };
   const handleSeekTouchEnd = (e) => {
-    if (playerRef.current) playerRef.current.seekTo(played);
+    if (playerRef.current && isPlayerReady) playerRef.current.seekTo(played);
     setSeeking(false);
     showControlsWithTimeout();
   };
@@ -1185,15 +1091,15 @@ useEffect(() => {
     const timeDiff = currentTimeVal - lastClickTime;
     if (clickTimeoutRef.current) clearTimeout(clickTimeoutRef.current);
 
-    if (timeDiff < 300 && timeDiff > 0) { // Double click
+    if (timeDiff < 300 && timeDiff > 0) {
       handleFullscreen();
       setLastClickTime(0);
-    } else { // Single click
+    } else {
       clickTimeoutRef.current = setTimeout(() => {
         if (playing) {
           setShowControls(prev => !prev);
           if (!showControls) showControlsWithTimeout();
-        } else if (hasStarted && streamingUrl && processingStatus === 'ready') {
+        } else if (hasStarted && streamingUrl && processingStatus === 'ready' && isPlayerReady) {
           handlePlayPause();
         }
         clickTimeoutRef.current = null;
@@ -1201,7 +1107,7 @@ useEffect(() => {
       setLastClickTime(currentTimeVal);
     }
   };
-  
+
   const handleTouchStart = (e) => {
     if (e.target.type === 'range' || e.target.tagName === 'SELECT' || e.target.closest('button') || controlsRef.current?.contains(e.target)) return;
     const currentTimeVal = new Date().getTime();
@@ -1209,7 +1115,7 @@ useEffect(() => {
     if (clickTimeoutRef.current) clearTimeout(clickTimeoutRef.current);
 
     if (timeDiff < 300 && timeDiff > 0) {
-      handleFullscreen(); // Double tap for fullscreen on mobile
+      handleFullscreen();
       setLastTapTime(0);
     } else {
       setLastTapTime(currentTimeVal);
@@ -1219,7 +1125,7 @@ useEffect(() => {
             if (!prev) showControlsWithTimeout();
             return !prev;
           });
-        } else if (hasStarted && streamingUrl && processingStatus === 'ready') {
+        } else if (hasStarted && streamingUrl && processingStatus === 'ready' && isPlayerReady) {
           handlePlayPause();
         }
         clickTimeoutRef.current = null;
@@ -1230,7 +1136,7 @@ useEffect(() => {
   const handleFullscreen = () => {
     if (screenfull.isEnabled && containerRef.current) {
       screenfull.toggle(containerRef.current).catch(err => console.warn("Screenfull toggle failed:", err));
-    } else { // Fallback for browsers/devices where screenfull might not work as expected on container
+    } else {
         const videoElement = playerRef.current?.getInternalPlayer();
         if (videoElement) {
             if (document.fullscreenElement === videoElement || document.webkitFullscreenElement === videoElement) {
@@ -1249,11 +1155,10 @@ useEffect(() => {
     if (isFullscreen && isMobile) {
       try {
         const newOrientation = screenOrientation === 'portrait' ? 'landscape' : 'portrait';
-        // Standard screen orientation lock
         if (screen.orientation && screen.orientation.lock) {
             await screen.orientation.lock(newOrientation);
             setScreenOrientation(newOrientation);
-        } else { // Fallback CSS rotation (less ideal)
+        } else {
             const videoWrapper = containerRef.current?.querySelector('.video-wrapper');
             if(videoWrapper) {
                 if (newOrientation === 'landscape') videoWrapper.style.transform = 'rotate(90deg)';
@@ -1267,7 +1172,7 @@ useEffect(() => {
     }
   };
 
-  useEffect(() => { // Handle native orientation changes
+  useEffect(() => {
     const updateOrientation = () => {
         if (screen.orientation) {
             setScreenOrientation(screen.orientation.type.includes('landscape') ? 'landscape' : 'portrait');
@@ -1277,14 +1182,14 @@ useEffect(() => {
     return () => screen.orientation?.removeEventListener('change', updateOrientation);
   }, []);
 
-  useEffect(() => { // Reset orientation styles when exiting fullscreen
+  useEffect(() => {
     if (!isFullscreen) {
         if (screen.orientation && screen.orientation.unlock) screen.orientation.unlock();
         const videoWrapper = containerRef.current?.querySelector('.video-wrapper');
         if (videoWrapper && videoWrapper.style.transform.includes('rotate')) {
-            videoWrapper.style.transform = 'none'; // Reset CSS rotation
+            videoWrapper.style.transform = 'none';
         }
-        setScreenOrientation('portrait'); // Default back
+        setScreenOrientation('portrait');
     }
   }, [isFullscreen]);
 
@@ -1301,7 +1206,6 @@ useEffect(() => {
 
   const toggleSubtitles = () => {
     setSubtitlesEnabled(!subtitlesEnabled);
-    // Actual track mode update is handled in the useEffect for subtitleTracks/currentSubtitleIndex/subtitlesEnabled
   };
 
   const showSubtitleChangeNotification = (message) => {
@@ -1312,8 +1216,8 @@ useEffect(() => {
       setSubtitleChangeMessage('');
     }, 3000);
   };
-  
-  useEffect(() => { // Tooltip for multiple subtitle versions
+
+  useEffect(() => {
     if (subtitleTracks.length > 1 && hasStarted) {
       setShowSubtitleTooltip(true);
       const timer = setTimeout(() => setShowSubtitleTooltip(false), 7000);
@@ -1322,8 +1226,8 @@ useEffect(() => {
       setShowSubtitleTooltip(false);
     }
   }, [subtitleTracks, hasStarted]);
-  
-  useEffect(() => { // Tooltip for fullscreen hint
+
+  useEffect(() => {
     if (isMobile && hasStarted && playing && !isFullscreen && !showControls) {
       if (fullscreenTooltipTimeoutRef.current) clearTimeout(fullscreenTooltipTimeoutRef.current);
       setShowFullscreenTooltip(true);
@@ -1335,7 +1239,6 @@ useEffect(() => {
     return () => clearTimeout(fullscreenTooltipTimeoutRef.current);
   }, [isMobile, hasStarted, playing, isFullscreen, showControls]);
 
-  // Cleanup timeouts and abort controller on unmount
   useEffect(() => {
     return () => {
       cancelActiveRequest();
@@ -1352,23 +1255,22 @@ useEffect(() => {
       if (customStyles) customStyles.remove();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Empty array: runs on mount and unmount
+  }, []);
 
 
-  // Derived states for rendering overlays
   const showProcessingSpinner = (processingStatus === 'checking' || processingStatus === 'downloading') && !showInitialPlayButton && processingInitiated;
-  const showLoadingIndicator = isBuffering || (processingStatus === 'ready' && !videoMetadataLoaded && hasStarted && !showInitialPlayButton && streamingUrl);
-  const showPausedPlayButton = (!playing && hasStarted && processingStatus === 'ready' && streamingUrl && !showInitialPlayButton && !isBuffering && videoMetadataLoaded);
+  const showLoadingIndicator = isBuffering || (processingStatus === 'ready' && !videoMetadataLoaded && hasStarted && !showInitialPlayButton && streamingUrl && !isPlayerReady);
+  const showPausedPlayButton = (!playing && hasStarted && processingStatus === 'ready' && streamingUrl && !showInitialPlayButton && !isBuffering && videoMetadataLoaded && isPlayerReady);
   const showErrorDisplay = processingStatus === 'error' && !showInitialPlayButton && (errorMessage || (selectedQuality && !streamingUrl));
 
 
   return (
     <div className="space-y-4">
-       <h2 className="text-2xl font-bold p-4 text-center">{movieTitle ? cleanSeriesTitle(movieTitle) : "Series Stream"}</h2>
+        <h2 className="text-2xl font-bold p-4 text-center">{movieTitle ? cleanSeriesTitle(movieTitle) : "Series Stream"}</h2>
       <div className="flex flex-wrap gap-2 md:gap-4 mb-4 mt-2 px-2 md:px-0 justify-center">
         <select
           value={selectedSeason}
-          onChange={(e) => {setSelectedSeason(e.target.value); setSelectedEpisode(''); /* Reset episode when season changes */}}
+          onChange={(e) => {setSelectedSeason(e.target.value); setSelectedEpisode('');}}
           className="bg-gray-700 text-white px-3 py-1.5 md:px-4 md:py-2 rounded-md text-sm md:text-base focus:outline-none focus:ring-2 focus:ring-blue-500"
           aria-label="Select Season"
         >
@@ -1421,12 +1323,12 @@ useEffect(() => {
         style={{ paddingBottom: (isAndroid && !isFullscreen) ? '50px' : '0px', WebkitTapHighlightColor: 'transparent' }}
       >
         <div className={`flex items-center justify-center bg-black ${isFullscreen ? 'h-screen w-screen fixed top-0 left-0 z-[2147483647]' : 'aspect-video'}`}>
-            {isFullscreen && ( // Click shield for fullscreen desktop
-                <div  
+            {isFullscreen && (
+                <div
                     className="absolute inset-0 z-20"
                     onMouseMove={isMobile ? undefined : showControlsWithTimeout}
                     onMouseLeave={isMobile ? undefined : () => { if (playing && !seeking) hideControls(); }}
-                    onClick={isMobile ? undefined : handleVideoClick} // Already handled by parent for non-mobile
+                    onClick={isMobile ? undefined : handleVideoClick}
                     style={{pointerEvents: 'auto'}}
                 />
             )}
@@ -1441,7 +1343,7 @@ useEffect(() => {
                     </button>
                 </div>
             )}
-            
+
             {processingStatus === 'blocked' && !showInitialPlayButton && (
                  <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-10 p-4">
                     <div className="text-white text-lg text-center">
@@ -1459,8 +1361,7 @@ useEffect(() => {
                 </div>
             )}
 
-            {/* Video Player Area */}
-            {((processingStatus === 'ready' && streamingUrl) || (hasStarted && streamingUrl && !showInitialPlayButton) ) && (
+            {streamingUrl && (
                 <>
                     {showSubtitleChangeMessage && subtitleChangeMessage && (
                         <div className="absolute top-4 left-1/2 transform -translate-x-1/2 bg-black/70 text-white text-sm p-2 rounded-md z-30 shadow-lg">
@@ -1479,14 +1380,20 @@ useEffect(() => {
                     )}
 
                     {showPausedPlayButton && (
-                        <div className="absolute inset-0 flex items-center justify-center cursor-pointer z-20" onClick={handlePlayPause} >
+                        // MODIFICATION: Added e.stopPropagation() to the onClick handler here
+                        <div
+                            className="absolute inset-0 flex items-center justify-center cursor-pointer z-20"
+                            onClick={(e) => {
+                                e.stopPropagation(); // Prevent click from bubbling to parent container
+                                handlePlayPause();
+                            }}
+                        >
                             <button className="group relative bg-black/40 rounded-full p-3 hover:bg-black/60 transition-colors" aria-label="Play video" >
                                 <FaPlay className="text-white text-3xl md:text-4xl group-hover:scale-110 transition-transform" />
                             </button>
                         </div>
                     )}
-                    
-                    {/* Mobile Mid-Screen Controls */}
+
                     {playing && showControls && isMobile && !isIOS && (
                          <div className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none">
                             <div className="flex items-center justify-around space-x-4 md:space-x-8 pointer-events-auto bg-black/40 p-2 md:p-3 rounded-lg shadow-xl">
@@ -1510,7 +1417,7 @@ useEffect(() => {
                         <ReactPlayer
                             ref={playerRef}
                             url={streamingUrl}
-                            key={`player-${selectedSeason}-${selectedEpisode}-${selectedQuality}`} // Key to force re-render on source change
+                            key={`player-${selectedSeason}-${selectedEpisode}-${selectedQuality}-${streamingUrl}`}
                             playing={playing}
                             volume={volume}
                             muted={isMuted}
@@ -1519,11 +1426,23 @@ useEffect(() => {
                             style={{ maxWidth: '100%', maxHeight: '100%', margin: 'auto', objectFit: 'contain', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'black' }}
                             className={`react-player ${isFullscreen ? 'fullscreen' : ''}`}
                             onProgress={handleProgress}
-                            onDuration={setDuration}
                             onBuffer={handleBuffer}
                             onBufferEnd={handleBufferEnd}
-                            onReady={handlePlayerReady}
+                            onReady={handleReactPlayerReady}
                             onError={handleError}
+                            onPlay={() => {
+                                console.log("DEBUG (Series): Player started playing (onPlay event)");
+                                setPlaying(true);
+                                setIsBuffering(false);
+                            }}
+                            onPause={() => {
+                                console.log("DEBUG (Series): Player paused (onPause event)");
+                                setPlaying(false);
+                            }}
+                            onEnded={() => {
+                                console.log("DEBUG (Series): Player ended (onEnded event)");
+                                setPlaying(false);
+                            }}
                             config={{
                                 file: {
                                     attributes: { controlsList: 'nodownload', crossOrigin: 'anonymous', playsInline: true, 'webkit-playsinline': true, muted: false, style: { width: '100%', height: '100%', objectFit: 'contain', backgroundColor: 'black' } },
@@ -1535,7 +1454,7 @@ useEffect(() => {
                     </div>
                 </>
             )}
-            
+
             {showLoadingIndicator && (
                 <div className="absolute inset-0 flex items-center justify-center bg-black/30 z-20">
                     <FaSpinner className="animate-spin text-white text-4xl" />
@@ -1553,7 +1472,7 @@ useEffect(() => {
                     <div className="text-red-400 mb-3 text-sm md:text-base">
                         Error: {errorMessage}
                     </div>
-                    {(selectedQuality) && ( // Allow retry if a quality is selected
+                    {(selectedQuality) && (
                         <button onClick={handleRetry} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md flex items-center text-sm md:text-base shadow hover:shadow-lg transition-all" >
                             <FaRotate className={`mr-2 ${isRetrying ? 'animate-spin' : ''}`} />
                             Retry {isRetrying ? `(${retryCount}/${maxRetries})` : ''}
@@ -1561,7 +1480,7 @@ useEffect(() => {
                     )}
                 </div>
             )}
-            
+
             {showFullscreenTooltip && (
                 <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 bg-black/70 text-white text-xs p-2 rounded-md z-30 whitespace-nowrap shadow">
                     Double tap video for fullscreen
@@ -1584,13 +1503,12 @@ useEffect(() => {
             )}
 
 
-            {/* Controls Bar */}
-            {((hasStarted && streamingUrl && !showInitialPlayButton) || (showControls && !showInitialPlayButton)) && (
+            {((hasStarted && (streamingUrl || processingStatus === 'ready')) && !showInitialPlayButton) && (
                 <div
                     ref={controlsRef}
                     className={`absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/85 via-black/60 to-transparent p-2 md:p-3 transition-opacity duration-300 ${showControls ? 'opacity-100 z-20' : 'opacity-0 z-0 pointer-events-none'}`}
-                    onClick={(e) => e.stopPropagation()}
-                    onTouchStart={(e) => e.stopPropagation()}
+                    onClick={(e) => e.stopPropagation()} // Prevent clicks on controls from bubbling to video click/tap
+                    onTouchStart={(e) => e.stopPropagation()} // Prevent touches on controls from bubbling
                 >
                     <div className="flex items-center space-x-2 mb-1.5 md:mb-2.5">
                         <input
@@ -1600,19 +1518,21 @@ useEffect(() => {
                             className="w-full h-1.5 md:h-2 bg-gray-500/70 rounded-lg appearance-none cursor-pointer range-thumb-blue transition-opacity hover:opacity-90"
                             style={{ background: `linear-gradient(to right, #3b82f6 ${played * 100}%, rgba(75, 85, 99, 0.7) ${played * 100}%)` }}
                             aria-label="Video progress"
+                            disabled={!isPlayerReady || duration === 0}
                         />
                     </div>
                     <div className="flex items-center justify-between text-xs md:text-sm text-white">
                         <div className="flex items-center space-x-2 md:space-x-3">
-                            <button onClick={handlePlayPause} className="text-white hover:text-gray-300 transition p-1 focus:outline-none focus:ring-1 focus:ring-white/50 rounded" aria-label={playing ? "Pause" : "Play"}>
+                            <button onClick={handlePlayPause} disabled={!isPlayerReady} className="text-white hover:text-gray-300 transition p-1 focus:outline-none focus:ring-1 focus:ring-white/50 rounded disabled:opacity-50" aria-label={playing ? "Pause" : "Play"}>
                                 {playing ? <FaPause size={isMobile ? 16 : 18} /> : <FaPlay size={isMobile ? 16 : 18} />}
                             </button>
-                            <button onClick={toggleMute} className="text-white hover:text-gray-300 transition p-1 focus:outline-none focus:ring-1 focus:ring-white/50 rounded" aria-label={isMuted || volume === 0 ? "Unmute" : "Mute"}>
+                            <button onClick={toggleMute} disabled={!isPlayerReady} className="text-white hover:text-gray-300 transition p-1 focus:outline-none focus:ring-1 focus:ring-white/50 rounded disabled:opacity-50" aria-label={isMuted || volume === 0 ? "Unmute" : "Mute"}>
                                 {isMuted || volume === 0 ? <FaVolumeMute size={isMobile ? 16 : 18} /> : <FaVolumeUp size={isMobile ? 16 : 18} />}
                             </button>
                             {(!isMuted && !isMobile) && (
                                 <input type="range" min={0} max={1} step="any" value={volume} onChange={handleVolumeChange}
-                                    className="w-14 md:w-20 h-1 bg-gray-600/80 rounded-lg appearance-none cursor-pointer range-thumb-sm-white"
+                                    disabled={!isPlayerReady}
+                                    className="w-14 md:w-20 h-1 bg-gray-600/80 rounded-lg appearance-none cursor-pointer range-thumb-sm-white disabled:opacity-50"
                                     style={{ background: `linear-gradient(to right, white ${volume * 100}%, rgba(107, 114, 128, 0.8) ${volume * 100}%)`}}
                                     aria-label="Volume"
                                 />
@@ -1626,28 +1546,27 @@ useEffect(() => {
                                 <div className="flex items-center space-x-0.5 md:space-x-1">
                                     {subtitleTracks.length > 1 && (
                                         <button onClick={() => { const newIndex = Math.max(currentSubtitleIndex - 1, 0); if (newIndex !== currentSubtitleIndex) {setCurrentSubtitleIndex(newIndex); showSubtitleChangeNotification(`Subtitles: ${subtitleTracks[newIndex]?.label || `Track ${newIndex + 1}`}`);} }}
-                                            disabled={currentSubtitleIndex === 0} className="text-white hover:text-gray-300 disabled:opacity-40 disabled:cursor-not-allowed transition p-1 focus:outline-none focus:ring-1 focus:ring-white/50 rounded" aria-label="Previous subtitle version">
+                                            disabled={currentSubtitleIndex === 0 || !isPlayerReady} className="text-white hover:text-gray-300 disabled:opacity-40 disabled:cursor-not-allowed transition p-1 focus:outline-none focus:ring-1 focus:ring-white/50 rounded" aria-label="Previous subtitle version">
                                             <FaChevronLeft size={isMobile ? 12 : 14} />
                                         </button>
                                     )}
-                                    <button onClick={toggleSubtitles} className={`hover:text-gray-300 transition p-1 focus:outline-none focus:ring-1 focus:ring-white/50 rounded ${subtitlesEnabled ? 'text-blue-400 hover:text-blue-300' : 'text-white'}`} title={subtitlesEnabled ? 'Disable subtitles' : 'Enable subtitles'}>
+                                    <button onClick={toggleSubtitles} disabled={!isPlayerReady} className={`hover:text-gray-300 transition p-1 focus:outline-none focus:ring-1 focus:ring-white/50 rounded disabled:opacity-50 ${subtitlesEnabled ? 'text-blue-400 hover:text-blue-300' : 'text-white'}`} title={subtitlesEnabled ? 'Disable subtitles' : 'Enable subtitles'}>
                                         <FaClosedCaptioning size={isMobile ? 16 : 18} />
                                     </button>
                                     {subtitleTracks.length > 1 && (
                                         <button onClick={() => { const newIndex = Math.min(currentSubtitleIndex + 1, subtitleTracks.length - 1); if (newIndex !== currentSubtitleIndex) {setCurrentSubtitleIndex(newIndex); showSubtitleChangeNotification(`Subtitles: ${subtitleTracks[newIndex]?.label || `Track ${newIndex + 1}`}`);} }}
-                                            disabled={currentSubtitleIndex === subtitleTracks.length - 1} className="text-white hover:text-gray-300 disabled:opacity-40 disabled:cursor-not-allowed transition p-1 focus:outline-none focus:ring-1 focus:ring-white/50 rounded" aria-label="Next subtitle version">
+                                            disabled={currentSubtitleIndex === subtitleTracks.length - 1 || !isPlayerReady} className="text-white hover:text-gray-300 disabled:opacity-40 disabled:cursor-not-allowed transition p-1 focus:outline-none focus:ring-1 focus:ring-white/50 rounded" aria-label="Next subtitle version">
                                             <FaChevronRight size={isMobile ? 12 : 14} />
                                         </button>
                                     )}
                                 </div>
                             )}
-                            {/* Quality Selector in controls - can be shown for desktop if preferred */}
-                             <select value={selectedQuality} 
-                                    onChange={(e) => setSelectedQuality(e.target.value)}
-                                    disabled={!selectedSeason || availableQualities.length === 0}
-                                    className="bg-gray-700/80 text-white px-1.5 py-0.5 md:px-2 md:py-1 rounded text-xs md:text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/80 appearance-none cursor-pointer disabled:opacity-50"
-                                    style={{ WebkitAppearance: 'none', MozAppearance: 'none', appearance: 'none', paddingRight: isMobile ? '1.25rem' : '1.5rem' }}
-                                    aria-label="Select video quality from controls"
+                             <select value={selectedQuality}
+                                     onChange={(e) => setSelectedQuality(e.target.value)}
+                                     disabled={!selectedSeason || availableQualities.length === 0 || !isPlayerReady}
+                                     className="bg-gray-700/80 text-white px-1.5 py-0.5 md:px-2 md:py-1 rounded text-xs md:text-sm focus:outline-none focus:ring-1 focus:ring-blue-500/80 appearance-none cursor-pointer disabled:opacity-50"
+                                     style={{ WebkitAppearance: 'none', MozAppearance: 'none', appearance: 'none', paddingRight: isMobile ? '1.25rem' : '1.5rem' }}
+                                     aria-label="Select video quality from controls"
                             >
                                 {availableQualities.map(quality => (
                                     <option key={`quality-control-${quality}`} value={quality}>
@@ -1656,11 +1575,11 @@ useEffect(() => {
                                 ))}
                             </select>
                             {isMobile && isFullscreen && (
-                                <button onClick={handleRotate} className="text-white hover:text-gray-300 transition p-1 focus:outline-none focus:ring-1 focus:ring-white/50 rounded" aria-label="Rotate screen">
+                                <button onClick={handleRotate} disabled={!isPlayerReady} className="text-white hover:text-gray-300 transition p-1 focus:outline-none focus:ring-1 focus:ring-white/50 rounded disabled:opacity-50" aria-label="Rotate screen">
                                     <FaRotate size={isMobile ? 16 : 18} />
                                 </button>
                             )}
-                            <button onClick={handleFullscreen} className="text-white hover:text-gray-300 transition p-1 focus:outline-none focus:ring-1 focus:ring-white/50 rounded" aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}>
+                            <button onClick={handleFullscreen} disabled={!isPlayerReady} className="text-white hover:text-gray-300 transition p-1 focus:outline-none focus:ring-1 focus:ring-white/50 rounded disabled:opacity-50" aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}>
                                 <FaExpand size={isMobile ? 16 : 18} />
                             </button>
                         </div>
