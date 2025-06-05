@@ -43,7 +43,7 @@ const SearchPage = () => {
       }
 
       try {
-        const [resAm, resAiom, resAiome, resAiokd] = await Promise.all([
+        const [resAm, resAiom, resAiome, resAiokd, resComics] = await Promise.all([
           axios.get(
             `https://api3.mp3vault.xyz/searchAm?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
           ),
@@ -56,6 +56,9 @@ const SearchPage = () => {
           axios.get(
             `https://api3.mp3vault.xyz/searchAiokd?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
           ),
+          axios.get(
+            `https://api3.mp3vault.xyz/searchComics?title=${key}&skip=${skip}&limit=${limit}&currentPage=${currentPage}`
+          ),
         ]);
 
         const mergedItems = [
@@ -63,6 +66,7 @@ const SearchPage = () => {
           ...resAiom.data.items,
           ...resAiome.data.items,
           ...resAiokd.data.items,
+          ...resComics.data.items,
         ];
 
         // Sort merged items by relevance
@@ -76,7 +80,8 @@ const SearchPage = () => {
           resAm.data.totalCount +
           resAiom.data.totalCount +
           resAiome.data.totalCount +
-          resAiokd.data.totalCount;
+          resAiokd.data.totalCount +
+          resComics.data.totalCount;
 
         setFoundItems(sortedItems);
         setTotalCount(totalCount);

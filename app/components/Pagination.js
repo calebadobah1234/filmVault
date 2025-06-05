@@ -65,6 +65,8 @@ const Pagination = (props) => {
                 ? "-series"
                 : props.kdrama
                 ? "-kdrama"
+                : props.comics
+                ? "-comics"
                 : ""
             }?${props.whatFor}=${props.category}&skip=${
               currentPage - 1
@@ -87,6 +89,8 @@ const Pagination = (props) => {
                   ? "-series"
                   : props.kdrama
                   ? "-kdrama"
+                  : props.comics
+                  ? "-comics"
                   : ""
               }?${props.whatFor}=${
                 props.category
@@ -113,6 +117,8 @@ const Pagination = (props) => {
                 ? "-series"
                 : props.kdrama
                 ? "-kdrama"
+                : props.comics
+                ? "-comics"
                 : ""
             }?${props.whatFor}=${
               props.category
@@ -147,6 +153,8 @@ const Pagination = (props) => {
                   ? "-series"
                   : props.kdrama
                   ? "-kdrama"
+                  : props.comics
+                  ? "-comics"
                   : ""
               }?${props.whatFor}=${
                 props.category
@@ -169,6 +177,8 @@ const Pagination = (props) => {
                 ? "-series"
                 : props.kdrama
                 ? "-kdrama"
+                : props.comics
+                ? "-comics"
                 : ""
             }?${props.whatFor}=${props.category}&skip=${
               currentPage + 1
