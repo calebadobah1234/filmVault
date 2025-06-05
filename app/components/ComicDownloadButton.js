@@ -217,7 +217,7 @@ const ComicDownloadButton = ({
       {/* Success message with download link as backup */}
       {downloadState === 'complete' && downloadUrl && (
         <div className="mt-2 text-sm text-green-600 text-center">
-          Download started! If it doesn't start automatically, 
+          Download started! If it doesn&apos;t start automatically, 
           <a 
             href={downloadUrl} 
             target="_blank" 
