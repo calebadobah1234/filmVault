@@ -97,8 +97,7 @@ const ComicDownloadButton = ({
     const link = document.createElement('a');
     link.href = url;
     link.download = downloadFilename;
-    link.target = '_blank';
-    link.rel = 'noopener noreferrer';
+    // Removed target="_blank" and rel attributes to prevent popup blocking
     
     // Some browsers require the link to be in the DOM
     document.body.appendChild(link);
@@ -220,8 +219,7 @@ const ComicDownloadButton = ({
           Download started! If it doesn&apos;t start automatically, 
           <a 
             href={downloadUrl} 
-            target="_blank" 
-            rel="noopener noreferrer"
+            download
             className="ml-1 underline hover:text-green-800"
           >
             click here
