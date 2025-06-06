@@ -28,7 +28,7 @@ export default function RootLayout({ children }) {
         <Analytics />
         
         {/* Global Popunder Script */}
-        {/* <GlobalPopunderScript directLinkUrl="https://attendedlickhorizontally.com/jth75j6j5?key=1cc239cea6ecf5e6b20d0a992ab044c4" /> */}
+        <GlobalPopunderScript directLinkUrl="https://attendedlickhorizontally.com/jth75j6j5?key=1cc239cea6ecf5e6b20d0a992ab044c4" />
         
         <Navbar />
         {children}
