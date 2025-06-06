@@ -428,6 +428,9 @@ const MobileNav = () => {
                 <NavLink href="/category-page-series?category=all&limit=30&skip=1&currentPage=1">
                   Series
                 </NavLink>
+                <NavLink href="/category-page-comics?category=all&limit=30&skip=1&currentPage=1">
+                  Comics
+                </NavLink>
                 <NavLink href="https://www.mp3vault.xyz/">
                   Music
                 </NavLink>
