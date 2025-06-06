@@ -14,7 +14,7 @@ export async function generateMetadata({ searchParams }) {
 const page = async ({ searchParams }) => {
   const res = await fetch(
     `https://api3.mp3vault.xyz/get-category-dataComics/?category=${searchParams.category}&limit=30&skip=${searchParams.skip}`,
-    { next: { revalidate: 0 } }
+    { next: { revalidate: 21600 } }
   );
   const data = await res.json();
   console.log(data);

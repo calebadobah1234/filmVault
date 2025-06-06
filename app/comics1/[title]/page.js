@@ -26,12 +26,13 @@ export async function generateMetadata({ params }) {
       cache: "force-cache",
     }
   );
-  const data = await res.json();
+  const data1 = await res.json();
+  const data = data1[0];
 
   const coverImage = data.chapters?.[0]?.images?.[0]?.r2_url || data.chapters?.[0]?.images?.[0]?.original_src;
 
   return {
-    title: `Read and Download ${data.title} - ${data.publisher} | ComicVault.xyz`,
+    title: `Read and Download ${data.title} - ${data.publisher} | FilmVault.xyz`,
     description: `Read and download ${data.title} online for free. ${
       data.description ? data.description.slice(0, 300) : ""
     } Published by ${data.publisher} in ${data.year}.`,
