@@ -78,52 +78,35 @@ export async function generateMetadata({ params }) {
   // Check if the year is already in the title
   const shouldAddYear = !data.title.includes(data.year);
   const titleWithYear = shouldAddYear
-    ? `${data.title} (${data.year})`
+    ? `${data.title} ${data.year}`
     : data.title;
 
-  // Improved SEO title - more descriptive and keyword-rich
-  const seoTitle = `Watch ${titleWithYear} Full Movie Free HD Download | FilmVault.xyz`;
-  
-  // Enhanced meta description with better keywords and call-to-action
-  const metaDescription = `Watch ${titleWithYear} online free in HD quality. Download full movie ${data.title} with subtitles. Stream ${data.categories?.join(', ') || 'movies'} instantly on FilmVault.xyz - your ultimate movie destination.`;
-
   return {
-    title: seoTitle,
-    description: metaDescription,
-    keywords: [
-      data.title,
-      `${data.title} download`,
-      `${data.title} watch online`,
-      `${data.title} free movie`,
-      ...(data.categories || []),
-      ...(data.actors || []),
-      'HD movie download',
-      'free movies online',
-      'movie streaming'
-    ].join(', '),
+    title: `watch and download ${titleWithYear} full movie | FilmVault.xyz`,
+    description: `Watch and download ${titleWithYear} for free in HD quality. ${
+      data.description ? data.description.slice(0, 300) : ""
+    }`,
     openGraph: {
-      title: `${titleWithYear} - Free HD Movie Download & Streaming`,
-      description: metaDescription,
+      title: `${titleWithYear} free HD download | FilmVault.xyz`,
+      description: `Watch and download ${titleWithYear} for free in HD quality. ${
+        data.description ? data.description.slice(0, 300) : ""
+      }`,
       images: [
         {
           url: data.img,
           width: 800,
           height: 600,
-          alt: `${data.title} movie poster - Watch and download free`,
+          alt: data.title,
         },
       ],
-      type: "video.movie",
+      type: "website",
       site_name: "FilmVault.xyz",
-      url: `https://filmvault.xyz/movie/${params.title}`,
     },
     twitter: {
       card: "summary_large_image",
-      title: `${titleWithYear} - Free HD Download`,
-      description: metaDescription,
+      title: data.title,
+      description: data.description,
       images: [data.img],
-    },
-    alternates: {
-      canonical: `https://filmvault.xyz/movie/${params.title}`,
     },
   };
 }
@@ -255,11 +238,6 @@ const page = async ({ params }) => {
     }));
   }
 
-  // Enhanced title with year for better SEO
-  const enhancedTitle = data.year && !data.title.includes(data.year) 
-    ? `${data.title} (${data.year})`
-    : data.title;
-
   return (
     <>
     <ViewCounter itemId={data._id} specifier="Am" />
@@ -294,8 +272,14 @@ const page = async ({ params }) => {
           },
         }}
       />
+{/* <AdportScript /> */}
 
-      <div className="container mx-auto p-4">
+
+{/* <AdScript type="native" className="my-banner-class flex justify-center"/> */}
+        {/* <AdScript type="native" className="my-banner-class flex justify-center"/> */}
+        {/* <AdScript type="native" className="my-banner-class flex justify-center"/> */}
+
+      <div className="container mx-auto p-4 ">
         <div className="flex flex-col md:flex-row bg-gray-50 rounded-lg shadow-md overflow-hidden py-4">
           <div className="md:w-1/3 flex max-md:justify-start max-md:ml-6 lg:justify-end items-center">
             <ImageWithFallback
@@ -310,104 +294,80 @@ const page = async ({ params }) => {
               }
               width={200}
               height={300}
-              alt={`${data.title} movie poster - watch and download free`}
+              alt={data.title}
               className="rounded-md"
             />
           </div>
           <div className="p-6 md:w-2/3 flex flex-col justify-between">
             <div>
-              {/* H1 for Movie Title */}
               <h1 className="text-3xl font-bold text-gray-800 mb-4">
-                {enhancedTitle}
+                {data.title}
               </h1>
-              
-              <div className="space-y-3">
-                <p className="text-gray-700">
-                  <span className="font-semibold">Released:</span>{" "}
+              <p className="text-gray-700 mb-4">
+                <span className="font-semibold">Released:</span>{" "}
+                <Link
+                  href={`/year-page?year=${
+                    data.movieInfo?.yearOfPublication
+                      ? data.movieInfo.yearOfPublication
+                      : data.year
+                  }&limit=30&skip=1&pageNumber=1`}
+                >
+                  <span className="text-blue-500 hover:underline">
+                    {data.movieInfo?.yearOfPublication
+                      ? data.movieInfo.yearOfPublication
+                      : data.year}
+                  </span>
+                </Link>
+              </p>
+              <div className="text-sm text-gray-600 mb-4">
+                <span className="font-semibold">Genre: </span>
+                {activeCategories.map((item, index) => (
                   <Link
-                    href={`/year-page?year=${
-                      data.movieInfo?.yearOfPublication
-                        ? data.movieInfo.yearOfPublication
-                        : data.year
-                    }&limit=30&skip=1&pageNumber=1`}
+                    key={index}
+                    href={`/category-page/?category=${item}&skip=${1}&currentPage=${1}`}
                   >
-                    <span className="text-blue-500 hover:underline">
-                      {data.movieInfo?.yearOfPublication
-                        ? data.movieInfo.yearOfPublication
-                        : data.year}
+                    <span className="text-green-500 hover:underline cursor-pointer mr-2">
+                      {item}
+                      {index < activeCategories.length - 1 ? " |" : ""}
                     </span>
                   </Link>
-                </p>
-                
-                <div className="text-gray-700">
-                  <span className="font-semibold">Genre: </span>
-                  {activeCategories.map((item, index) => (
-                    <Link
-                      key={index}
-                      href={`/category-page/?category=${item}&skip=${1}&currentPage=${1}`}
-                    >
-                      <span className="text-green-500 hover:underline cursor-pointer mr-2">
-                        {item}
-                        {index < activeCategories.length - 1 ? " |" : ""}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
-                
-                {((data.imdb !== undefined && data.imdb !== null) || data.imdbRating) && (
-                  <p className="text-gray-700">
+                ))}
+              </div>
+              <p className="text-gray-700 mb-4">
+                {(data.imdb !== undefined && data.imdb !== null) ||
+                data.imdbRating ? (
+                  <>
                     <span className="font-semibold">IMDB Rating:</span>{" "}
                     <span className="text-yellow-500">
                       {data.imdb ? data.imdb : data.imdbRating}/10
                     </span>
-                  </p>
-                )}
-                
-                <div className="text-gray-700">
-                  <span className="font-semibold">Cast:</span>{" "}
-                  {data.actors.map((item, index) => (
-                    <Link key={index} href={`/actors-page/${item}`}>
-                      <span className="text-blue-500 hover:underline cursor-pointer">
-                        {item}
-                        {index < data.actors.length - 1 ? ", " : ""}
-                      </span>
-                    </Link>
-                  ))}
-                </div>
+                  </>
+                ) : null}
+              </p>
+              <div className="text-gray-700 mb-4">
+                <span className="font-semibold">About: </span>
+                <p className="text-gray-600">{data.description}</p>
+              </div>
+              <div className="text-gray-700">
+                <span className="font-semibold">Actors:</span>{" "}
+                {data.actors.map((item, index) => (
+                  <Link key={index} href={`/actors-page/${item}`}>
+                    <span className="text-blue-500 hover:underline cursor-pointer">
+                      {item}
+                      {index < data.actors.length - 1 ? ", " : ""}
+                    </span>
+                  </Link>
+                ))}
               </div>
             </div>
           </div>
         </div>
+{/* <BannerScript2/> */}
+{/* <AdportRichMedia /> */}
 
-        {/* Movie Plot Section with H2 */}
-        {data.description && (
-          <section className="mt-8 bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">
-              About {data.title} ({data.year})
-            </h2>
-            <p className="text-gray-700 leading-relaxed">
-              {data.description}
-            </p>
-          </section>
-        )}
-
-        {/* SEO-Enhanced Section moved after About */}
-        <section className="mt-8 bg-blue-50 rounded-lg shadow-md p-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2 leading-tight ">
-            Watch {enhancedTitle} Full Movie Free HD Download
-          </h2>
-          <p className="text-lg text-gray-600">
-            Stream and download {data.title} in high quality for free. 
-            {activeCategories.length > 0 && ` ${activeCategories.join(', ')} movie`} 
-            {data.year && ` from ${data.year}`} available now.
-          </p>
-        </section>
-
-        {/* Streaming Section */}
-        <section className="mt-8">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4 flex justify-center">
-            Watch {data.title} Online Free
-          </h2>
+{/* <AdScript type="custom" /> */}
+        <div className="mt-8">
+          {/* <h2 className="text-2xl font-bold text-gray-800 mb-4">Stream Now</h2> */}
           <ClientOnly>
             <StreamingComponent 
               movieTitle={data.title}
@@ -425,17 +385,10 @@ const page = async ({ params }) => {
               naijaRocks={data.downloadLinksNaija?.[0]?.url}
             />
           </ClientOnly>
-        </section>
+        </div>
 
-        {/* Download Section with Enhanced H2 */}
-        <section className="mt-12 text-center">
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            Download {data.title} Full Movie HD Free
-          </h2>
-          <p className="text-gray-600 mb-6">
-            Get {data.title} in multiple quality options. Fast and secure downloads available.
-          </p>
-          
+        <div className="mt-12 text-center">
+          <h2 className="text-2xl font-bold text-gray-800">Download Links</h2>
           <div className="flex flex-wrap justify-center mt-6 gap-4">
             {/* Main download link if actualDownloadUrl exists */}
             {(data.downloadPageUrl || data.downloadLinksNaija) && (
@@ -443,7 +396,6 @@ const page = async ({ params }) => {
                 href={data.downloadPageUrl ? data.downloadPageUrl : data.downloadLinksNaija[0].url}
                 download={`${data.title}.mp4`}
                 className="max-md:min-w-[100%] bg-gray-800 text-white py-4 px-8 rounded-lg shadow-lg hover:bg-gray-700 transition duration-200"
-                aria-label={`Download ${data.title} full movie`}
               >
                 Download {data.title}  {data.fileSize ? `| ${data.fileSize}` : ""}
               </a>
@@ -463,7 +415,6 @@ const page = async ({ params }) => {
                     key={index}
                     download={`${data.title}_${item.quality}.mp4`}
                     className="max-md:min-w-[100%] bg-gray-800 text-white py-4 px-8 rounded-lg shadow-lg hover:bg-gray-700 transition duration-200"
-                    aria-label={`Download ${data.title} in ${item.quality} quality`}
                   >
                     {item.quality} | {item.size}
                   </a>
@@ -471,17 +422,12 @@ const page = async ({ params }) => {
               );
             })}
           </div>
-        </section>
+        </div>
 
         {/* Server 2 (episodesDataBC) Section */}
         {data.episodesDataBC && data.episodesDataBC.length > 0 && (
-          <section className="mt-12 text-center">
-            <h3 className="text-xl font-bold text-gray-800 mb-2">
-              Alternative Download Server
-            </h3>
-            <p className="text-gray-600 mb-4">
-              Additional download options for {data.title}
-            </p>
+          <div className="mt-12 text-center">
+            <h2 className="text-2xl font-bold text-gray-800">Server 99</h2>
             <div className="flex flex-wrap justify-center mt-6 gap-4">
               {data.episodesDataBC.map((item, index) => {
                 const blockedTerms = ["buy-subscription", "Duble", "Dubbed"];
@@ -496,7 +442,6 @@ const page = async ({ params }) => {
                       key={index}
                       download={`${data.title}_${item.quality}.mp4`}
                       className="max-md:min-w-[100%] bg-gray-700 text-white py-4 px-8 rounded-lg shadow-lg hover:bg-gray-600 transition duration-200"
-                      aria-label={`Download ${data.title} from alternative server in ${item.quality}`}
                     >
                       {item.quality} | {item.size}
                     </a>
@@ -504,14 +449,14 @@ const page = async ({ params }) => {
                 );
               })}
             </div>
-          </section>
+          </div>
         )}
-
-        {/* Related Movies Section */}
-        <section className="mt-12">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-6 flex justify-center">
-            Movies Similar to {data.title}
-          </h2>
+{/* <BannerScript /> */}
+        {/* <AdScript /> */}
+        
+        {/* <NativeScript /> */}
+        {/* <AdsteraScript /> */}
+        <div className="mt-12">
           <LatestItems
             title="You May Also Like"
             data={relatedData}
@@ -519,17 +464,19 @@ const page = async ({ params }) => {
             relatedContent={true}
             hide={true}
           />
-        </section>
-
-        {/* Comments Section */}
-        <section className="mt-12">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-6 flex justify-center">
-            Comments & Reviews for {data.title}
-          </h2>
-          <CommentSection itemId={data._id} linkIdentifier="Am" />
-        </section>
+        </div>
+        {/* <BannerScript /> */}
+        {/* <AdScript type="custom-2"/> */}
+{/* <AdScript type="custom-2"/>
+<AdScript type="custom-2"/> */}
+{/* <SocialBarScript 
+        delay={15000} 
+        sessionKey="customSocialBarKeyhhyy" 
+        className="my-custom-classhggyy" 
+      /> */}
+        <CommentSection itemId={data._id} linkIdentifier="Am" />
+        
       </div>
-      
       <ClientOnly>
         <DirectLinkScript directLinkUrl="https://attendedlickhorizontally.com/jth75j6j5?key=1cc239cea6ecf5e6b20d0a992ab044c4" />
       </ClientOnly>

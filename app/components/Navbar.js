@@ -10,7 +10,7 @@ const MobileNav = dynamic(() => import("./MobileNav"), { ssr: false });
 
 const Navbar = ({ isHomePage }) => {
   const [isScrolled, setIsScrolled] = useState(false);
-  const HeadingTag = isHomePage ? "h1" : "h2";
+  const HeadingTag = isHomePage ? "h1" : "div";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -22,7 +22,7 @@ const Navbar = ({ isHomePage }) => {
   }, []);
 
   return (
-    <div className="w-full relative" style={{ zIndex: 40 }}>
+    <header className="w-full relative" style={{ zIndex: 40 }} role="banner">
       <div className={`max-md:overflow-x-hidden w-full transition-all duration-300 ${
         isScrolled ? 'bg-gray-900/95 backdrop-blur-md shadow-lg' : 'bg-gray-900'
       }`} style={{ zIndex: 40 }}>
@@ -33,7 +33,12 @@ const Navbar = ({ isHomePage }) => {
             <div className="hidden md:block md:flex-1"></div>
             
             {/* Logo - Left aligned on mobile, centered on desktop */}
-            <Link href="/" className="flex justify-center md:flex-1">
+            <Link 
+              href="/" 
+              className="flex justify-center md:flex-1"
+              aria-label="FilmVault.XYZ - Home page for movies, series, anime and comics"
+              title="FilmVault.XYZ - Your entertainment destination"
+            >
               <HeadingTag className="text-3xl sm:text-4xl md:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-green-400 via-blue-400 to-purple-500 hover:from-purple-500 hover:via-blue-400 hover:to-green-400 transition-all duration-500">
                 FilmVault.XYZ
               </HeadingTag>
@@ -47,6 +52,8 @@ const Navbar = ({ isHomePage }) => {
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="flex items-center justify-center hover:opacity-80 transition-opacity duration-200"
+                aria-label="Join our Telegram channel for updates"
+                title="Follow us on Telegram"
               >
                 <svg 
                   xmlns="http://www.w3.org/2000/svg" 
@@ -54,6 +61,7 @@ const Navbar = ({ isHomePage }) => {
                   height="28" 
                   viewBox="0 0 240 240"
                   className="fill-current"
+                  aria-hidden="true"
                 >
                   <defs>
                     <linearGradient id="telegram-gradient" x1="46.14" x2="28.78" y1="11.38" y2="52.92" gradientUnits="userSpaceOnUse">
@@ -77,20 +85,20 @@ const Navbar = ({ isHomePage }) => {
           </div>
         </div>
 
-        {/* Rest of the navigation remains unchanged */}
-        <nav className="hidden md:block text-white border-t border-gray-800">
+        {/* Main Navigation */}
+        <nav className="hidden md:block text-white border-t border-gray-800" role="navigation" aria-label="Main navigation">
           <div className="container mx-auto">
             <ul className="flex flex-wrap justify-center items-center gap-1 py-3 px-4">
               {[
-                { href: "/", label: "Home" },
-                { href: "/category-page?category=all&limit=30=&skip=1&currentPage=1", label: "Movies" },
-                { href: "/category-page-series?category=all&limit=30=&skip=1&currentPage=1", label: "Series" },
-                { href: "/category-page-anime?category=all&limit=30=&skip=1&currentPage=1", label: "Anime" },
-                { href: "/category-page-comics?category=all&limit=30=&skip=1&currentPage=1", label: "Comics" },
-                // { href: "/category-page-kdrama?category=all&limit=30=&skip=1&currentPage=1", label: "Korean Series" },
-                { href: "https://www.mp3vault.xyz/", label: "Music", external: true },
-                { href: "https://www.cracksoft.xyz/", label: "PC Games & Software", external: true },
-                { href: "https://t.me/+l4x6T0ByASdjOGE0", label: "Telegram Channel", external: true }
+                { href: "/", label: "Home", description: "Go to homepage" },
+                { href: "/category-page?category=all&limit=30=&skip=1&currentPage=1", label: "Movies", description: "Browse all movies" },
+                { href: "/category-page-series?category=all&limit=30=&skip=1&currentPage=1", label: "Series", description: "Browse TV series" },
+                { href: "/category-page-anime?category=all&limit=30=&skip=1&currentPage=1", label: "Anime", description: "Browse anime collection" },
+                { href: "/category-page-comics?category=all&limit=30=&skip=1&currentPage=1", label: "Comics", description: "Browse comics collection" },
+                // { href: "/category-page-kdrama?category=all&limit=30=&skip=1&currentPage=1", label: "Korean Series", description: "Browse Korean drama series" },
+                { href: "https://www.mp3vault.xyz/", label: "Music", external: true, description: "Visit our music platform" },
+                { href: "https://www.cracksoft.xyz/", label: "PC Games & Software", external: true, description: "Download PC games and software" },
+                { href: "https://t.me/+l4x6T0ByASdjOGE0", label: "Telegram Channel", external: true, description: "Join our Telegram channel" }
               ].map((item) => (
                 <li key={item.label} className="relative group">
                   {item.external ? (
@@ -99,6 +107,8 @@ const Navbar = ({ isHomePage }) => {
                       target="_blank"
                       rel="noopener noreferrer"
                       className="px-3 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-gray-800 hover:text-white transition-all duration-200 flex items-center space-x-1"
+                      aria-label={item.description}
+                      title={item.description}
                     >
                       {item.label}
                     </a>
@@ -106,6 +116,8 @@ const Navbar = ({ isHomePage }) => {
                     <Link
                       href={item.href}
                       className="px-3 py-2 text-sm font-medium text-gray-300 rounded-md hover:bg-gray-800 hover:text-white transition-all duration-200 flex items-center space-x-1"
+                      aria-label={item.description}
+                      title={item.description}
                     >
                       {item.label}
                     </Link>
@@ -121,7 +133,7 @@ const Navbar = ({ isHomePage }) => {
       
       {/* Search Bar */}
       <Searchbar />
-    </div>
+    </header>
   );
 };
 
