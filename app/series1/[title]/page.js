@@ -1,0 +1,275 @@
+import React from "react";
+import LatestItems from "@/app/components/LatestItems";
+import Link from "next/link";
+import DownloadSection from "@/app/components/DownloadSection";
+import { JsonLd } from "react-schemaorg";
+import CommentSection from "@/app/components/CommentSection";
+import ImageWithFallback from "@/app/components/ImageWithFallback";
+import Script from "next/script";
+import AdScript from "@/app/components/Adscript";
+import EnhancedSeriesStreamingComponent from "@/app/components/StreamingComponentSeries";
+import BannerScript from "@/app/components/BannerScript";
+import BannerScript2 from "@/app/components/BannerScript2";
+import NativeScript from "@/app/components/NativeScript";
+import ViewCounter from "@/app/components/ViewCounter";
+import AdportScript from "@/app/components/AdportBanner";
+import AdportRichMedia from "@/app/components/AdportRichMedia";
+import DirectLinkScript from "@/app/components/DirectLinkScript";
+import ClientOnly from '@/app/components/ClientOnly';
+// Normalize seasons data function
+const normalizeSeasons = (seasons) => {
+  if (!seasons) return [];
+  
+  return seasons.map(season => {
+    // Check if season follows the new format (with downloadLinks)
+    if (season.episodes && season.episodes[0]?.downloadLinks) {
+      // Group episodes by quality
+      const qualityGroups = {};
+      season.episodes.forEach(episode => {
+        episode.downloadLinks.forEach(link => {
+          const quality = link.quality.replace('دانلود ', ''); // Remove Persian "download" text if present
+          if (!qualityGroups[quality]) {
+            qualityGroups[quality] = [];
+          }
+          qualityGroups[quality].push({
+            fileName: episode.episodeInfo,
+            downloadLink: link.downloadLink,
+            size: link.size
+          });
+        });
+      });
+
+      // Convert to resolutions array format
+      return {
+        seasonNumber: season.seasonNumber,
+        resolutions: Object.entries(qualityGroups).map(([quality, episodes]) => ({
+          resolution: quality,
+          episodes
+        }))
+      };
+    }
+    // Return original format unchanged
+    return season;
+  });
+};
+
+export async function generateMetadata({ params }) {
+  const res = await fetch(
+    `https://api3.mp3vault.xyz/get-item-detailsAiom/${params.title}`,
+    {
+      cache: "force-cache",
+    }
+  );
+  const data1 = await res.json();
+  const data = data1[0];
+  return {
+    title: `watch and download ${data.title?data.title:"free tv shows"} ${
+      data.year ? data.year : ""
+    }| FilmVault.xyz`,
+    description: `Watch and download ${data.title} (${
+      data.year
+    }) for free in HD quality. ${data.description.slice(0, 300)}`,
+    openGraph: {
+      title: `${data.title} ${
+        data.year ? data.year : ""
+      } free HD download | FilmVault.xyz`,
+      description: `Watch and download ${data.title?data.title:"free tv shows"} (${
+        data.year
+      }) for free in HD quality. ${data.description.slice(0, 300)}`,
+      images: [
+        {
+          url: data.img,
+          width: 800,
+          height: 600,
+          alt: data.title,
+        },
+      ],
+      type: "website",
+      site_name: "FilmVault.xyz",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: data.title,
+      description: data.description,
+      images: [data.img],
+    },
+  };
+}
+
+const page = async ({ params }) => {
+  const res = await fetch(
+    `https://api3.mp3vault.xyz/get-item-detailsAiom/${params.title}`,
+    {
+      revalidate: 86400,
+    }
+  );
+  const resData = await res.json();
+  const data = resData[0];
+
+  // Normalize the seasons data before passing it to components
+  const normalizedSeasons = normalizeSeasons(data.seasons);
+  const normalizedSeasons2 = normalizeSeasons(data.seasons2);
+  
+  const activeCategories = data.categories || [];
+  const actors = data.actors || [];
+
+  async function fetchRelatedContent(categories, actors, title) {
+    try {
+      const queryString = new URLSearchParams({
+        categories: categories.join(","),
+        actors: actors.join(","),
+        title: title,
+      }).toString();
+      const response = await fetch(
+        `https://api3.mp3vault.xyz/get-related-contentAiom?${queryString}`,
+        {
+          cache: "force-cache",
+        }
+      );
+      if (!response.ok) throw new Error("Network response was not ok");
+      return response.json();
+    } catch (error) {
+      console.error("Error fetching related content:", error);
+      return [];
+    }
+  }
+
+  const relatedData = await fetchRelatedContent(
+    activeCategories,
+    actors,
+    data.title
+  );
+
+  return (
+    <>
+    <ViewCounter itemId={data._id} specifier="Aiom" />
+      <JsonLd
+        item={{
+          "@context": "https://schema.org",
+          "@type": "TVSeries",
+          name: data.title,
+          description: data.description,
+          datePublished: data.year,
+          image: data.imageUrl ? data.imageUrl : data.img,
+          aggregateRating: {
+            "@type": "AggregateRating",
+            ratingValue: data.imdbRating ? data.imdbRating : data.imdb,
+            bestRating: "10",
+            worstRating: "1",
+            ratingCount: "1000",
+          },
+          genre: activeCategories,
+          actor: actors.map((actor) => ({
+            "@type": "Person",
+            name: actor,
+          })),
+          isAccessibleForFree: true,
+          offers: {
+            "@type": "Offer",
+            availability: "https://schema.org/InStock",
+            price: "0",
+            priceCurrency: "USD",
+          },
+        }}
+      />
+{/* <AdScript type="native" className="my-banner-class flex justify-center"/> */}
+        {/* <AdScript type="native" className="my-banner-class flex justify-center"/> */}
+        {/* <AdScript type="native" className="my-banner-class flex justify-center"/> */}
+      <div className="container mx-auto p-4">
+        <div className="flex flex-col md:flex-row bg-gray-50 rounded-lg shadow-md overflow-hidden py-4">
+          <div className="md:w-1/3 flex max-md:justify-start max-md:ml-6 lg:justify-end items-center">
+            <ImageWithFallback
+              src={data.imageUrl}
+              width={200}
+              height={300}
+              alt={data.title}
+              className="rounded-md"
+            />
+          </div>
+          <div className="p-6 md:w-2/3 flex flex-col justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-800 mb-4">
+                {data.title}
+              </h1>
+              <p className="text-gray-700 mb-4">
+                <span className="font-semibold">Released:</span>{" "}
+                <span className="text-blue-500 hover:underline">
+                  {data.year}
+                </span>
+              </p>
+              <div className="text-sm text-gray-600 mb-4">
+                <span className="font-semibold">Genre: </span>
+                {activeCategories.map((item, index) => (
+                  <Link
+                    key={index}
+                    href={`/category-page-series/?category=${item}&skip=${1}&currentPage=${1}`}
+                  >
+                    <span className="text-green-500 hover:underline cursor-pointer mr-2">
+                      {item}
+                      {index < activeCategories.length - 1 ? " |" : ""}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+              <p className="text-gray-700 mb-4">
+                <span className="font-semibold">IMDB Rating:</span>{" "}
+                <span className="text-yellow-500">
+                  {data.imdbRating ? data.imdbRating : data.imdb}/10
+                </span>
+              </p>
+              <div className="text-gray-700 mb-4">
+                <span className="font-semibold">About: </span>
+                <p className="text-gray-600">{data.description}</p>
+              </div>
+              <div className="text-gray-700">
+                <span className="font-semibold">Actors:</span>{" "}
+                {data.actors.map((item, index) => (
+                  <Link key={index} href={`/actor-page-series/${item}`}>
+                    <span className="text-blue-500 hover:underline cursor-pointer">
+                      {item}
+                      {index < data.actors.length - 1 ? ", " : ""}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <EnhancedSeriesStreamingComponent seasons={normalizedSeasons} seasons2={normalizedSeasons2} movieTitle={data.title} />
+        {/* <BannerScript2 /> */}
+        {/* <AdportRichMedia /> */}
+        {/* <AdScript type="custom"/> */}
+        <div className="mt-12 text-center">
+          <div className="flex flex-col flex-wrap justify-center mt-6 gap-4">
+            <DownloadSection seasons={normalizedSeasons} seasons2={normalizedSeasons2}/>
+          </div>
+        </div>
+        {/* <AdScript /> */}
+        
+        {/* <BannerScript /> */}
+        {/* <NativeScript /> */}
+        <div className="mt-12">
+          <LatestItems
+            title="You May Also Like"
+            data={relatedData}
+            flex={true}
+            relatedContent={true}
+            hide={true}
+            series={true}
+          />
+        </div>
+        {/* <BannerScript /> */}
+          {/* <AdScript type="custom-2"/> */}
+         {/* <AdScript type="custom-2"/>
+         <AdScript type="custom-2"/> */}
+        <CommentSection itemId={data._id} linkIdentifier="Aiom" />
+      </div>
+       <ClientOnly>
+              <DirectLinkScript directLinkUrl="https://attendedlickhorizontally.com/jth75j6j5?key=1cc239cea6ecf5e6b20d0a992ab044c4" />
+            </ClientOnly>
+    </>
+  );
+};
+
+export default page;
